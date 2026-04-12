@@ -21,10 +21,11 @@ class KeeperPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = keeperPalette(context);
+    final scheme = Theme.of(context).colorScheme;
     final color = switch (tone) {
-      KeeperPanelTone.base => palette.surface,
-      KeeperPanelTone.high => palette.surfaceHigh,
-      KeeperPanelTone.accent => palette.accentSurface,
+      KeeperPanelTone.base => scheme.surfaceContainerLow,
+      KeeperPanelTone.high => scheme.surfaceContainerHigh,
+      KeeperPanelTone.accent => palette.badgeBackground,
     };
 
     return DecoratedBox(

@@ -1,16 +1,26 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_strings.dart';
+import '../models/app_settings.dart';
 import '../theme/app_theme.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({
     super.key,
     required this.currentAccent,
+    required this.currentLanguage,
     required this.onAccentChanged,
+    required this.onLanguageChanged,
+    required this.onOpenArchive,
+    required this.onOpenAnalytics,
   });
 
   final Color currentAccent;
+  final AppLanguage currentLanguage;
   final ValueChanged<Color> onAccentChanged;
+  final ValueChanged<AppLanguage> onLanguageChanged;
+  final VoidCallback onOpenArchive;
+  final VoidCallback onOpenAnalytics;
 
   static const accentOptions = [
     Color(0xFFA78BFA),
@@ -25,24 +35,25 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final palette = keeperPalette(context);
+    final scheme = theme.colorScheme;
+    final strings = AppStrings.of(currentLanguage);
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
       children: [
         Text(
-          'Настройки',
-          style: theme.textTheme.headlineMedium?.copyWith(
-            fontWeight: FontWeight.w800,
+          strings.settings,
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w700,
           ),
         ),
         const SizedBox(height: 18),
         _SettingsBlockCard(
-          color: palette.accentSurface,
+          color: scheme.surfaceContainerLow,
           padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: accentOptions.map((color) {
-              final palette = keeperPalette(context);
               final selected = color.toARGB32() == currentAccent.toARGB32();
               return InkWell(
                 borderRadius: BorderRadius.circular(12),
@@ -52,7 +63,9 @@ class SettingsScreen extends StatelessWidget {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: selected ? palette.surfaceHigher : Colors.transparent,
+                    color: selected
+                        ? scheme.surfaceContainerHighest
+                        : Colors.transparent,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Center(
@@ -77,40 +90,68 @@ class SettingsScreen extends StatelessWidget {
         const SizedBox(height: 18),
         _SettingsActionTile(
           position: _SettingsBlockPosition.top,
+          icon: Icons.language_rounded,
+          title:
+              '${strings.languageLabel}: ${currentLanguage == AppLanguage.en ? strings.english : strings.russian}',
+          backgroundColor: scheme.surfaceContainerLow,
+          iconColor: palette.badgeForeground,
+          onTap: () => _showLanguageSheet(context, strings),
+        ),
+        const SizedBox(height: 8),
+        _SettingsActionTile(
+          position: _SettingsBlockPosition.middle,
+          icon: Icons.archive_outlined,
+          title: strings.archive,
+          backgroundColor: scheme.surfaceContainerLow,
+          iconColor: palette.badgeForeground,
+          onTap: onOpenArchive,
+        ),
+        const SizedBox(height: 8),
+        _SettingsActionTile(
+          position: _SettingsBlockPosition.bottom,
+          icon: Icons.insights_rounded,
+          title: strings.analytics,
+          backgroundColor: scheme.surfaceContainerLow,
+          iconColor: palette.badgeForeground,
+          onTap: onOpenAnalytics,
+        ),
+        const SizedBox(height: 18),
+        _SettingsActionTile(
+          position: _SettingsBlockPosition.top,
           icon: Icons.cloud_outlined,
-          title: 'Бекап',
-          backgroundColor: palette.accentSurface,
+          title: strings.backup,
+          backgroundColor: scheme.surfaceContainerLow,
           iconColor: palette.badgeForeground,
           onTap: () => _showStub(
             context,
-            'Бекап',
-            'Заглушка. Здесь будет экспорт данных приложения.',
+            strings.backup,
+            strings.archiveStub,
           ),
         ),
         const SizedBox(height: 8),
         _SettingsActionTile(
           position: _SettingsBlockPosition.middle,
           icon: Icons.settings_backup_restore_rounded,
-          title: 'Восстановление',
-          backgroundColor: palette.accentSurface,
+          title: strings.restore,
+          backgroundColor: scheme.surfaceContainerLow,
           iconColor: palette.badgeForeground,
           onTap: () => _showStub(
             context,
-            'Восстановление',
-            'Заглушка. Здесь будет восстановление данных из бекапа.',
+            strings.restore,
+            strings.restoreStub,
           ),
         ),
         const SizedBox(height: 8),
         _SettingsActionTile(
           position: _SettingsBlockPosition.bottom,
           icon: Icons.info_outline_rounded,
-          title: 'О приложении',
-          backgroundColor: palette.accentSurface,
+          title: strings.aboutApp,
+          backgroundColor: scheme.surfaceContainerLow,
           iconColor: palette.badgeForeground,
           onTap: () => _showStub(
             context,
-            'О приложении',
-            'Keeper\n\nУчет кормлений, линек и карточек пауков.',
+            strings.aboutApp,
+            strings.aboutStub,
           ),
         ),
       ],
@@ -127,9 +168,50 @@ class SettingsScreen extends StatelessWidget {
           actions: [
             FilledButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Ок'),
+              child: Text(AppStrings.of(currentLanguage).ok),
             ),
           ],
+        );
+      },
+    );
+  }
+
+  Future<void> _showLanguageSheet(BuildContext context, AppStrings strings) {
+    final palette = keeperPalette(context);
+    return showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: palette.surface,
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _SettingsActionTile(
+                icon: Icons.translate_rounded,
+                title: strings.english,
+                position: _SettingsBlockPosition.top,
+                backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
+                iconColor: keeperPalette(context).badgeForeground,
+                onTap: () {
+                  onLanguageChanged(AppLanguage.en);
+                  Navigator.of(context).pop();
+                },
+              ),
+              const SizedBox(height: 8),
+              _SettingsActionTile(
+                icon: Icons.translate_rounded,
+                title: strings.russian,
+                position: _SettingsBlockPosition.bottom,
+                backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
+                iconColor: keeperPalette(context).badgeForeground,
+                onTap: () {
+                  onLanguageChanged(AppLanguage.ru);
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          ),
         );
       },
     );
@@ -176,9 +258,9 @@ class _SettingsBlockCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = keeperPalette(context);
+    final scheme = Theme.of(context).colorScheme;
     return Material(
-      color: color ?? palette.surfaceHigh,
+      color: color ?? scheme.surfaceContainerLow,
       borderRadius: _radius(),
       child: Padding(
         padding: padding,
@@ -249,8 +331,8 @@ class _SettingsActionTile extends StatelessWidget {
                 Expanded(
                   child: Text(
                     title,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),

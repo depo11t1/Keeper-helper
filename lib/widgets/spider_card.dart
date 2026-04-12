@@ -9,7 +9,10 @@ class SpiderCard extends StatelessWidget {
     super.key,
     required this.spider,
     required this.globalAccent,
+    required this.speciesLabel,
+    required this.sex,
     required this.onTap,
+    required this.onLongPress,
     required this.onFeedTap,
     required this.onFeedLongPress,
     required this.relativeLastFeeding,
@@ -18,7 +21,10 @@ class SpiderCard extends StatelessWidget {
 
   final SpiderProfile spider;
   final Color globalAccent;
+  final String speciesLabel;
+  final SpiderSex sex;
   final VoidCallback onTap;
+  final VoidCallback onLongPress;
   final VoidCallback onFeedTap;
   final VoidCallback onFeedLongPress;
   final String relativeLastFeeding;
@@ -28,15 +34,14 @@ class SpiderCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final palette = keeperPalette(context);
-    final cardColor = palette.accentSurface;
-    final primaryPanel = Color.alphaBlend(
-      globalAccent.withValues(alpha: 0.08),
-      palette.surfaceHigh,
+    final scheme = theme.colorScheme;
+    final cardColor = scheme.surfaceContainerLow;
+    final panelColor = Color.alphaBlend(
+      palette.badgeBackground.withValues(alpha: 0.08),
+      scheme.surfaceContainerLow,
     );
-    final secondaryPanel = Color.alphaBlend(
-      globalAccent.withValues(alpha: 0.08),
-      palette.surfaceHigh,
-    );
+    final primaryPanel = panelColor;
+    final secondaryPanel = panelColor;
 
     return Material(
       color: cardColor,
@@ -44,9 +49,10 @@ class SpiderCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
+        onLongPress: onLongPress,
         borderRadius: BorderRadius.circular(28),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(18, 14, 18, 14),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
           child: Column(
             children: [
               Row(
@@ -56,6 +62,7 @@ class SpiderCard extends StatelessWidget {
                     seed: spider.avatarSeed,
                     accent: globalAccent,
                     label: spider.name,
+                    photoPath: spider.photoPath,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -72,7 +79,7 @@ class SpiderCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          spider.latinName,
+                          speciesLabel,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: palette.textMuted,
                             fontStyle: FontStyle.italic,
@@ -85,16 +92,16 @@ class SpiderCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   Padding(
-                    padding: const EdgeInsets.only(top: 0),
+                    padding: const EdgeInsets.only(top: 2),
                     child: GestureDetector(
                       onLongPress: onFeedLongPress,
                       child: FilledButton.tonal(
                         onPressed: onFeedTap,
                         style: FilledButton.styleFrom(
-                          backgroundColor: globalAccent.withValues(alpha: 0.16),
-                          foregroundColor: Colors.white,
-                          minimumSize: const Size(56, 56),
-                          maximumSize: const Size(56, 56),
+                          backgroundColor: palette.badgeBackground,
+                          foregroundColor: palette.badgeForeground,
+                          minimumSize: const Size(60, 60),
+                          maximumSize: const Size(60, 60),
                           padding: EdgeInsets.zero,
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           shape: RoundedRectangleBorder(
@@ -110,7 +117,7 @@ class SpiderCard extends StatelessWidget {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Expanded(
+                  Flexible(
                     child: _StatusPanel(
                       title: 'Кормление',
                       value: relativeLastFeeding,
@@ -118,8 +125,8 @@ class SpiderCard extends StatelessWidget {
                       color: primaryPanel,
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
+                  const SizedBox(width: 10),
+                  Flexible(
                     child: _StatusPanel(
                       title: 'Линька',
                       value: lastMoltLabel,
@@ -153,8 +160,9 @@ class _StatusPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final palette = keeperPalette(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(20),
@@ -164,23 +172,23 @@ class _StatusPanel extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(icon, size: 18, color: Colors.white.withValues(alpha: 0.86)),
+              Icon(icon, size: 18, color: palette.badgeForeground),
               const SizedBox(width: 8),
               Text(
                 title,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.82),
+                  color: palette.badgeForeground.withValues(alpha: 0.85),
                   fontWeight: FontWeight.w400,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
             value,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w500,
-              color: Colors.white,
+              color: palette.textPrimary.withValues(alpha: 0.86),
             ),
           ),
         ],

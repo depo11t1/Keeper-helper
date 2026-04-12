@@ -8,6 +8,9 @@ class KeeperPalette {
     required this.surface,
     required this.surfaceHigh,
     required this.surfaceHigher,
+    required this.answerBackground,
+    required this.answerBorder,
+    required this.heroStart,
     required this.outline,
     required this.accent,
     required this.textPrimary,
@@ -20,6 +23,9 @@ class KeeperPalette {
   final Color surface;
   final Color surfaceHigh;
   final Color surfaceHigher;
+  final Color answerBackground;
+  final Color answerBorder;
+  final Color heroStart;
   final Color outline;
   final Color accent;
   final Color textPrimary;
@@ -54,6 +60,9 @@ class KeeperTheme extends ThemeExtension<KeeperTheme> {
         surface: Color.lerp(a.surface, b.surface, t)!,
         surfaceHigh: Color.lerp(a.surfaceHigh, b.surfaceHigh, t)!,
         surfaceHigher: Color.lerp(a.surfaceHigher, b.surfaceHigher, t)!,
+        answerBackground: Color.lerp(a.answerBackground, b.answerBackground, t)!,
+        answerBorder: Color.lerp(a.answerBorder, b.answerBorder, t)!,
+        heroStart: Color.lerp(a.heroStart, b.heroStart, t)!,
         outline: Color.lerp(a.outline, b.outline, t)!,
         accent: Color.lerp(a.accent, b.accent, t)!,
         textPrimary: Color.lerp(a.textPrimary, b.textPrimary, t)!,
@@ -84,7 +93,7 @@ ThemeData buildKeeperTheme(Color accentColor) {
     surfaceContainer: palette.surface,
     surfaceContainerHigh: palette.surfaceHigh,
     surfaceContainerHighest: palette.surfaceHigher,
-    secondaryContainer: palette.accentSurface,
+    secondaryContainer: palette.badgeBackground,
     onSecondaryContainer: palette.badgeForeground,
     onSurface: palette.textPrimary,
     onSurfaceVariant: palette.textMuted,
@@ -233,7 +242,7 @@ ThemeData buildKeeperTheme(Color accentColor) {
     navigationBarTheme: NavigationBarThemeData(
       backgroundColor: palette.background,
       surfaceTintColor: Colors.transparent,
-      indicatorColor: palette.accentSurface,
+      indicatorColor: palette.badgeBackground,
       height: 68,
       labelTextStyle: WidgetStateProperty.resolveWith((states) {
         final selected = states.contains(WidgetState.selected);
@@ -275,6 +284,9 @@ KeeperPalette _paletteFor(Color accentColor) {
     surface: Color(0xFF070A0A),
     surfaceHigh: Color(0xFF0B1010),
     surfaceHigher: Color(0xFF111818),
+    answerBackground: Color(0xFF0C1111),
+    answerBorder: Color(0xFF12302E),
+    heroStart: Color(0xFF0E1414),
     outline: Color(0xFF12302E),
     accent: Color(0xFF2DD4BF),
     textPrimary: Color(0xFFF5F3FF),
@@ -287,12 +299,15 @@ KeeperPalette _paletteFor(Color accentColor) {
     background: base.background,
     surface: Color.lerp(base.surface, accentColor, 0.02)!,
     surfaceHigh: Color.lerp(base.surfaceHigh, accentColor, 0.02)!,
-    surfaceHigher: Color.lerp(base.surfaceHigher, accentColor, 0.03)!,
-    outline: Color.lerp(base.outline, accentColor, 0.075)!,
+    surfaceHigher: Color.lerp(base.surfaceHigher, accentColor, 0.02)!,
+    answerBackground: Color.lerp(base.answerBackground, accentColor, 0.02)!,
+    answerBorder: Color.lerp(base.answerBorder, accentColor, 0.06)!,
+    heroStart: Color.lerp(base.heroStart, accentColor, 0.08)!,
+    outline: Color.lerp(base.outline, accentColor, 0.06)!,
     accent: accentColor,
     textPrimary: base.textPrimary,
     textMuted: base.textMuted,
-    badgeBackground: accentColor.withValues(alpha: 0.12),
+    badgeBackground: accentColor.withValues(alpha: 0.2),
     badgeForeground: accentColor,
   );
 }

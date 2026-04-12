@@ -1,10 +1,15 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../l10n/app_strings.dart';
+import '../models/app_settings.dart';
 import '../models/spider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/keeper_panel.dart';
 import '../widgets/spider_avatar.dart';
+import 'package:image_picker/image_picker.dart';
 import '../widgets/timeline_chart.dart';
 
 // Экран подробной карточки животного.
@@ -14,7 +19,9 @@ class SpiderDetailScreen extends StatefulWidget {
     super.key,
     required this.spider,
     required this.globalAccent,
+    required this.language,
     required this.onAvatarChanged,
+    required this.onPhotoChanged,
     required this.onSpiderUpdated,
     required this.onHumidityUpdated,
     required this.onFeedingEdited,
@@ -26,7 +33,9 @@ class SpiderDetailScreen extends StatefulWidget {
 
   final SpiderProfile spider;
   final Color globalAccent;
+  final AppLanguage language;
   final ValueChanged<int> onAvatarChanged;
+  final ValueChanged<String?> onPhotoChanged;
   final void Function(String name, String latinName, SpiderSex sex) onSpiderUpdated;
   final ValueChanged<int> onHumidityUpdated;
   final void Function(int index, DateTime value) onFeedingEdited;
@@ -42,11 +51,14 @@ class SpiderDetailScreen extends StatefulWidget {
 class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
   var _showAllFeedings = false;
   var _showAllMolts = false;
+  final _imagePicker = ImagePicker();
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final palette = keeperPalette(context);
+    final scheme = theme.colorScheme;
+    final strings = AppStrings.of(widget.language);
     final feedings = widget.spider.feedings.toList()
       ..sort((a, b) => b.date.compareTo(a.date));
     final molts = widget.spider.molts.toList()
@@ -67,6 +79,24 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
         children: [
+          if (widget.spider.archived && widget.spider.archivedAt != null) ...[
+            KeeperPanel(
+              tone: KeeperPanelTone.base,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  const Icon(Icons.archive_outlined, size: 18),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${strings.archivedSince} '
+                    '${DateFormat('d MMMM yyyy', strings.localeCode).format(widget.spider.archivedAt!)}',
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
           KeeperPanel(
             tone: KeeperPanelTone.base,
             child: Column(
@@ -81,6 +111,7 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
                         accent: widget.globalAccent,
                         label: widget.spider.name,
                         size: 94,
+                        photoPath: widget.spider.photoPath,
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -97,7 +128,7 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
                           const SizedBox(height: 6),
                           Text(
                             widget.spider.latinName.trim().isEmpty
-                                ? 'Вид не указан'
+                                ? strings.speciesPlaceholder
                                 : widget.spider.latinName,
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontStyle: FontStyle.italic,
@@ -105,10 +136,6 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          Text(
-                            _sexLabel(widget.spider.sex),
-                            style: theme.textTheme.bodyMedium,
-                          ),
                         ],
                       ),
                     ),
@@ -126,30 +153,66 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
                           vertical: 12,
                         ),
                         decoration: BoxDecoration(
-                          color: palette.accentSurface,
+                          color: Color.alphaBlend(
+                            palette.badgeBackground,
+                            scheme.surfaceContainerLow,
+                          ),
                           borderRadius: BorderRadius.circular(18),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.water_drop_rounded, size: 18),
+                            Icon(
+                              Icons.water_drop_rounded,
+                              size: 18,
+                              color: palette.badgeForeground,
+                            ),
                             const SizedBox(width: 8),
                             Text(
                               '${widget.spider.humidity}%',
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w500,
+                                color: palette.badgeForeground,
                               ),
                             ),
                           ],
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => _showEditSpiderSheet(context),
-                        icon: const Icon(Icons.edit_rounded),
-                        label: const Text('Редактировать'),
+                    const SizedBox(width: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Color.alphaBlend(
+                          palette.badgeBackground,
+                          scheme.surfaceContainerLow,
+                        ),
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            widget.spider.sex == SpiderSex.female
+                                ? Icons.female_rounded
+                                : widget.spider.sex == SpiderSex.male
+                                    ? Icons.male_rounded
+                                    : Icons.help_outline_rounded,
+                            size: 18,
+                            color: palette.badgeForeground,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            _sexLabel(widget.spider.sex),
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w500,
+                              color: palette.badgeForeground,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -160,63 +223,72 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
           const SizedBox(height: 18),
           _DetailGroupCard(
             position: _DetailGroupPosition.top,
-            color: palette.accentSurface,
+            color: scheme.surfaceContainerLow,
             child: _SummaryStrip(
-              title: 'В среднем ест',
-              value: feedingAverage == null ? 'Мало данных' : 'каждые $feedingAverage дн.',
+              title: strings.avgEats,
+              value: feedingAverage == null
+                  ? strings.littleData
+                  : strings.everyDays(feedingAverage),
             ),
           ),
           const SizedBox(height: 6),
           _DetailGroupCard(
             position: _DetailGroupPosition.middle,
-            color: palette.accentSurface,
+            color: scheme.surfaceContainerLow,
             padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
             child: TimelineChart(
               dates: feedings.map((entry) => entry.date).toList(),
               accent: widget.globalAccent,
-              emptyLabel: 'Пока нет записей о кормлении',
-              averageLabel: 'В среднем ест',
+              emptyLabel: strings.noFeedingRecords,
+              averageLabel: strings.avgEats,
             ),
           ),
           const SizedBox(height: 6),
-          ...List.generate(visibleFeedings.length, (index) {
-            final entry = visibleFeedings[index];
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: index == visibleFeedings.length - 1 ? 0 : 6,
-              ),
-              child: _EditableDateTile(
-                position: visibleFeedings.length == 1
-                    ? _DetailGroupPosition.bottom
-                    : index == visibleFeedings.length - 1
+          AnimatedSize(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeInOut,
+            alignment: Alignment.topCenter,
+            child: Column(
+              children: List.generate(visibleFeedings.length, (index) {
+                final entry = visibleFeedings[index];
+                return Padding(
+                  padding: EdgeInsets.only(
+                    bottom: index == visibleFeedings.length - 1 ? 0 : 6,
+                  ),
+                  child: _EditableDateTile(
+                    position: visibleFeedings.length == 1
                         ? _DetailGroupPosition.bottom
-                        : _DetailGroupPosition.middle,
-                title: DateFormat('d MMMM yyyy', 'ru').format(entry.date),
-                subtitle: null,
-                accent: widget.globalAccent,
-                color: palette.accentSurface,
-                onEdit: () async {
-                  final picked = await showDatePicker(
-                    context: context,
-                    initialDate: entry.date,
-                    firstDate: DateTime(2020),
-                    lastDate: DateTime.now().add(const Duration(days: 1)),
-                    locale: const Locale('ru'),
-                  );
-                  if (picked != null) {
-                    final originalIndex = feedings.indexOf(entry);
-                    widget.onFeedingEdited(originalIndex, picked);
-                    setState(() {});
-                  }
-                },
-                onDelete: () {
-                  final originalIndex = feedings.indexOf(entry);
-                  widget.onFeedingDeleted(originalIndex);
-                  setState(() {});
-                },
-              ),
-            );
-          }),
+                        : index == visibleFeedings.length - 1
+                            ? _DetailGroupPosition.bottom
+                            : _DetailGroupPosition.middle,
+                    title: DateFormat('d MMMM yyyy', 'ru').format(entry.date),
+                    subtitle: null,
+                    accent: widget.globalAccent,
+                    color: scheme.surfaceContainerLow,
+                    onEdit: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: entry.date,
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime.now().add(const Duration(days: 1)),
+                        locale: const Locale('ru'),
+                      );
+                      if (picked != null) {
+                        final originalIndex = feedings.indexOf(entry);
+                        widget.onFeedingEdited(originalIndex, picked);
+                        setState(() {});
+                      }
+                    },
+                    onDelete: () {
+                      final originalIndex = feedings.indexOf(entry);
+                      widget.onFeedingDeleted(originalIndex);
+                      setState(() {});
+                    },
+                  ),
+                );
+              }),
+            ),
+          ),
           if (feedings.length > 2) ...[
             const SizedBox(height: 8),
             Center(
@@ -224,19 +296,21 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
                 onPressed: () {
                   setState(() => _showAllFeedings = !_showAllFeedings);
                 },
-                icon: Icon(
-                  _showAllFeedings
-                      ? Icons.keyboard_arrow_up_rounded
-                      : Icons.keyboard_arrow_down_rounded,
-                  size: 30,
+                icon: AnimatedRotation(
+                  duration: const Duration(milliseconds: 220),
+                  turns: _showAllFeedings ? 0.5 : 0.0,
+                  child: const Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    size: 30,
+                  ),
                 ),
               ),
             ),
           ],
           const SizedBox(height: 18),
           _SectionHeader(
-            title: 'Линьки',
-            trailing: FilledButton.tonalIcon(
+            title: strings.molts,
+            trailing: FilledButton.icon(
               onPressed: () async {
                 await widget.onMoltAdded();
                 if (mounted) {
@@ -244,62 +318,75 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
                 }
               },
               style: FilledButton.styleFrom(
-                backgroundColor: palette.accentSurface,
+                backgroundColor: palette.badgeBackground,
                 foregroundColor: palette.badgeForeground,
-                minimumSize: const Size(0, 44),
+                minimumSize: const Size(0, 40),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
               icon: const Icon(Icons.add_rounded),
-              label: const Text('Создать'),
+              label: Text(strings.create),
             ),
           ),
           const SizedBox(height: 10),
           _DetailGroupCard(
             position: _DetailGroupPosition.top,
-            color: palette.accentSurface,
+            color: scheme.surfaceContainerLow,
             child: _SummaryStrip(
-              title: 'В среднем линяет',
-              value: moltAverage == null ? 'Мало данных' : 'каждые $moltAverage дн.',
+              title: strings.avgMolts,
+              value: moltAverage == null
+                  ? strings.littleData
+                  : strings.everyDays(moltAverage),
             ),
           ),
           const SizedBox(height: 6),
           _DetailGroupCard(
             position: _DetailGroupPosition.middle,
-            color: palette.accentSurface,
+            color: scheme.surfaceContainerLow,
             padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
             child: TimelineChart(
               dates: molts.map((entry) => entry.date).toList(),
               accent: widget.globalAccent,
-              emptyLabel: 'Линек еще не добавляли',
-              averageLabel: 'В среднем линяет',
+              emptyLabel: strings.noMoltsAdded,
+              averageLabel: strings.avgMolts,
             ),
           ),
           const SizedBox(height: 6),
-          ...List.generate(visibleMolts.length, (index) {
-            final entry = visibleMolts[index];
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: index == visibleMolts.length - 1 ? 0 : 6,
-              ),
-              child: _EditableDateTile(
-                position: visibleMolts.length == 1
-                    ? _DetailGroupPosition.bottom
-                    : index == visibleMolts.length - 1
+          AnimatedSize(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeInOut,
+            alignment: Alignment.topCenter,
+            child: Column(
+              children: List.generate(visibleMolts.length, (index) {
+                final entry = visibleMolts[index];
+                return Padding(
+                  padding: EdgeInsets.only(
+                    bottom: index == visibleMolts.length - 1 ? 0 : 6,
+                  ),
+                  child: _EditableDateTile(
+                    position: visibleMolts.length == 1
                         ? _DetailGroupPosition.bottom
-                        : _DetailGroupPosition.middle,
-                title:
-                    '${entry.stage} • ${DateFormat('d MMMM yyyy', 'ru').format(entry.date)}',
-                subtitle: null,
-                accent: widget.globalAccent,
-                color: palette.accentSurface,
-                onEdit: () => _showEditMoltDialog(context, entry, molts),
-                onDelete: () {
-                  final originalIndex = molts.indexOf(entry);
-                  widget.onMoltDeleted(originalIndex);
-                  setState(() {});
-                },
-              ),
-            );
-          }),
+                        : index == visibleMolts.length - 1
+                            ? _DetailGroupPosition.bottom
+                            : _DetailGroupPosition.middle,
+                    title:
+                        '${entry.stage} • ${DateFormat('d MMMM yyyy', 'ru').format(entry.date)}',
+                    subtitle: null,
+                    accent: widget.globalAccent,
+                    color: scheme.surfaceContainerLow,
+                    onEdit: () => _showEditMoltDialog(context, entry, molts),
+                    onDelete: () {
+                      final originalIndex = molts.indexOf(entry);
+                      widget.onMoltDeleted(originalIndex);
+                      setState(() {});
+                    },
+                  ),
+                );
+              }),
+            ),
+          ),
           if (molts.length > 2) ...[
             const SizedBox(height: 8),
             Center(
@@ -307,11 +394,13 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
                 onPressed: () {
                   setState(() => _showAllMolts = !_showAllMolts);
                 },
-                icon: Icon(
-                  _showAllMolts
-                      ? Icons.keyboard_arrow_up_rounded
-                      : Icons.keyboard_arrow_down_rounded,
-                  size: 30,
+                icon: AnimatedRotation(
+                  duration: const Duration(milliseconds: 220),
+                  turns: _showAllMolts ? 0.5 : 0.0,
+                  child: const Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    size: 30,
+                  ),
                 ),
               ),
             ),
@@ -382,12 +471,12 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
-                tileColor: palette.accentSurface,
+                tileColor: Theme.of(context).colorScheme.surfaceContainerLow,
                 leading: const Icon(Icons.photo_camera_back_rounded),
                 title: const Text('Изменить фото'),
                 onTap: () {
                   Navigator.of(context).pop();
-                  _showAvatarSheet(this.context);
+                  _pickPhoto();
                 },
               ),
               const SizedBox(height: 8),
@@ -395,10 +484,14 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
-                tileColor: palette.accentSurface,
+                tileColor:
+                    Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.34),
+                iconColor: Theme.of(context).colorScheme.error,
+                textColor: Theme.of(context).colorScheme.error,
                 leading: const Icon(Icons.delete_outline_rounded),
                 title: const Text('Удалить фото'),
                 onTap: () {
+                  widget.onPhotoChanged(null);
                   widget.onAvatarChanged(-1);
                   setState(() {});
                   Navigator.of(context).pop();
@@ -406,6 +499,37 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
               ),
             ],
           ),
+        );
+      },
+    );
+  }
+
+  Future<void> _pickPhoto() async {
+    if (!Platform.isAndroid && !Platform.isIOS) {
+      _showPhotoUnavailable();
+      return;
+    }
+    final picked = await _imagePicker.pickImage(source: ImageSource.gallery);
+    if (picked == null) {
+      return;
+    }
+    widget.onPhotoChanged(picked.path);
+    setState(() {});
+  }
+
+  void _showPhotoUnavailable() {
+    showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Фото'),
+          content: const Text('Выбор фото доступен только на мобильных устройствах.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Ок'),
+            ),
+          ],
         );
       },
     );
@@ -518,27 +642,37 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 10),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        _SexChoiceChip(
-                          label: 'Самка',
-                          selected: sex == SpiderSex.female,
-                          onTap: () => setLocalState(() => sex = SpiderSex.female),
+                    SizedBox(
+                      width: double.infinity,
+                      child: SegmentedButton<SpiderSex>(
+                        segments: const [
+                          ButtonSegment(
+                            value: SpiderSex.female,
+                            label: Text('Самка'),
+                            icon: Icon(Icons.female_rounded),
+                          ),
+                          ButtonSegment(
+                            value: SpiderSex.male,
+                            label: Text('Самец'),
+                            icon: Icon(Icons.male_rounded),
+                          ),
+                          ButtonSegment(
+                            value: SpiderSex.unknown,
+                            label: Text('Не знаю'),
+                            icon: Icon(Icons.help_outline_rounded),
+                          ),
+                        ],
+                        selected: {sex},
+                        onSelectionChanged: (value) {
+                          setLocalState(() => sex = value.first);
+                        },
+                        style: ButtonStyle(
+                          padding: WidgetStateProperty.all(
+                            const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          ),
                         ),
-                        _SexChoiceChip(
-                          label: 'Самец',
-                          selected: sex == SpiderSex.male,
-                          onTap: () => setLocalState(() => sex = SpiderSex.male),
-                        ),
-                        _SexChoiceChip(
-                          label: 'Не знаю',
-                          selected: sex == SpiderSex.unknown,
-                          onTap: () => setLocalState(() => sex = SpiderSex.unknown),
-                        ),
-                      ],
                       ),
+                    ),
                     const SizedBox(height: 16),
                     FilledButton(
                       onPressed: () {
@@ -589,41 +723,11 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
           title: const Text('Изменить линьку'),
           content: StatefulBuilder(
             builder: (context, setState) {
-              return DropdownButtonFormField<String>(
-                initialValue: stage,
-                items: const [
-                  'Неизвестно',
-                  'L1',
-                  'L2',
-                  'L3',
-                  'L4',
-                  'L5',
-                  'L6',
-                  'L7',
-                  'L8',
-                  'L9',
-                  'L10',
-                  'L11',
-                  'L12',
-                  'L13',
-                  'L14',
-                  'L15',
-                ]
-                    .map(
-                      (value) => DropdownMenuItem(
-                        value: value,
-                        child: Text(value),
-                      ),
-                    )
-                    .toList(),
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() => stage = value);
-                  }
-                },
+              return InputDecorator(
                 decoration: const InputDecoration(
                   labelText: 'Возраст',
                 ),
+                child: Text(stage),
               );
             },
           ),
@@ -709,6 +813,7 @@ class _EditableDateTile extends StatelessWidget {
           title,
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w500,
+            color: palette.textPrimary,
           ),
         ),
         subtitle: subtitle == null
@@ -725,7 +830,7 @@ class _EditableDateTile extends StatelessWidget {
           children: [
             IconButton(
               onPressed: onEdit,
-              icon: Icon(Icons.edit_rounded, color: accent),
+              icon: Icon(Icons.edit_rounded, color: palette.textPrimary),
             ),
             IconButton(
               onPressed: onDelete,
@@ -804,18 +909,22 @@ class _SummaryStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final palette = keeperPalette(context);
     return Row(
       children: [
         Expanded(
           child: Text(
             title,
-            style: theme.textTheme.titleMedium,
+            style: theme.textTheme.titleMedium?.copyWith(
+                  color: palette.textPrimary,
+                ),
           ),
         ),
         Text(
           value,
           style: theme.textTheme.labelLarge?.copyWith(
             fontWeight: FontWeight.w400,
+            color: palette.textPrimary,
           ),
         ),
       ],
@@ -837,16 +946,17 @@ class _SexChoiceChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = keeperPalette(context);
+    final scheme = Theme.of(context).colorScheme;
 
     return ChoiceChip(
       label: Text(label),
       selected: selected,
       showCheckmark: false,
       side: BorderSide.none,
-      backgroundColor: palette.surfaceHigh,
-      selectedColor: palette.accentSurface,
+      backgroundColor: scheme.surfaceContainerLow,
+      selectedColor: palette.badgeBackground,
       labelStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
-            color: selected ? palette.textPrimary : palette.textMuted,
+            color: selected ? palette.badgeForeground : palette.textMuted,
             fontWeight: FontWeight.w500,
           ),
       onSelected: (_) => onTap(),

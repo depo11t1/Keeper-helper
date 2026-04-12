@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_strings.dart';
+import '../models/app_settings.dart';
 import '../models/spider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/spider_card.dart';
@@ -11,7 +13,9 @@ class HomeScreen extends StatelessWidget {
     super.key,
     required this.spiders,
     required this.accent,
+    required this.language,
     required this.onSpiderTap,
+    required this.onSpiderLongPress,
     required this.onFeedTap,
     required this.onFeedLongPress,
     required this.onCreateSpider,
@@ -19,7 +23,9 @@ class HomeScreen extends StatelessWidget {
 
   final List<SpiderProfile> spiders;
   final Color accent;
+  final AppLanguage language;
   final ValueChanged<SpiderProfile> onSpiderTap;
+  final ValueChanged<SpiderProfile> onSpiderLongPress;
   final ValueChanged<SpiderProfile> onFeedTap;
   final ValueChanged<SpiderProfile> onFeedLongPress;
   final VoidCallback onCreateSpider;
@@ -28,6 +34,7 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final palette = keeperPalette(context);
+    final strings = AppStrings.of(language);
 
     // Кто дольше не ел, тот выше в списке.
     final sortedSpiders = spiders.toList()
@@ -48,27 +55,50 @@ class HomeScreen extends StatelessWidget {
 
     return Stack(
       children: [
-        ListView(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 110),
-          children: [
-            Text(
-              'Keeper',
-              style: theme.textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.w800,
+        CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              pinned: true,
+              backgroundColor: palette.background,
+              surfaceTintColor: Colors.transparent,
+              toolbarHeight: 64,
+              titleSpacing: 20,
+              title: Text(
+                strings.appTitle,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: palette.textPrimary.withValues(alpha: 0.92),
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
-            const SizedBox(height: 18),
-            ...sortedSpiders.map(
-              (spider) => Padding(
-                padding: const EdgeInsets.only(bottom: 14),
-                child: SpiderCard(
-                  spider: spider,
-                  globalAccent: accent,
-                  onTap: () => onSpiderTap(spider),
-                  onFeedTap: () => onFeedTap(spider),
-                  onFeedLongPress: () => onFeedLongPress(spider),
-                  relativeLastFeeding: _relativeLabel(spider.lastFeeding?.date),
-                  lastMoltLabel: _lastMoltLabel(spider),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 110),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final spider = sortedSpiders[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 14),
+                      child: SpiderCard(
+                        spider: spider,
+                        globalAccent: accent,
+                        speciesLabel: spider.latinName.trim().isEmpty
+                            ? strings.speciesPlaceholder
+                            : spider.latinName,
+                        sex: spider.sex,
+                        onTap: () => onSpiderTap(spider),
+                        onLongPress: () => onSpiderLongPress(spider),
+                        onFeedTap: () => onFeedTap(spider),
+                        onFeedLongPress: () => onFeedLongPress(spider),
+                        relativeLastFeeding: _relativeLabel(
+                          spider.lastFeeding?.date,
+                          strings,
+                        ),
+                        lastMoltLabel: _lastMoltLabel(spider, strings),
+                      ),
+                    );
+                  },
+                  childCount: sortedSpiders.length,
                 ),
               ),
             ),
@@ -91,21 +121,21 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  String _relativeLabel(DateTime? date) {
+  String _relativeLabel(DateTime? date, AppStrings strings) {
     if (date == null) {
-      return 'еще не отмечено';
+      return strings.missingValue;
     }
 
     final days = DateTime.now().difference(date).inDays;
     if (days <= 0) {
-      return 'сегодня';
+      return strings.today;
     }
-    return '$days дн. назад';
+    return strings.daysAgo(days);
   }
 
-  String _lastMoltLabel(SpiderProfile spider) {
+  String _lastMoltLabel(SpiderProfile spider, AppStrings strings) {
     if (spider.molts.isEmpty) {
-      return 'Нет данных';
+      return strings.missingValue;
     }
 
     final sorted = spider.molts.toList()

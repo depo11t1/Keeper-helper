@@ -5,7 +5,9 @@ import '../models/spider.dart';
 
 AppSettings buildInitialSettings() {
   return AppSettings(
-    accentColor: const Color(0xFF86EFAC),
+    accentColor: const Color(0xFF93C5FD),
+    language: AppLanguage.en,
+    analyticsIncludeIds: <String>{},
   );
 }
 
@@ -21,6 +23,8 @@ List<SpiderProfile> buildSampleSpiders() {
       humidity: 68,
       avatarSeed: -1,
       accent: const Color(0xFF86EFAC),
+      archived: false,
+      archivedAt: null,
       feedings: [
         FeedingEntry(date: now.subtract(const Duration(days: 2))),
         FeedingEntry(date: now.subtract(const Duration(days: 8))),
@@ -41,6 +45,8 @@ List<SpiderProfile> buildSampleSpiders() {
       humidity: 74,
       avatarSeed: -1,
       accent: const Color(0xFF7EC8FF),
+      archived: false,
+      archivedAt: null,
       feedings: [
         FeedingEntry(date: now.subtract(const Duration(days: 5))),
         FeedingEntry(date: now.subtract(const Duration(days: 11))),
@@ -61,6 +67,8 @@ List<SpiderProfile> buildSampleSpiders() {
       humidity: 61,
       avatarSeed: -1,
       accent: const Color(0xFFFFB86C),
+      archived: false,
+      archivedAt: null,
       feedings: [
         FeedingEntry(date: now.subtract(const Duration(days: 1))),
         FeedingEntry(date: now.subtract(const Duration(days: 7))),
