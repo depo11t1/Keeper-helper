@@ -46,8 +46,10 @@ class SpiderAvatar extends StatelessWidget {
     int targetSize = 384,
   }) async {
     try {
-      final codec =
-          await ui.instantiateImageCodec(bytes, targetWidth: targetSize);
+      final codec = await ui.instantiateImageCodec(
+        Uint8List.fromList(bytes),
+        targetWidth: targetSize,
+      );
       final frame = await codec.getNextFrame();
       final data = await frame.image.toByteData(
         format: ui.ImageByteFormat.png,
@@ -121,7 +123,6 @@ class SpiderAvatar extends StatelessWidget {
                   gaplessPlayback: true,
                   filterQuality: FilterQuality.medium,
                   isAntiAlias: true,
-                  cacheWidth: cacheSize,
                 ),
               )
             : hasPreview
