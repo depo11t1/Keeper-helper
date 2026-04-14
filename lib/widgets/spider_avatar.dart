@@ -20,20 +20,57 @@ class SpiderAvatar extends StatelessWidget {
   final String? photoPath;
   static final Map<String, ImageProvider> _imageCache = {};
 
-  static void cachePhoto(String path, List<int> bytes) {
-    _imageCache[path] = MemoryImage(Uint8List.fromList(bytes));
+  static ImageProvider _providerFor(String path, int cacheSize) {
+    final key = '$path@$cacheSize';
+    return _imageCache.putIfAbsent(
+      key,
+      () => ResizeImage(
+        FileImage(File(path)),
+        width: cacheSize,
+        height: cacheSize,
+      ),
+    );
+  }
+
+  static void cacheBytesForPath(
+    BuildContext context,
+    String path,
+    List<int> bytes,
+    List<double> sizes,
+  ) {
+    final dpr = MediaQuery.of(context).devicePixelRatio;
+    for (final size in sizes) {
+      final cacheSize = (size * dpr).round();
+      final key = '$path@$cacheSize';
+      _imageCache[key] = ResizeImage(
+        MemoryImage(Uint8List.fromList(bytes)),
+        width: cacheSize,
+        height: cacheSize,
+      );
+    }
+  }
+
+  static Future<void> precacheForSizes(
+    BuildContext context,
+    String path,
+    List<double> sizes,
+  ) async {
+    final dpr = MediaQuery.of(context).devicePixelRatio;
+    for (final size in sizes) {
+      final cacheSize = (size * dpr).round();
+      final provider = _providerFor(path, cacheSize);
+      await precacheImage(provider, context);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final hasPreview = seed >= 0;
     final hasPhoto = photoPath != null && File(photoPath!).existsSync();
-    final photoProvider = hasPhoto
-        ? _imageCache.putIfAbsent(
-            photoPath!,
-            () => FileImage(File(photoPath!)),
-          )
-        : null;
+    final dpr = MediaQuery.of(context).devicePixelRatio;
+    final cacheSize = (size * dpr).round();
+    final photoProvider =
+        hasPhoto ? _providerFor(photoPath!, cacheSize) : null;
 
     return Container(
       width: size,

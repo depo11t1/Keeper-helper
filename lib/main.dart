@@ -122,9 +122,11 @@ class _KeeperAppState extends State<KeeperApp> {
       if (!file.existsSync()) {
         continue;
       }
-      final bytes = file.readAsBytesSync();
-      SpiderAvatar.cachePhoto(path, bytes);
-      precacheImage(MemoryImage(bytes), context);
+      SpiderAvatar.precacheForSizes(
+        context,
+        path,
+        const [68],
+      );
     }
   }
 

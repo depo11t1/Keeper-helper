@@ -613,8 +613,24 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
       if (picked == null) {
         return;
       }
+      final bytes = await File(picked.path).readAsBytes();
       final storedPath = await _storePhoto(picked.path);
+      if (context.mounted) {
+        SpiderAvatar.cacheBytesForPath(
+          context,
+          storedPath,
+          bytes,
+          const [68, 78, 94],
+        );
+      }
       widget.onPhotoChanged(storedPath);
+      if (context.mounted) {
+        SpiderAvatar.precacheForSizes(
+          context,
+          storedPath,
+          const [68, 78, 94],
+        );
+      }
       setState(() {});
       return;
     }
@@ -624,8 +640,24 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
     if (pathPicked == null) {
       return;
     }
+    final bytes = await File(pathPicked).readAsBytes();
     final storedPath = await _storePhoto(pathPicked);
+    if (context.mounted) {
+      SpiderAvatar.cacheBytesForPath(
+        context,
+        storedPath,
+        bytes,
+        const [68, 78, 94],
+      );
+    }
     widget.onPhotoChanged(storedPath);
+    if (context.mounted) {
+      SpiderAvatar.precacheForSizes(
+        context,
+        storedPath,
+        const [68, 78, 94],
+      );
+    }
     setState(() {});
   }
 
