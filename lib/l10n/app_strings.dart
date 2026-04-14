@@ -306,16 +306,16 @@ class AppStrings {
         ja: '復元',
       );
   String get newSpider => _t(
-        ru: 'Новый паук',
-        en: 'New spider',
-        hi: 'नया मकड़ी',
-        fr: 'Nouvelle araignée',
-        de: 'Neue Spinne',
-        es: 'Nueva araña',
-        sv: 'Ny spindel',
-        nl: 'Nieuwe spin',
-        pt: 'Nova aranha',
-        ja: '新しいクモ',
+        ru: 'Новый питомец',
+        en: 'New pet',
+        hi: 'नया पालतू',
+        fr: 'Nouvel animal',
+        de: 'Neues Tier',
+        es: 'Nueva mascota',
+        sv: 'Nytt husdjur',
+        nl: 'Nieuw huisdier',
+        pt: 'Novo pet',
+        ja: '新しいペット',
       );
   String get name => _t(
         ru: 'Имя',

@@ -109,6 +109,17 @@ class _AnalyticsPlaceholderScreenState extends State<AnalyticsPlaceholderScreen>
     );
   }
 
+  @override
+  void didUpdateWidget(covariant AnalyticsPlaceholderScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.spiders != widget.spiders) {
+      setState(() {
+        _showAllFeeders = false;
+        _showAllMolters = false;
+      });
+    }
+  }
+
   List<_StatItem> _buildItems(List<SpiderProfile> spiders, {required bool isMolt}) {
     final items = <_StatItem>[];
     for (final spider in spiders) {

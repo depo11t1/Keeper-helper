@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
@@ -19,12 +20,20 @@ class SpiderAvatar extends StatelessWidget {
   final String? photoPath;
   static final Map<String, ImageProvider> _imageCache = {};
 
+  static void cachePhoto(String path, List<int> bytes) {
+    _imageCache[path] = MemoryImage(Uint8List.fromList(bytes));
+  }
+
   @override
   Widget build(BuildContext context) {
     final hasPreview = seed >= 0;
     final hasPhoto = photoPath != null && File(photoPath!).existsSync();
-    final photoProvider =
-        hasPhoto ? _imageCache.putIfAbsent(photoPath!, () => FileImage(File(photoPath!))) : null;
+    final photoProvider = hasPhoto
+        ? _imageCache.putIfAbsent(
+            photoPath!,
+            () => FileImage(File(photoPath!)),
+          )
+        : null;
 
     return Container(
       width: size,

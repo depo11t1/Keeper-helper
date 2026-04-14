@@ -81,7 +81,7 @@ class HomeScreen extends StatelessWidget {
                               ? strings.speciesPlaceholder
                               : spider.latinName,
                           feedingTitle: strings.feeding,
-                          moltTitle: strings.molts,
+                          moltTitle: strings.moltLabel,
                           sex: spider.sex,
                           onTap: () => onSpiderTap(spider),
                         onLongPress: () => onSpiderLongPress(spider),

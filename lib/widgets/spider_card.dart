@@ -187,7 +187,7 @@ class _StatusPanel extends StatelessWidget {
                 title,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: palette.badgeForeground.withValues(alpha: 0.85),
-                  fontWeight: FontWeight.w400,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],

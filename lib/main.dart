@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'widgets/spider_avatar.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
@@ -121,7 +122,9 @@ class _KeeperAppState extends State<KeeperApp> {
       if (!file.existsSync()) {
         continue;
       }
-      precacheImage(FileImage(file), context);
+      final bytes = file.readAsBytesSync();
+      SpiderAvatar.cachePhoto(path, bytes);
+      precacheImage(MemoryImage(bytes), context);
     }
   }
 

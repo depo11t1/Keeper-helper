@@ -1344,29 +1344,36 @@ Future<String?> _pickMoltStage(
     backgroundColor: palette.background,
     isScrollControlled: true,
     builder: (context) {
-      return SizedBox(
-        height: MediaQuery.of(context).size.height * 0.5,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-          child: Column(
-            children: [
-              Expanded(
-                child: ListWheelScrollView.useDelegate(
-                  itemExtent: 44,
-                  physics: const FixedExtentScrollPhysics(),
-                  onSelectedItemChanged: (index) => selected = index,
-                  controller: FixedExtentScrollController(initialItem: selected),
-                  childDelegate: ListWheelChildBuilderDelegate(
-                    builder: (context, index) {
-                      if (index < 0 || index >= options.length) {
-                        return null;
-                      }
-                      final isActive = index == selected;
-                      return Center(
-                        child: Text(
-                          options[index],
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
+      return StatefulBuilder(
+        builder: (context, setLocalState) {
+          return SizedBox(
+            height: MediaQuery.of(context).size.height * 0.5,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: ListWheelScrollView.useDelegate(
+                      itemExtent: 44,
+                      physics: const FixedExtentScrollPhysics(),
+                      onSelectedItemChanged: (index) {
+                        setLocalState(() => selected = index);
+                      },
+                      controller:
+                          FixedExtentScrollController(initialItem: selected),
+                      childDelegate: ListWheelChildBuilderDelegate(
+                        builder: (context, index) {
+                          if (index < 0 || index >= options.length) {
+                            return null;
+                          }
+                          final isActive = index == selected;
+                          return Center(
+                            child: Text(
+                              options[index],
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium
+                                  ?.copyWith(
                                     fontSize: isActive ? 22 : 18,
                                     fontWeight: isActive
                                         ? FontWeight.w600
@@ -1378,25 +1385,27 @@ Future<String?> _pickMoltStage(
                                             .bodyMedium
                                             ?.color,
                                   ),
-                        ),
-                      );
-                    },
-                    childCount: options.length,
+                            ),
+                          );
+                        },
+                        childCount: options.length,
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: () =>
+                          Navigator.of(context).pop(options[selected]),
+                      child: Text(strings.choose),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: () =>
-                      Navigator.of(context).pop(options[selected]),
-                  child: Text(strings.choose),
-                ),
-              ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       );
     },
   );
