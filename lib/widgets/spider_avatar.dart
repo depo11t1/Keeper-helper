@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
@@ -20,16 +21,15 @@ class SpiderAvatar extends StatelessWidget {
   final String? photoPath;
   static final Map<String, ImageProvider> _imageCache = {};
 
-  static ImageProvider _providerFor(String path, int cacheSize) {
-    final key = '$path@$cacheSize';
-    return _imageCache.putIfAbsent(
-      key,
-      () => ResizeImage(
-        FileImage(File(path)),
-        width: cacheSize,
-        height: cacheSize,
-      ),
-    );
+  static String thumbnailPath(String photoPath) => '$photoPath.thumb.png';
+
+  static String resolvePhotoPath(String photoPath) {
+    final thumb = File(thumbnailPath(photoPath));
+    return thumb.existsSync() ? thumb.path : photoPath;
+  }
+
+  static ImageProvider _providerFor(String path) {
+    return _imageCache[path] ?? FileImage(File(path));
   }
 
   static void cacheBytesForPath(
@@ -38,15 +38,46 @@ class SpiderAvatar extends StatelessWidget {
     List<int> bytes,
     List<double> sizes,
   ) {
-    final dpr = MediaQuery.of(context).devicePixelRatio;
-    for (final size in sizes) {
-      final cacheSize = (size * dpr).round();
-      final key = '$path@$cacheSize';
-      _imageCache[key] = ResizeImage(
-        MemoryImage(Uint8List.fromList(bytes)),
-        width: cacheSize,
-        height: cacheSize,
+    _imageCache[path] = MemoryImage(Uint8List.fromList(bytes));
+  }
+
+  static Future<Uint8List?> createThumbnailBytes(
+    List<int> bytes, {
+    int targetSize = 384,
+  }) async {
+    try {
+      final codec =
+          await ui.instantiateImageCodec(bytes, targetWidth: targetSize);
+      final frame = await codec.getNextFrame();
+      final data = await frame.image.toByteData(
+        format: ui.ImageByteFormat.png,
       );
+      return data?.buffer.asUint8List();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<String?> ensureThumbnail(String photoPath) async {
+    final thumbPath = thumbnailPath(photoPath);
+    final thumbFile = File(thumbPath);
+    if (thumbFile.existsSync()) {
+      return thumbPath;
+    }
+    final source = File(photoPath);
+    if (!source.existsSync()) {
+      return null;
+    }
+    try {
+      final bytes = await source.readAsBytes();
+      final thumbBytes = await createThumbnailBytes(bytes);
+      if (thumbBytes == null) {
+        return null;
+      }
+      await thumbFile.writeAsBytes(thumbBytes, flush: true);
+      return thumbPath;
+    } catch (_) {
+      return null;
     }
   }
 
@@ -55,12 +86,8 @@ class SpiderAvatar extends StatelessWidget {
     String path,
     List<double> sizes,
   ) async {
-    final dpr = MediaQuery.of(context).devicePixelRatio;
-    for (final size in sizes) {
-      final cacheSize = (size * dpr).round();
-      final provider = _providerFor(path, cacheSize);
-      await precacheImage(provider, context);
-    }
+    final provider = _providerFor(path);
+    await precacheImage(provider, context);
   }
 
   @override
@@ -69,8 +96,9 @@ class SpiderAvatar extends StatelessWidget {
     final hasPhoto = photoPath != null && File(photoPath!).existsSync();
     final dpr = MediaQuery.of(context).devicePixelRatio;
     final cacheSize = (size * dpr).round();
+    final resolvedPath = hasPhoto ? resolvePhotoPath(photoPath!) : null;
     final photoProvider =
-        hasPhoto ? _providerFor(photoPath!, cacheSize) : null;
+        resolvedPath == null ? null : _providerFor(resolvedPath);
 
     return Container(
       width: size,
@@ -91,7 +119,9 @@ class SpiderAvatar extends StatelessWidget {
                   width: size,
                   height: size,
                   gaplessPlayback: true,
-                  filterQuality: FilterQuality.low,
+                  filterQuality: FilterQuality.medium,
+                  isAntiAlias: true,
+                  cacheWidth: cacheSize,
                 ),
               )
             : hasPreview

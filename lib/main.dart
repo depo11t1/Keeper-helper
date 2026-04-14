@@ -68,11 +68,14 @@ class _KeeperAppState extends State<KeeperApp> {
     final data = jsonDecode(raw) as Map<String, dynamic>;
     final settingsJson = data['settings'] as Map<String, dynamic>? ?? {};
     final spidersJson = data['spiders'] as List<dynamic>? ?? [];
+    final settings = AppSettings.fromJson(settingsJson);
+    final spiders = spidersJson
+        .map((entry) => SpiderProfile.fromJson(entry as Map<String, dynamic>))
+        .toList();
+    await _ensurePhotoThumbs(spiders);
     setState(() {
-      _settings = AppSettings.fromJson(settingsJson);
-      _spiders = spidersJson
-          .map((entry) => SpiderProfile.fromJson(entry as Map<String, dynamic>))
-          .toList();
+      _settings = settings;
+      _spiders = spiders;
       Intl.defaultLocale = AppStrings.of(_settings.language).localeCode;
     });
     _precachePhotos();
@@ -108,6 +111,20 @@ class _KeeperAppState extends State<KeeperApp> {
     return AppLanguage.en;
   }
 
+  Future<void> _ensurePhotoThumbs(List<SpiderProfile> spiders) async {
+    for (final spider in spiders) {
+      final path = spider.photoPath;
+      if (path == null) {
+        continue;
+      }
+      final file = File(path);
+      if (!file.existsSync()) {
+        continue;
+      }
+      await SpiderAvatar.ensureThumbnail(path);
+    }
+  }
+
   void _precachePhotos() {
     final context = _navigatorKey.currentContext;
     if (context == null) {
@@ -122,9 +139,10 @@ class _KeeperAppState extends State<KeeperApp> {
       if (!file.existsSync()) {
         continue;
       }
+      final resolved = SpiderAvatar.resolvePhotoPath(path);
       SpiderAvatar.precacheForSizes(
         context,
-        path,
+        resolved,
         const [68],
       );
     }

@@ -564,6 +564,11 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
                   if (widget.spider.photoPath != null) {
                     try {
                       File(widget.spider.photoPath!).deleteSync();
+                      final thumbPath =
+                          SpiderAvatar.thumbnailPath(widget.spider.photoPath!);
+                      if (File(thumbPath).existsSync()) {
+                        File(thumbPath).deleteSync();
+                      }
                     } catch (_) {}
                   }
                   widget.onPhotoChanged(null);
@@ -615,11 +620,18 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
       }
       final bytes = await File(picked.path).readAsBytes();
       final storedPath = await _storePhoto(picked.path);
+      final thumbBytes = await SpiderAvatar.createThumbnailBytes(bytes);
+      String? cachePath;
+      if (thumbBytes != null) {
+        final thumbPath = SpiderAvatar.thumbnailPath(storedPath);
+        await File(thumbPath).writeAsBytes(thumbBytes, flush: true);
+        cachePath = thumbPath;
+      }
       if (context.mounted) {
         SpiderAvatar.cacheBytesForPath(
           context,
-          storedPath,
-          bytes,
+          cachePath ?? storedPath,
+          thumbBytes ?? bytes,
           const [68, 78, 94],
         );
       }
@@ -627,7 +639,7 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
       if (context.mounted) {
         SpiderAvatar.precacheForSizes(
           context,
-          storedPath,
+          cachePath ?? storedPath,
           const [68, 78, 94],
         );
       }
@@ -642,11 +654,18 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
     }
     final bytes = await File(pathPicked).readAsBytes();
     final storedPath = await _storePhoto(pathPicked);
+    final thumbBytes = await SpiderAvatar.createThumbnailBytes(bytes);
+    String? cachePath;
+    if (thumbBytes != null) {
+      final thumbPath = SpiderAvatar.thumbnailPath(storedPath);
+      await File(thumbPath).writeAsBytes(thumbBytes, flush: true);
+      cachePath = thumbPath;
+    }
     if (context.mounted) {
       SpiderAvatar.cacheBytesForPath(
         context,
-        storedPath,
-        bytes,
+        cachePath ?? storedPath,
+        thumbBytes ?? bytes,
         const [68, 78, 94],
       );
     }
@@ -654,7 +673,7 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
     if (context.mounted) {
       SpiderAvatar.precacheForSizes(
         context,
-        storedPath,
+        cachePath ?? storedPath,
         const [68, 78, 94],
       );
     }
