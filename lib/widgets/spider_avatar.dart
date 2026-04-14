@@ -21,7 +21,10 @@ class SpiderAvatar extends StatelessWidget {
   final String? photoPath;
   static final Map<String, ImageProvider> _imageCache = {};
 
-  static String thumbnailPath(String photoPath) => '$photoPath.thumb.png';
+  static String thumbnailPath(String photoPath) => '$photoPath.thumb_v2.png';
+
+  static String legacyThumbnailPath(String photoPath) =>
+      '$photoPath.thumb.png';
 
   static String resolvePhotoPath(String photoPath) {
     final thumb = File(thumbnailPath(photoPath));
@@ -38,6 +41,18 @@ class SpiderAvatar extends StatelessWidget {
     List<int> bytes,
     List<double> sizes,
   ) {
+    _imageCache[path] = MemoryImage(Uint8List.fromList(bytes));
+  }
+
+  static Future<void> cacheFileForPath(String path) async {
+    if (_imageCache.containsKey(path)) {
+      return;
+    }
+    final file = File(path);
+    if (!file.existsSync()) {
+      return;
+    }
+    final bytes = await file.readAsBytes();
     _imageCache[path] = MemoryImage(Uint8List.fromList(bytes));
   }
 

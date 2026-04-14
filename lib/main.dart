@@ -1,10 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 
+import 'package:archive/archive.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'widgets/spider_avatar.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:image/image.dart' as img;
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -121,7 +124,10 @@ class _KeeperAppState extends State<KeeperApp> {
       if (!file.existsSync()) {
         continue;
       }
-      await SpiderAvatar.ensureThumbnail(path);
+      final thumbPath = await SpiderAvatar.ensureThumbnail(path);
+      if (thumbPath != null) {
+        await SpiderAvatar.cacheFileForPath(thumbPath);
+      }
     }
   }
 
@@ -165,7 +171,7 @@ class _KeeperAppState extends State<KeeperApp> {
     );
   }
 
-  Map<String, dynamic> _buildBackupPayload() {
+  Map<String, dynamic> _buildBackupManifest() {
     final photos = <String, Map<String, String>>{};
     for (final spider in _spiders) {
       final photoPath = spider.photoPath;
@@ -176,20 +182,35 @@ class _KeeperAppState extends State<KeeperApp> {
       if (!file.existsSync()) {
         continue;
       }
-      final bytes = file.readAsBytesSync();
-      final ext = file.path.split('.').last;
       photos[spider.id] = {
-        'ext': ext,
-        'data': base64Encode(bytes),
+        'file': 'photos/${spider.id}.jpg',
       };
     }
 
     return <String, dynamic>{
-      'version': '1.0.0',
+      'version': '1.1.0',
       'settings': _settings.toJson(),
       'spiders': _spiders.map((spider) => spider.toJson()).toList(),
       'photos': photos,
     };
+  }
+
+  Future<List<int>> _encodeBackupPhoto(String photoPath) async {
+    final bytes = await File(photoPath).readAsBytes();
+    final decoded = img.decodeImage(bytes);
+    if (decoded == null) {
+      return bytes;
+    }
+    final baked = img.bakeOrientation(decoded);
+    final maxSide = math.max(baked.width, baked.height);
+    final resized = maxSide > 1024
+        ? img.copyResize(
+            baked,
+            width: baked.width >= baked.height ? 1024 : null,
+            height: baked.height > baked.width ? 1024 : null,
+          )
+        : baked;
+    return img.encodeJpg(resized, quality: 85);
   }
 
   Future<void> _exportBackupToDownloads() async {
@@ -205,9 +226,36 @@ class _KeeperAppState extends State<KeeperApp> {
       keeperDir.createSync(recursive: true);
     }
     final backupPath =
-        path.join(keeperDir.path, 'keeper_backup_$timestamp.json');
-    final payload = _buildBackupPayload();
-    await File(backupPath).writeAsString(jsonEncode(payload));
+        path.join(keeperDir.path, 'keeper_backup_$timestamp.kpr.zip');
+    final manifest = _buildBackupManifest();
+    final manifestBytes = utf8.encode(jsonEncode(manifest));
+    final archive = Archive();
+    archive.addFile(
+      ArchiveFile('backup.json', manifestBytes.length, manifestBytes),
+    );
+    for (final spider in _spiders) {
+      final photoPath = spider.photoPath;
+      if (photoPath == null) {
+        continue;
+      }
+      final file = File(photoPath);
+      if (!file.existsSync()) {
+        continue;
+      }
+      final entry =
+          (manifest['photos'] as Map<String, dynamic>)[spider.id] as Map?;
+      final fileName = entry?['file'] as String?;
+      if (fileName == null) {
+        continue;
+      }
+      final bytes = await _encodeBackupPhoto(photoPath);
+      archive.addFile(ArchiveFile(fileName, bytes.length, bytes));
+    }
+    final zipData = ZipEncoder().encode(archive);
+    if (zipData == null) {
+      throw Exception('Backup archive failed');
+    }
+    await File(backupPath).writeAsBytes(zipData, flush: true);
   }
 
   Future<void> _restoreFromFile() async {
@@ -220,18 +268,45 @@ class _KeeperAppState extends State<KeeperApp> {
       final result = await FilePicker.platform.pickFiles(
         dialogTitle: strings.restore,
         type: FileType.custom,
-        allowedExtensions: ['json'],
+        allowedExtensions: ['json', 'zip', 'kpr'],
       );
       if (result == null || result.files.isEmpty) {
         return;
       }
       final file = File(result.files.single.path!);
-      final raw = await file.readAsString();
-      final data = jsonDecode(raw) as Map<String, dynamic>;
+      final fileBytes = await file.readAsBytes();
+      Archive? archive;
+      try {
+        archive = ZipDecoder().decodeBytes(fileBytes);
+      } catch (_) {
+        archive = null;
+      }
+      Map<String, dynamic> data;
+      Map<String, dynamic> photos;
+      if (archive != null && archive.isNotEmpty) {
+        ArchiveFile? manifestFile;
+        for (final entry in archive.files) {
+          if (entry.name == 'backup.json') {
+            manifestFile = entry;
+            break;
+          }
+        }
+        if (manifestFile == null || manifestFile.content is! List<int>) {
+          throw Exception('Invalid backup');
+        }
+        final manifestRaw = utf8.decode(manifestFile.content as List<int>);
+        data = jsonDecode(manifestRaw) as Map<String, dynamic>;
+        photos = (data['photos'] as Map<String, dynamic>? ?? {});
+      } else {
+        final raw = utf8.decode(fileBytes);
+        data = jsonDecode(raw) as Map<String, dynamic>;
+        photos = (data['photos'] as Map<String, dynamic>? ?? {});
+      }
       final settingsJson = data['settings'] as Map<String, dynamic>? ?? {};
       final spidersJson = data['spiders'] as List<dynamic>? ?? [];
-      final photos = (data['photos'] as Map<String, dynamic>? ?? {})
-          .map((key, value) => MapEntry(key, value as Map<String, dynamic>));
+      final photosMap = photos.map(
+        (key, value) => MapEntry(key, value as Map<String, dynamic>),
+      );
 
       final restoredSpiders = spidersJson
           .map((entry) => SpiderProfile.fromJson(entry as Map<String, dynamic>))
@@ -244,26 +319,52 @@ class _KeeperAppState extends State<KeeperApp> {
       }
 
       for (final spider in restoredSpiders) {
-        final photoEntry = photos[spider.id];
+        final photoEntry = photosMap[spider.id];
         if (photoEntry == null) {
           spider.photoPath = null;
           continue;
         }
-        final ext = photoEntry['ext'] as String? ?? 'jpg';
+        final fileRef = photoEntry['file'] as String?;
         final dataString = photoEntry['data'] as String?;
-        if (dataString == null) {
+        List<int>? bytes;
+        String filename = '${spider.id}.jpg';
+        if (fileRef != null && archive != null) {
+          ArchiveFile? entry;
+          for (final fileEntry in archive.files) {
+            if (fileEntry.name == fileRef) {
+              entry = fileEntry;
+              break;
+            }
+          }
+          if (entry != null && entry.content is List<int>) {
+            bytes = entry.content as List<int>;
+            filename = path.basename(fileRef);
+          }
+        } else if (dataString != null) {
+          bytes = base64Decode(dataString);
+          final ext = photoEntry['ext'] as String? ?? 'jpg';
+          filename = '${spider.id}.$ext';
+        }
+        if (bytes == null) {
+          spider.photoPath = null;
           continue;
         }
-        final bytes = base64Decode(dataString);
-        final filename = '${spider.id}.$ext';
         final targetPath = path.join(photosDir.path, filename);
         await File(targetPath).writeAsBytes(bytes, flush: true);
         spider.photoPath = targetPath;
       }
 
+      final mergedById = <String, SpiderProfile>{
+        for (final spider in _spiders) spider.id: spider,
+      };
+      for (final spider in restoredSpiders) {
+        mergedById[spider.id] = spider;
+      }
+      final mergedSpiders = mergedById.values.toList();
+      await _ensurePhotoThumbs(mergedSpiders);
       setState(() {
         _settings = AppSettings.fromJson(settingsJson);
-        _spiders = restoredSpiders;
+        _spiders = mergedSpiders;
         Intl.defaultLocale = AppStrings.of(_settings.language).localeCode;
       });
       await _saveState();

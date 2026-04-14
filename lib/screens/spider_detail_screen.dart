@@ -566,8 +566,15 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
                       File(widget.spider.photoPath!).deleteSync();
                       final thumbPath =
                           SpiderAvatar.thumbnailPath(widget.spider.photoPath!);
+                      final legacyThumb =
+                          SpiderAvatar.legacyThumbnailPath(
+                        widget.spider.photoPath!,
+                      );
                       if (File(thumbPath).existsSync()) {
                         File(thumbPath).deleteSync();
+                      }
+                      if (File(legacyThumb).existsSync()) {
+                        File(legacyThumb).deleteSync();
                       }
                     } catch (_) {}
                   }
@@ -625,6 +632,12 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
       if (thumbBytes != null) {
         final thumbPath = SpiderAvatar.thumbnailPath(storedPath);
         await File(thumbPath).writeAsBytes(thumbBytes, flush: true);
+        final legacyThumb = SpiderAvatar.legacyThumbnailPath(storedPath);
+        if (File(legacyThumb).existsSync()) {
+          try {
+            File(legacyThumb).deleteSync();
+          } catch (_) {}
+        }
         cachePath = thumbPath;
       }
       if (context.mounted) {
@@ -659,6 +672,12 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
     if (thumbBytes != null) {
       final thumbPath = SpiderAvatar.thumbnailPath(storedPath);
       await File(thumbPath).writeAsBytes(thumbBytes, flush: true);
+      final legacyThumb = SpiderAvatar.legacyThumbnailPath(storedPath);
+      if (File(legacyThumb).existsSync()) {
+        try {
+          File(legacyThumb).deleteSync();
+        } catch (_) {}
+      }
       cachePath = thumbPath;
     }
     if (context.mounted) {
