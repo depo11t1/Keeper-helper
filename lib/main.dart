@@ -1,10 +1,14 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
 
 import 'data/sample_data.dart';
 import 'l10n/app_strings.dart';
@@ -13,6 +17,7 @@ import 'models/spider.dart';
 import 'screens/analytics_placeholder_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/backup_screen.dart';
 import 'screens/spider_detail_screen.dart';
 import 'theme/app_theme.dart';
 
@@ -46,9 +51,11 @@ class _KeeperAppState extends State<KeeperApp> {
   @override
   void initState() {
     super.initState();
-    _settings = buildInitialSettings();
-    _spiders = buildSampleSpiders();
+    _settings = buildInitialSettings(language: _resolveSystemLanguage());
+    _spiders = [];
+    Intl.defaultLocale = AppStrings.of(_settings.language).localeCode;
     _loadState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _precachePhotos());
   }
 
   Future<void> _loadState() async {
@@ -67,6 +74,200 @@ class _KeeperAppState extends State<KeeperApp> {
           .toList();
       Intl.defaultLocale = AppStrings.of(_settings.language).localeCode;
     });
+    _precachePhotos();
+  }
+
+  AppLanguage _resolveSystemLanguage() {
+    final locales = WidgetsBinding.instance.platformDispatcher.locales;
+    for (final locale in locales) {
+      final code = locale.languageCode.toLowerCase();
+      switch (code) {
+        case 'ru':
+          return AppLanguage.ru;
+        case 'en':
+          return AppLanguage.en;
+        case 'hi':
+          return AppLanguage.hi;
+        case 'fr':
+          return AppLanguage.fr;
+        case 'de':
+          return AppLanguage.de;
+        case 'es':
+          return AppLanguage.es;
+        case 'sv':
+          return AppLanguage.sv;
+        case 'nl':
+          return AppLanguage.nl;
+        case 'pt':
+          return AppLanguage.pt;
+        case 'ja':
+          return AppLanguage.ja;
+      }
+    }
+    return AppLanguage.en;
+  }
+
+  void _precachePhotos() {
+    final context = _navigatorKey.currentContext;
+    if (context == null) {
+      return;
+    }
+    for (final spider in _spiders) {
+      final path = spider.photoPath;
+      if (path == null) {
+        continue;
+      }
+      final file = File(path);
+      if (!file.existsSync()) {
+        continue;
+      }
+      precacheImage(FileImage(file), context);
+    }
+  }
+
+  void _openBackupScreen() {
+    final context = _navigatorKey.currentContext;
+    if (context == null) {
+      return;
+    }
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => BackupScreen(
+          language: _settings.language,
+          accent: _settings.accentColor,
+          onExport: _exportBackupToDownloads,
+          onRestore: _restoreFromFile,
+        ),
+      ),
+    );
+  }
+
+  Map<String, dynamic> _buildBackupPayload() {
+    final photos = <String, Map<String, String>>{};
+    for (final spider in _spiders) {
+      final photoPath = spider.photoPath;
+      if (photoPath == null) {
+        continue;
+      }
+      final file = File(photoPath);
+      if (!file.existsSync()) {
+        continue;
+      }
+      final bytes = file.readAsBytesSync();
+      final ext = file.path.split('.').last;
+      photos[spider.id] = {
+        'ext': ext,
+        'data': base64Encode(bytes),
+      };
+    }
+
+    return <String, dynamic>{
+      'version': '1.0.0',
+      'settings': _settings.toJson(),
+      'spiders': _spiders.map((spider) => spider.toJson()).toList(),
+      'photos': photos,
+    };
+  }
+
+  Future<void> _exportBackupToDownloads() async {
+    final context = _navigatorKey.currentContext;
+    if (context == null) {
+      return;
+    }
+    final strings = AppStrings.of(_settings.language);
+    final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-');
+    final targetDir = await _resolveDownloadsDir();
+    final keeperDir = Directory(path.join(targetDir.path, 'Keeper'));
+    if (!keeperDir.existsSync()) {
+      keeperDir.createSync(recursive: true);
+    }
+    final backupPath =
+        path.join(keeperDir.path, 'keeper_backup_$timestamp.json');
+    final payload = _buildBackupPayload();
+    await File(backupPath).writeAsString(jsonEncode(payload));
+  }
+
+  Future<void> _restoreFromFile() async {
+    final context = _navigatorKey.currentContext;
+    if (context == null) {
+      return;
+    }
+    final strings = AppStrings.of(_settings.language);
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        dialogTitle: strings.restore,
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+      );
+      if (result == null || result.files.isEmpty) {
+        return;
+      }
+      final file = File(result.files.single.path!);
+      final raw = await file.readAsString();
+      final data = jsonDecode(raw) as Map<String, dynamic>;
+      final settingsJson = data['settings'] as Map<String, dynamic>? ?? {};
+      final spidersJson = data['spiders'] as List<dynamic>? ?? [];
+      final photos = (data['photos'] as Map<String, dynamic>? ?? {})
+          .map((key, value) => MapEntry(key, value as Map<String, dynamic>));
+
+      final restoredSpiders = spidersJson
+          .map((entry) => SpiderProfile.fromJson(entry as Map<String, dynamic>))
+          .toList();
+
+      final dir = await getApplicationDocumentsDirectory();
+      final photosDir = Directory(path.join(dir.path, 'photos'));
+      if (!photosDir.existsSync()) {
+        photosDir.createSync(recursive: true);
+      }
+
+      for (final spider in restoredSpiders) {
+        final photoEntry = photos[spider.id];
+        if (photoEntry == null) {
+          spider.photoPath = null;
+          continue;
+        }
+        final ext = photoEntry['ext'] as String? ?? 'jpg';
+        final dataString = photoEntry['data'] as String?;
+        if (dataString == null) {
+          continue;
+        }
+        final bytes = base64Decode(dataString);
+        final filename = '${spider.id}.$ext';
+        final targetPath = path.join(photosDir.path, filename);
+        await File(targetPath).writeAsBytes(bytes, flush: true);
+        spider.photoPath = targetPath;
+      }
+
+      setState(() {
+        _settings = AppSettings.fromJson(settingsJson);
+        _spiders = restoredSpiders;
+        Intl.defaultLocale = AppStrings.of(_settings.language).localeCode;
+      });
+      await _saveState();
+      _precachePhotos();
+      _showTopNotice(
+        context,
+        message: strings.restoreDone,
+        accent: keeperPalette(context).accent,
+      );
+    } catch (_) {
+      _showTopNotice(
+        context,
+        message: strings.restoreFailed,
+        accent: keeperPalette(context).accent,
+      );
+    }
+  }
+
+  Future<Directory> _resolveDownloadsDir() async {
+    if (Platform.isAndroid) {
+      return Directory('/storage/emulated/0/Download');
+    }
+    final fallback = await getDownloadsDirectory();
+    if (fallback != null) {
+      return fallback;
+    }
+    return await getApplicationDocumentsDirectory();
   }
 
   Future<void> _saveState() async {
@@ -154,6 +355,7 @@ class _KeeperAppState extends State<KeeperApp> {
                 },
                 onOpenArchive: _openArchiveSheet,
                 onOpenAnalytics: _openAnalyticsSheet,
+                onBackup: _openBackupScreen,
               ),
           ],
         ),
@@ -285,10 +487,23 @@ class _KeeperAppState extends State<KeeperApp> {
               }) {
                 final selected = _settings.sortField == field;
                 final descending = _settings.sortDescending;
+                final usesLatin = switch (_settings.language) {
+                  AppLanguage.en ||
+                  AppLanguage.fr ||
+                  AppLanguage.de ||
+                  AppLanguage.es ||
+                  AppLanguage.pt ||
+                  AppLanguage.nl ||
+                  AppLanguage.sv =>
+                    true,
+                  _ => false,
+                };
                 final label = field == SortField.name
-                    ? (strings.isRu
+                    ? (_settings.language == AppLanguage.ru
                         ? (descending ? 'Я - А' : 'А - Я')
-                        : (descending ? 'Z - A' : 'A - Z'))
+                        : usesLatin
+                            ? (descending ? 'Z - A' : 'A - Z')
+                            : (descending ? '↓' : '↑'))
                     : (descending ? '↓' : '↑');
                 final position = field == SortField.name
                     ? _ArchiveTilePosition.top
@@ -406,6 +621,7 @@ class _KeeperAppState extends State<KeeperApp> {
                 onPhotoChanged: (path) {
                   spider.photoPath = path;
                   refresh();
+                  _precachePhotos();
                 },
                 onSpiderUpdated: (name, latinName, sex) {
                   spider.name = name;
@@ -622,50 +838,39 @@ class _KeeperAppState extends State<KeeperApp> {
                         ),
                       ),
                       const SizedBox(height: 18),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () => Navigator.of(context).pop(),
-                              child: Text(strings.cancel),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: FilledButton(
-                              onPressed: () {
-                                if (formKey.currentState?.validate() != true) {
-                                  return;
-                                }
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton(
+                          onPressed: () {
+                            if (formKey.currentState?.validate() != true) {
+                              return;
+                            }
 
-                                Navigator.of(context).pop(
-                                  SpiderProfile(
-                                    id: DateTime.now()
-                                        .microsecondsSinceEpoch
-                                        .toString(),
-                                    name: nameController.text.trim(),
-                                    latinName: latinController.text.trim(),
-                                    sex: sex,
-                                    humidity: 71,
-                                    avatarSeed: -1,
-                                    accent: _settings.accentColor,
-                                    archived: false,
-                                    feedings: [],
-                                    molts: stage == strings.missingValue
-                                        ? []
-                                        : [
-                                            MoltEntry(
-                                              date: _normalizeDate(DateTime.now()),
-                                              stage: stage,
-                                            ),
-                                          ],
-                                  ),
-                                );
-                              },
-                              child: Text(strings.create),
-                            ),
-                          ),
-                        ],
+                            Navigator.of(context).pop(
+                              SpiderProfile(
+                                id:
+                                    DateTime.now().microsecondsSinceEpoch.toString(),
+                                name: nameController.text.trim(),
+                                latinName: latinController.text.trim(),
+                                sex: sex,
+                                humidity: 71,
+                                avatarSeed: -1,
+                                accent: _settings.accentColor,
+                                archived: false,
+                                feedings: [],
+                                molts: stage == strings.missingValue
+                                    ? []
+                                    : [
+                                        MoltEntry(
+                                          date: _normalizeDate(DateTime.now()),
+                                          stage: stage,
+                                        ),
+                                      ],
+                              ),
+                            );
+                          },
+                          child: Text(strings.create),
+                        ),
                       ),
                     ],
                   ),
@@ -1154,7 +1359,34 @@ class _KeeperAppState extends State<KeeperApp> {
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: nameController,
-                      decoration: InputDecoration(labelText: strings.name),
+                      decoration: InputDecoration(
+                        labelText: strings.name,
+                        filled: true,
+                        fillColor: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerLow,
+                        floatingLabelBehavior: FloatingLabelBehavior.never,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide.none,
+                        ),
+                        errorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedErrorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return strings.enterName;
@@ -1165,7 +1397,34 @@ class _KeeperAppState extends State<KeeperApp> {
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: latinController,
-                      decoration: InputDecoration(labelText: strings.species),
+                      decoration: InputDecoration(
+                        labelText: strings.species,
+                        filled: true,
+                        fillColor: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerLow,
+                        floatingLabelBehavior: FloatingLabelBehavior.never,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide.none,
+                        ),
+                        errorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedErrorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 12),
                     Text(
@@ -1214,33 +1473,23 @@ class _KeeperAppState extends State<KeeperApp> {
                       ),
                     ),
                     const SizedBox(height: 18),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            child: Text(strings.cancel),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: FilledButton(
-                            onPressed: () {
-                              if (formKey.currentState?.validate() != true) {
-                                return;
-                              }
-                              setState(() {
-                                spider.name = nameController.text.trim();
-                                spider.latinName = latinController.text.trim();
-                                spider.sex = sex;
-                              });
-                              _saveState();
-                              Navigator.of(context).pop();
-                            },
-                            child: Text(strings.save),
-                          ),
-                        ),
-                      ],
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: () {
+                          if (formKey.currentState?.validate() != true) {
+                            return;
+                          }
+                          setState(() {
+                            spider.name = nameController.text.trim();
+                            spider.latinName = latinController.text.trim();
+                            spider.sex = sex;
+                          });
+                          _saveState();
+                          Navigator.of(context).pop();
+                        },
+                        child: Text(strings.save),
+                      ),
                     ),
                   ],
                 ),

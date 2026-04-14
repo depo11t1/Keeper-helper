@@ -14,6 +14,7 @@ class SettingsScreen extends StatelessWidget {
     required this.onLanguageChanged,
     required this.onOpenArchive,
     required this.onOpenAnalytics,
+    required this.onBackup,
   });
 
   final Color currentAccent;
@@ -22,6 +23,7 @@ class SettingsScreen extends StatelessWidget {
   final ValueChanged<AppLanguage> onLanguageChanged;
   final VoidCallback onOpenArchive;
   final VoidCallback onOpenAnalytics;
+  final VoidCallback onBackup;
 
   static const accentOptions = [
     Color(0xFFA78BFA),
@@ -132,24 +134,7 @@ class SettingsScreen extends StatelessWidget {
           title: strings.backup,
           backgroundColor: scheme.surfaceContainerLow,
           iconColor: palette.badgeForeground,
-          onTap: () => _showStub(
-            context,
-            strings.backup,
-            strings.archiveStub,
-          ),
-        ),
-        const SizedBox(height: 8),
-        _SettingsActionTile(
-          position: _SettingsBlockPosition.middle,
-          icon: Icons.settings_backup_restore_rounded,
-          title: strings.restore,
-          backgroundColor: scheme.surfaceContainerLow,
-          iconColor: palette.badgeForeground,
-          onTap: () => _showStub(
-            context,
-            strings.restore,
-            strings.restoreStub,
-          ),
+          onTap: onBackup,
         ),
         const SizedBox(height: 8),
         _SettingsActionTile(
@@ -232,7 +217,7 @@ class SettingsScreen extends StatelessWidget {
                   return Padding(
                     padding: EdgeInsets.only(bottom: isLast ? 0 : 8),
                     child: _SettingsActionTile(
-                      icon: Icons.translate_rounded,
+                      icon: null,
                       title: item.$1,
                       position: position,
                       backgroundColor:
@@ -322,7 +307,7 @@ class _SettingsBlockCard extends StatelessWidget {
 
 class _SettingsActionTile extends StatelessWidget {
   const _SettingsActionTile({
-    required this.icon,
+    this.icon,
     required this.title,
     required this.onTap,
     required this.backgroundColor,
@@ -331,7 +316,7 @@ class _SettingsActionTile extends StatelessWidget {
     this.position = _SettingsBlockPosition.single,
   });
 
-  final IconData icon;
+  final IconData? icon;
   final String title;
   final VoidCallback onTap;
   final Color backgroundColor;
@@ -378,8 +363,10 @@ class _SettingsActionTile extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
             child: Row(
               children: [
-                Icon(icon, color: iconColor),
-                const SizedBox(width: 16),
+                if (icon != null) ...[
+                  Icon(icon, color: iconColor),
+                  const SizedBox(width: 16),
+                ],
                 Expanded(
                   child: Text(
                     title,

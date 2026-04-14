@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import '../models/app_settings.dart';
 import '../models/spider.dart';
 
-AppSettings buildInitialSettings() {
+AppSettings buildInitialSettings({
+  AppLanguage? language,
+}) {
   return AppSettings(
     accentColor: const Color(0xFF93C5FD),
-    language: AppLanguage.en,
+    language: language ?? AppLanguage.en,
     analyticsIncludeIds: <String>{},
   );
 }

@@ -631,6 +631,18 @@ class AppStrings {
         ja: '脱皮記録はまだありません',
       );
   String get avgEats => _t(
+        ru: 'В среднем ест',
+        en: 'Average feeding',
+        hi: 'औसतन खाता है',
+        fr: 'Moyenne des nourrissages',
+        de: 'Im Schnitt frisst',
+        es: 'Promedio de alimentación',
+        sv: 'Genomsnittlig matning',
+        nl: 'Gemiddelde voeding',
+        pt: 'Média de alimentação',
+        ja: '平均給餌',
+      );
+  String get avgEatsPlural => _t(
         ru: 'В среднем едят',
         en: 'Average feeding',
         hi: 'औसतन खाते हैं',
@@ -643,6 +655,18 @@ class AppStrings {
         ja: '平均給餌',
       );
   String get avgMolts => _t(
+        ru: 'В среднем линяет',
+        en: 'Average molt',
+        hi: 'औसतन मोल्ट करता है',
+        fr: 'Moyenne des mues',
+        de: 'Im Schnitt häutet',
+        es: 'Promedio de mudas',
+        sv: 'Genomsnittlig ömsning',
+        nl: 'Gemiddelde vervelling',
+        pt: 'Média de mudas',
+        ja: '平均脱皮',
+      );
+  String get avgMoltsPlural => _t(
         ru: 'В среднем линяют',
         en: 'Average molt',
         hi: 'औसतन मोल्ट करते हैं',
@@ -810,6 +834,90 @@ class AppStrings {
         pt: 'Placeholder. Aqui aparecerá a restauração do backup.',
         ja: 'プレースホルダー。ここにバックアップからの復元が表示されます。',
       );
+  String get backupDone => _t(
+        ru: 'Бэкап сохранён',
+        en: 'Backup saved',
+        hi: 'बैकअप सहेजा गया',
+        fr: 'Sauvegarde enregistrée',
+        de: 'Backup gespeichert',
+        es: 'Copia guardada',
+        sv: 'Säkerhetskopia sparad',
+        nl: 'Back-up opgeslagen',
+        pt: 'Backup salvo',
+        ja: 'バックアップを保存しました',
+      );
+  String get restoreDone => _t(
+        ru: 'Бэкап восстановлен',
+        en: 'Backup restored',
+        hi: 'बैकअप पुनर्स्थापित किया गया',
+        fr: 'Sauvegarde restaurée',
+        de: 'Backup wiederhergestellt',
+        es: 'Copia restaurada',
+        sv: 'Säkerhetskopia återställd',
+        nl: 'Back-up hersteld',
+        pt: 'Backup restaurado',
+        ja: 'バックアップを復元しました',
+      );
+  String get exportData => _t(
+        ru: 'Экспорт данных',
+        en: 'Export data',
+        hi: 'डेटा निर्यात',
+        fr: 'Exporter les données',
+        de: 'Daten exportieren',
+        es: 'Exportar datos',
+        sv: 'Exportera data',
+        nl: 'Gegevens exporteren',
+        pt: 'Exportar dados',
+        ja: 'データをエクスポート',
+      );
+  String get exportLocation => _t(
+        ru: 'Данные сохраняются в Downloads/Keeper',
+        en: 'Data is saved to Downloads/Keeper',
+        hi: 'डेटा Downloads/Keeper में सेव होता है',
+        fr: 'Les données sont enregistrées dans Downloads/Keeper',
+        de: 'Daten werden in Downloads/Keeper gespeichert',
+        es: 'Los datos se guardan en Downloads/Keeper',
+        sv: 'Data sparas i Downloads/Keeper',
+        nl: 'Gegevens worden opgeslagen in Downloads/Keeper',
+        pt: 'Os dados são salvos em Downloads/Keeper',
+        ja: 'データはDownloads/Keeperに保存されます',
+      );
+  String get pickBackupFile => _t(
+        ru: 'Восстановить данные из файла',
+        en: 'Restore',
+        hi: 'फ़ाइल से पुनर्स्थापित करें',
+        fr: 'Restaurer depuis un fichier',
+        de: 'Aus Datei wiederherstellen',
+        es: 'Restaurar desde archivo',
+        sv: 'Återställ från fil',
+        nl: 'Herstellen uit bestand',
+        pt: 'Restaurar a partir de arquivo',
+        ja: 'ファイルから復元',
+      );
+  String get chooseFile => _t(
+        ru: 'Выбрать файл',
+        en: 'Choose file',
+        hi: 'फ़ाइल चुनें',
+        fr: 'Choisir un fichier',
+        de: 'Datei wählen',
+        es: 'Elegir archivo',
+        sv: 'Välj fil',
+        nl: 'Bestand kiezen',
+        pt: 'Escolher arquivo',
+        ja: 'ファイルを選択',
+      );
+  String get restoreFailed => _t(
+        ru: 'Не удалось восстановить бэкап',
+        en: 'Failed to restore backup',
+        hi: 'बैकअप पुनर्स्थापित नहीं हो सका',
+        fr: 'Échec de la restauration',
+        de: 'Backup konnte nicht wiederhergestellt werden',
+        es: 'No se pudo restaurar la copia',
+        sv: 'Kunde inte återställa säkerhetskopian',
+        nl: 'Herstellen van back-up mislukt',
+        pt: 'Falha ao restaurar o backup',
+        ja: 'バックアップの復元に失敗しました',
+      );
   String get aboutStub => _t(
         ru: 'Keeper помогает владельцам экзотических животных вести учет кормлений и линек, а также показывает интересную аналитику.',
         en: 'Keeper helps exotic pet owners track feedings and molts and also provides insightful analytics.',
@@ -835,16 +943,16 @@ class AppStrings {
         ja: 'Keeper — ソースコード',
       );
   String get aboutVersion => _t(
-        ru: 'Версия 0.9.1',
-        en: 'Version 0.9.1',
-        hi: 'संस्करण 0.9.1',
-        fr: 'Version 0.9.1',
-        de: 'Version 0.9.1',
-        es: 'Versión 0.9.1',
-        sv: 'Version 0.9.1',
-        nl: 'Versie 0.9.1',
-        pt: 'Versão 0.9.1',
-        ja: 'バージョン 0.9.1',
+        ru: 'Версия 1.0.0',
+        en: 'Version 1.0.0',
+        hi: 'संस्करण 1.0.0',
+        fr: 'Version 1.0.0',
+        de: 'Version 1.0.0',
+        es: 'Versión 1.0.0',
+        sv: 'Version 1.0.0',
+        nl: 'Versie 1.0.0',
+        pt: 'Versão 1.0.0',
+        ja: 'バージョン 1.0.0',
       );
   String get enterName => _t(
         ru: 'Введите имя',

@@ -386,9 +386,9 @@ class _AverageBars extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        buildRow(strings.avgEats, feedAverage),
+        buildRow(strings.avgEatsPlural, feedAverage),
         const SizedBox(height: 14),
-        buildRow(strings.avgMolts, moltAverage),
+        buildRow(strings.avgMoltsPlural, moltAverage),
         const SizedBox(height: 10),
         Text(
           strings.isRu
@@ -463,7 +463,7 @@ class _AnalyticsHero extends StatelessWidget {
             children: [
               Expanded(
                 child: _HeroStatPill(
-                  label: strings.avgEats,
+                  label: strings.avgEatsPlural,
                   value: feedAverage == null
                       ? strings.littleData
                       : strings.everyDays(feedAverage!),
@@ -477,7 +477,7 @@ class _AnalyticsHero extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: _HeroStatPill(
-                  label: strings.avgMolts,
+                  label: strings.avgMoltsPlural,
                   value: moltAverage == null
                       ? strings.littleData
                       : strings.everyDays(moltAverage!),

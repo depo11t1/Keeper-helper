@@ -482,34 +482,84 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
       context: context,
       backgroundColor: palette.background,
       builder: (context) {
+        Widget buildAction({
+          required String title,
+          required IconData icon,
+          required VoidCallback onTap,
+          required _DetailGroupPosition position,
+          Color? background,
+          Color? foreground,
+        }) {
+          final theme = Theme.of(context);
+          final tileRadius = switch (position) {
+            _DetailGroupPosition.single => BorderRadius.circular(22),
+            _DetailGroupPosition.top => const BorderRadius.only(
+                topLeft: Radius.circular(22),
+                topRight: Radius.circular(22),
+                bottomLeft: Radius.circular(10),
+                bottomRight: Radius.circular(10),
+              ),
+            _DetailGroupPosition.middle => BorderRadius.circular(10),
+            _DetailGroupPosition.bottom => const BorderRadius.only(
+                topLeft: Radius.circular(10),
+                topRight: Radius.circular(10),
+                bottomLeft: Radius.circular(22),
+                bottomRight: Radius.circular(22),
+              ),
+          };
+
+          return Material(
+            color: background ?? theme.colorScheme.surfaceContainerLow,
+            borderRadius: tileRadius,
+            child: InkWell(
+              borderRadius: tileRadius,
+              onTap: onTap,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                child: Row(
+                  children: [
+                    Icon(icon, color: foreground ?? palette.textPrimary),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w400,
+                          color: foreground ?? palette.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+
         return Padding(
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              ListTile(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                tileColor: Theme.of(context).colorScheme.surfaceContainerLow,
-                leading: const Icon(Icons.photo_camera_back_rounded),
-                title: Text(strings.changePhoto),
+              buildAction(
+                title: strings.changePhoto,
+                icon: Icons.photo_camera_back_rounded,
+                position: _DetailGroupPosition.top,
                 onTap: () {
                   Navigator.of(context).pop();
                   _pickPhoto();
                 },
               ),
               const SizedBox(height: 8),
-              ListTile(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                tileColor:
-                    Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.34),
-                iconColor: Theme.of(context).colorScheme.error,
-                textColor: Theme.of(context).colorScheme.error,
-                leading: const Icon(Icons.delete_outline_rounded),
-                title: Text(strings.removePhoto),
+              buildAction(
+                title: strings.removePhoto,
+                icon: Icons.delete_outline_rounded,
+                position: _DetailGroupPosition.bottom,
+                background: Theme.of(context)
+                    .colorScheme
+                    .errorContainer
+                    .withValues(alpha: 0.34),
+                foreground: Theme.of(context).colorScheme.error,
                 onTap: () {
                   if (widget.spider.photoPath != null) {
                     try {
@@ -704,7 +754,33 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: nameController,
-                      decoration: InputDecoration(labelText: strings.name),
+                      decoration: InputDecoration(
+                        labelText: strings.name,
+                        filled: true,
+                        fillColor:
+                            Theme.of(context).colorScheme.surfaceContainerLow,
+                        floatingLabelBehavior: FloatingLabelBehavior.never,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide.none,
+                        ),
+                        errorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedErrorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
                       validator: (value) =>
                           value == null || value.trim().isEmpty
                               ? strings.enterName
@@ -713,7 +789,33 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: latinController,
-                      decoration: InputDecoration(labelText: strings.species),
+                      decoration: InputDecoration(
+                        labelText: strings.species,
+                        filled: true,
+                        fillColor:
+                            Theme.of(context).colorScheme.surfaceContainerLow,
+                        floatingLabelBehavior: FloatingLabelBehavior.never,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide.none,
+                        ),
+                        errorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedErrorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 12),
                     Text(
@@ -793,46 +895,132 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
     List<MoltEntry> sortedEntries,
   ) async {
     final strings = AppStrings.of(widget.language);
-    final picked = await _showThemedDatePicker(
-      context: context,
-      initialDate: entry.date,
-      language: widget.language,
-    );
-    if (picked == null || !context.mounted) {
-      return;
-    }
+    final palette = keeperPalette(context);
+    DateTime selectedDate = entry.date;
+    String stage = entry.stage;
 
-    var stage = entry.stage;
-    await showDialog<void>(
+    await showModalBottomSheet<void>(
       context: context,
+      backgroundColor: palette.background,
+      isScrollControlled: true,
       builder: (context) {
-        return AlertDialog(
-          title: Text(strings.editMolt),
-          content: StatefulBuilder(
-            builder: (context, setState) {
-              return InputDecorator(
-                decoration: InputDecoration(
-                  labelText: strings.age,
+        Widget buildTile({
+          required String title,
+          required String value,
+          required VoidCallback onTap,
+          required _DetailGroupPosition position,
+        }) {
+          final radius = switch (position) {
+            _DetailGroupPosition.single => BorderRadius.circular(18),
+            _DetailGroupPosition.top => const BorderRadius.only(
+                topLeft: Radius.circular(18),
+                topRight: Radius.circular(18),
+                bottomLeft: Radius.circular(10),
+                bottomRight: Radius.circular(10),
+              ),
+            _DetailGroupPosition.middle => BorderRadius.circular(10),
+            _DetailGroupPosition.bottom => const BorderRadius.only(
+                topLeft: Radius.circular(10),
+                topRight: Radius.circular(10),
+                bottomLeft: Radius.circular(18),
+                bottomRight: Radius.circular(18),
+              ),
+          };
+
+          return Material(
+            color: Theme.of(context).colorScheme.surfaceContainerLow,
+            borderRadius: radius,
+            child: InkWell(
+              borderRadius: radius,
+              onTap: onTap,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              fontWeight: FontWeight.w500,
+                            ),
+                      ),
+                    ),
+                    Text(
+                      value,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: keeperPalette(context).textPrimary,
+                          ),
+                    ),
+                    const SizedBox(width: 6),
+                    const Icon(Icons.keyboard_arrow_down_rounded),
+                  ],
                 ),
-                child: Text(stage),
+              ),
+            ),
+          );
+        }
+
+        return Padding(
+          padding: EdgeInsets.fromLTRB(
+            20,
+            20,
+            20,
+            MediaQuery.of(context).viewInsets.bottom + 24,
+          ),
+          child: StatefulBuilder(
+            builder: (context, setLocalState) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  buildTile(
+                    title: strings.moltLabel,
+                    value: stage,
+                    position: _DetailGroupPosition.top,
+                    onTap: () async {
+                      final pickedStage = await _pickMoltStage(
+                        context,
+                        stage,
+                        strings,
+                      );
+                      if (pickedStage != null) {
+                        setLocalState(() => stage = pickedStage);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  buildTile(
+                    title: strings.dateLabel,
+                    value: DateFormat('d MMMM yyyy', strings.localeCode)
+                        .format(selectedDate),
+                    position: _DetailGroupPosition.bottom,
+                    onTap: () async {
+                      final picked = await _showThemedDatePicker(
+                        context: context,
+                        initialDate: selectedDate,
+                        language: widget.language,
+                      );
+                      if (picked != null) {
+                        setLocalState(() => selectedDate = picked);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: () {
+                        final originalIndex = sortedEntries.indexOf(entry);
+                        widget.onMoltEdited(originalIndex, selectedDate, stage);
+                        Navigator.of(context).pop();
+                        setState(() {});
+                      },
+                      child: Text(strings.save),
+                    ),
+                  ),
+                ],
               );
             },
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(strings.cancel),
-            ),
-            FilledButton(
-              onPressed: () {
-                final originalIndex = sortedEntries.indexOf(entry);
-                widget.onMoltEdited(originalIndex, picked, stage);
-                Navigator.of(context).pop();
-                setState(() {});
-              },
-              child: Text(strings.save),
-            ),
-          ],
         );
       },
     );
@@ -1122,4 +1310,96 @@ Future<DateTime?> _showThemedDatePicker({
       );
     },
   );
+}
+
+Future<String?> _pickMoltStage(
+  BuildContext context,
+  String current,
+  AppStrings strings,
+) async {
+  final palette = keeperPalette(context);
+  final stages = [
+    'L1',
+    'L2',
+    'L3',
+    'L4',
+    'L5',
+    'L6',
+    'L7',
+    'L8',
+    'L9',
+    'L10',
+    'L11',
+    'L12',
+    'L13',
+    'L14',
+    'L15',
+  ];
+  final options = <String>[strings.dontKnow, ...stages];
+  final currentIndex = options.indexOf(current);
+  var selected = currentIndex == -1 ? 0 : currentIndex;
+
+  final result = await showModalBottomSheet<String?>(
+    context: context,
+    backgroundColor: palette.background,
+    isScrollControlled: true,
+    builder: (context) {
+      return SizedBox(
+        height: MediaQuery.of(context).size.height * 0.5,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          child: Column(
+            children: [
+              Expanded(
+                child: ListWheelScrollView.useDelegate(
+                  itemExtent: 44,
+                  physics: const FixedExtentScrollPhysics(),
+                  onSelectedItemChanged: (index) => selected = index,
+                  controller: FixedExtentScrollController(initialItem: selected),
+                  childDelegate: ListWheelChildBuilderDelegate(
+                    builder: (context, index) {
+                      if (index < 0 || index >= options.length) {
+                        return null;
+                      }
+                      final isActive = index == selected;
+                      return Center(
+                        child: Text(
+                          options[index],
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontSize: isActive ? 22 : 18,
+                                    fontWeight: isActive
+                                        ? FontWeight.w600
+                                        : FontWeight.w400,
+                                    color: isActive
+                                        ? palette.accent
+                                        : Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.color,
+                                  ),
+                        ),
+                      );
+                    },
+                    childCount: options.length,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () =>
+                      Navigator.of(context).pop(options[selected]),
+                  child: Text(strings.choose),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+
+  return result ?? (current == strings.missingValue ? null : current);
 }
