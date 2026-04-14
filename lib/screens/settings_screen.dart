@@ -38,17 +38,27 @@ class SettingsScreen extends StatelessWidget {
     final scheme = theme.colorScheme;
     final strings = AppStrings.of(currentLanguage);
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
-      children: [
-        Text(
-          strings.settings,
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w700,
+    return CustomScrollView(
+      slivers: [
+        SliverAppBar(
+          pinned: true,
+          backgroundColor: palette.background,
+          surfaceTintColor: Colors.transparent,
+          toolbarHeight: 64,
+          titleSpacing: 20,
+          title: Text(
+            strings.settings,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
-        const SizedBox(height: 18),
-        _SettingsBlockCard(
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate(
+              [
+                _SettingsBlockCard(
           color: scheme.surfaceContainerLow,
           padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
           child: Row(
@@ -154,6 +164,10 @@ class SettingsScreen extends StatelessWidget {
             strings.aboutStub,
           ),
         ),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -180,7 +194,7 @@ class SettingsScreen extends StatelessWidget {
     final palette = keeperPalette(context);
     return showModalBottomSheet<void>(
       context: context,
-      backgroundColor: palette.surface,
+      backgroundColor: palette.background,
       builder: (context) {
         return Padding(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
@@ -332,7 +346,7 @@ class _SettingsActionTile extends StatelessWidget {
                   child: Text(
                     title,
                     style: theme.textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.w400,
                     ),
                   ),
                 ),

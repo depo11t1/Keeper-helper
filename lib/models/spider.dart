@@ -68,7 +68,8 @@ class SpiderProfile {
     this.archived = false,
     this.archivedAt,
     this.photoPath,
-  });
+    DateTime? createdAt,
+  }) : createdAt = createdAt ?? DateTime.now();
 
   final String id;
   String name;
@@ -80,6 +81,7 @@ class SpiderProfile {
   bool archived;
   DateTime? archivedAt;
   String? photoPath;
+  DateTime createdAt;
   final List<FeedingEntry> feedings;
   final List<MoltEntry> molts;
 
@@ -97,6 +99,7 @@ class SpiderProfile {
         'archived': archived,
         'archivedAt': archivedAt?.toIso8601String(),
         'photoPath': photoPath,
+        'createdAt': createdAt.toIso8601String(),
         'feedings': feedings.map((entry) => entry.toJson()).toList(),
         'molts': molts.map((entry) => entry.toJson()).toList(),
       };
@@ -115,6 +118,9 @@ class SpiderProfile {
           ? null
           : DateTime.parse(json['archivedAt'] as String),
       photoPath: json['photoPath'] as String?,
+      createdAt: json['createdAt'] == null
+          ? DateTime.now()
+          : DateTime.parse(json['createdAt'] as String),
       feedings: (json['feedings'] as List<dynamic>? ?? [])
           .map((entry) => FeedingEntry.fromJson(entry as Map<String, dynamic>))
           .toList(),

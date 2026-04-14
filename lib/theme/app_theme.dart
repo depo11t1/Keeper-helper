@@ -270,6 +270,7 @@ ThemeData buildKeeperTheme(Color accentColor) {
       backgroundColor: palette.surfaceHigher,
       contentTextStyle: TextStyle(color: palette.textPrimary),
       behavior: SnackBarBehavior.floating,
+      elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18),
       ),

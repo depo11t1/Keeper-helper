@@ -25,6 +25,7 @@ List<SpiderProfile> buildSampleSpiders() {
       accent: const Color(0xFF86EFAC),
       archived: false,
       archivedAt: null,
+      createdAt: now.subtract(const Duration(days: 60)),
       feedings: [
         FeedingEntry(date: now.subtract(const Duration(days: 2))),
         FeedingEntry(date: now.subtract(const Duration(days: 8))),
@@ -47,6 +48,7 @@ List<SpiderProfile> buildSampleSpiders() {
       accent: const Color(0xFF7EC8FF),
       archived: false,
       archivedAt: null,
+      createdAt: now.subtract(const Duration(days: 40)),
       feedings: [
         FeedingEntry(date: now.subtract(const Duration(days: 5))),
         FeedingEntry(date: now.subtract(const Duration(days: 11))),
@@ -69,6 +71,7 @@ List<SpiderProfile> buildSampleSpiders() {
       accent: const Color(0xFFFFB86C),
       archived: false,
       archivedAt: null,
+      createdAt: now.subtract(const Duration(days: 20)),
       feedings: [
         FeedingEntry(date: now.subtract(const Duration(days: 1))),
         FeedingEntry(date: now.subtract(const Duration(days: 7))),

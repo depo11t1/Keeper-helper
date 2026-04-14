@@ -10,6 +10,8 @@ class SpiderCard extends StatelessWidget {
     required this.spider,
     required this.globalAccent,
     required this.speciesLabel,
+    required this.feedingTitle,
+    required this.moltTitle,
     required this.sex,
     required this.onTap,
     required this.onLongPress,
@@ -22,6 +24,8 @@ class SpiderCard extends StatelessWidget {
   final SpiderProfile spider;
   final Color globalAccent;
   final String speciesLabel;
+  final String feedingTitle;
+  final String moltTitle;
   final SpiderSex sex;
   final VoidCallback onTap;
   final VoidCallback onLongPress;
@@ -50,6 +54,11 @@ class SpiderCard extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         onLongPress: onLongPress,
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        hoverColor: Colors.transparent,
+        overlayColor: WidgetStateProperty.all(Colors.transparent),
+        splashFactory: NoSplash.splashFactory,
         borderRadius: BorderRadius.circular(28),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
@@ -119,7 +128,7 @@ class SpiderCard extends StatelessWidget {
                 children: [
                   Flexible(
                     child: _StatusPanel(
-                      title: 'Кормление',
+                      title: feedingTitle,
                       value: relativeLastFeeding,
                       icon: Icons.restaurant_rounded,
                       color: primaryPanel,
@@ -128,9 +137,9 @@ class SpiderCard extends StatelessWidget {
                   const SizedBox(width: 10),
                   Flexible(
                     child: _StatusPanel(
-                      title: 'Линька',
+                      title: moltTitle,
                       value: lastMoltLabel,
-                      icon: Icons.science_rounded,
+                      icon: Icons.autorenew_rounded,
                       color: secondaryPanel,
                     ),
                   ),

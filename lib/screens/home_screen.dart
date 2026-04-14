@@ -19,6 +19,7 @@ class HomeScreen extends StatelessWidget {
     required this.onFeedTap,
     required this.onFeedLongPress,
     required this.onCreateSpider,
+    required this.onOpenSort,
   });
 
   final List<SpiderProfile> spiders;
@@ -29,6 +30,7 @@ class HomeScreen extends StatelessWidget {
   final ValueChanged<SpiderProfile> onFeedTap;
   final ValueChanged<SpiderProfile> onFeedLongPress;
   final VoidCallback onCreateSpider;
+  final VoidCallback onOpenSort;
 
   @override
   Widget build(BuildContext context) {
@@ -36,22 +38,7 @@ class HomeScreen extends StatelessWidget {
     final palette = keeperPalette(context);
     final strings = AppStrings.of(language);
 
-    // Кто дольше не ел, тот выше в списке.
-    final sortedSpiders = spiders.toList()
-      ..sort((a, b) {
-        final aDate = a.lastFeeding?.date;
-        final bDate = b.lastFeeding?.date;
-        if (aDate == null && bDate == null) {
-          return 0;
-        }
-        if (aDate == null) {
-          return -1;
-        }
-        if (bDate == null) {
-          return 1;
-        }
-        return aDate.compareTo(bDate);
-      });
+    final sortedSpiders = spiders;
 
     return Stack(
       children: [
@@ -65,28 +52,38 @@ class HomeScreen extends StatelessWidget {
               titleSpacing: 20,
               title: Text(
                 strings.appTitle,
-                style: theme.textTheme.titleMedium?.copyWith(
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontSize: 24,
                   color: palette.textPrimary.withValues(alpha: 0.92),
                   fontWeight: FontWeight.w700,
                 ),
               ),
+              actions: [
+                IconButton(
+                  onPressed: onOpenSort,
+                  icon: const Icon(Icons.sort_rounded),
+                ),
+                const SizedBox(width: 8),
+              ],
             ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 110),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 110),
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
                     final spider = sortedSpiders[index];
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 14),
-                      child: SpiderCard(
-                        spider: spider,
-                        globalAccent: accent,
-                        speciesLabel: spider.latinName.trim().isEmpty
-                            ? strings.speciesPlaceholder
-                            : spider.latinName,
-                        sex: spider.sex,
-                        onTap: () => onSpiderTap(spider),
+                        child: SpiderCard(
+                          spider: spider,
+                          globalAccent: accent,
+                          speciesLabel: spider.latinName.trim().isEmpty
+                              ? strings.speciesPlaceholder
+                              : spider.latinName,
+                          feedingTitle: strings.feeding,
+                          moltTitle: strings.molts,
+                          sex: spider.sex,
+                          onTap: () => onSpiderTap(spider),
                         onLongPress: () => onSpiderLongPress(spider),
                         onFeedTap: () => onFeedTap(spider),
                         onFeedLongPress: () => onFeedLongPress(spider),

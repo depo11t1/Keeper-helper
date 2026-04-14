@@ -2,6 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
+import 'package:file_picker/file_picker.dart';
 
 import '../l10n/app_strings.dart';
 import '../models/app_settings.dart';
@@ -249,6 +252,7 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
             curve: Curves.easeInOut,
             alignment: Alignment.topCenter,
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: List.generate(visibleFeedings.length, (index) {
                 final entry = visibleFeedings[index];
                 return Padding(
@@ -266,12 +270,9 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
                     accent: widget.globalAccent,
                     color: scheme.surfaceContainerLow,
                     onEdit: () async {
-                      final picked = await showDatePicker(
+                      final picked = await _showThemedDatePicker(
                         context: context,
                         initialDate: entry.date,
-                        firstDate: DateTime(2020),
-                        lastDate: DateTime.now().add(const Duration(days: 1)),
-                        locale: const Locale('ru'),
                       );
                       if (picked != null) {
                         final originalIndex = feedings.indexOf(entry);
@@ -280,9 +281,15 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
                       }
                     },
                     onDelete: () {
-                      final originalIndex = feedings.indexOf(entry);
-                      widget.onFeedingDeleted(originalIndex);
-                      setState(() {});
+                      _confirmDeleteEntry(
+                        context,
+                        title: strings.feeding,
+                        onConfirm: () {
+                          final originalIndex = feedings.indexOf(entry);
+                          widget.onFeedingDeleted(originalIndex);
+                          setState(() {});
+                        },
+                      );
                     },
                   ),
                 );
@@ -310,7 +317,7 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
           const SizedBox(height: 18),
           _SectionHeader(
             title: strings.molts,
-            trailing: FilledButton.icon(
+            trailing: FilledButton.tonal(
               onPressed: () async {
                 await widget.onMoltAdded();
                 if (mounted) {
@@ -318,16 +325,15 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
                 }
               },
               style: FilledButton.styleFrom(
-                backgroundColor: palette.badgeBackground,
-                foregroundColor: palette.badgeForeground,
-                minimumSize: const Size(0, 40),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                backgroundColor: palette.accent,
+                foregroundColor: scheme.onPrimary,
+                minimumSize: const Size(40, 40),
+                padding: EdgeInsets.zero,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(14),
                 ),
               ),
-              icon: const Icon(Icons.add_rounded),
-              label: Text(strings.create),
+              child: const Icon(Icons.add_rounded, size: 22),
             ),
           ),
           const SizedBox(height: 10),
@@ -359,6 +365,7 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
             curve: Curves.easeInOut,
             alignment: Alignment.topCenter,
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: List.generate(visibleMolts.length, (index) {
                 final entry = visibleMolts[index];
                 return Padding(
@@ -378,9 +385,15 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
                     color: scheme.surfaceContainerLow,
                     onEdit: () => _showEditMoltDialog(context, entry, molts),
                     onDelete: () {
-                      final originalIndex = molts.indexOf(entry);
-                      widget.onMoltDeleted(originalIndex);
-                      setState(() {});
+                      _confirmDeleteEntry(
+                        context,
+                        title: strings.molts,
+                        onConfirm: () {
+                          final originalIndex = molts.indexOf(entry);
+                          widget.onMoltDeleted(originalIndex);
+                          setState(() {});
+                        },
+                      );
                     },
                   ),
                 );
@@ -412,9 +425,10 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
 
   Future<void> _showAvatarSheet(BuildContext context) async {
     final palette = keeperPalette(context);
+    final strings = AppStrings.of(widget.language);
     await showModalBottomSheet<void>(
       context: context,
-      backgroundColor: palette.surface,
+      backgroundColor: palette.background,
       builder: (context) {
         return Padding(
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
@@ -423,7 +437,7 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Выбрать фото-стиль',
+                strings.photoStyle,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
@@ -458,9 +472,10 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
   Future<void> _showAvatarActions(BuildContext context) async {
     // Фото меняется не отдельной кнопкой, а по нажатию на саму аватарку.
     final palette = keeperPalette(context);
+    final strings = AppStrings.of(widget.language);
     await showModalBottomSheet<void>(
       context: context,
-      backgroundColor: palette.surface,
+      backgroundColor: palette.background,
       builder: (context) {
         return Padding(
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
@@ -473,7 +488,7 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
                 ),
                 tileColor: Theme.of(context).colorScheme.surfaceContainerLow,
                 leading: const Icon(Icons.photo_camera_back_rounded),
-                title: const Text('Изменить фото'),
+                title: Text(strings.changePhoto),
                 onTap: () {
                   Navigator.of(context).pop();
                   _pickPhoto();
@@ -489,8 +504,13 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
                 iconColor: Theme.of(context).colorScheme.error,
                 textColor: Theme.of(context).colorScheme.error,
                 leading: const Icon(Icons.delete_outline_rounded),
-                title: const Text('Удалить фото'),
+                title: Text(strings.removePhoto),
                 onTap: () {
+                  if (widget.spider.photoPath != null) {
+                    try {
+                      File(widget.spider.photoPath!).deleteSync();
+                    } catch (_) {}
+                  }
                   widget.onPhotoChanged(null);
                   widget.onAvatarChanged(-1);
                   setState(() {});
@@ -504,30 +524,85 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
     );
   }
 
+  Future<void> _confirmDeleteEntry(
+    BuildContext context, {
+    required String title,
+    required VoidCallback onConfirm,
+  }) async {
+    final strings = AppStrings.of(widget.language);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(strings.delete),
+          content: Text('${strings.delete} $title?'),
+          actionsAlignment: MainAxisAlignment.end,
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(strings.delete),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true) {
+      onConfirm();
+    }
+  }
+
   Future<void> _pickPhoto() async {
-    if (!Platform.isAndroid && !Platform.isIOS) {
-      _showPhotoUnavailable();
+    if (Platform.isAndroid || Platform.isIOS) {
+      final picked = await _imagePicker.pickImage(source: ImageSource.gallery);
+      if (picked == null) {
+        return;
+      }
+      final storedPath = await _storePhoto(picked.path);
+      widget.onPhotoChanged(storedPath);
+      setState(() {});
       return;
     }
-    final picked = await _imagePicker.pickImage(source: ImageSource.gallery);
-    if (picked == null) {
+
+    final result = await FilePicker.platform.pickFiles(type: FileType.image);
+    final pathPicked = result?.files.single.path;
+    if (pathPicked == null) {
       return;
     }
-    widget.onPhotoChanged(picked.path);
+    final storedPath = await _storePhoto(pathPicked);
+    widget.onPhotoChanged(storedPath);
     setState(() {});
   }
 
+  Future<String> _storePhoto(String sourcePath) async {
+    final dir = await getApplicationDocumentsDirectory();
+    final photosDir = Directory(path.join(dir.path, 'photos'));
+    if (!photosDir.existsSync()) {
+      photosDir.createSync(recursive: true);
+    }
+    final filename =
+        'spider_${widget.spider.id}_${DateTime.now().millisecondsSinceEpoch}${path.extension(sourcePath)}';
+    final targetPath = path.join(photosDir.path, filename);
+    final copied = await File(sourcePath).copy(targetPath);
+    return copied.path;
+  }
+
   void _showPhotoUnavailable() {
+    final strings = AppStrings.of(widget.language);
     showDialog<void>(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Фото'),
-          content: const Text('Выбор фото доступен только на мобильных устройствах.'),
+          title: Text(strings.photoStyle),
+          content: Text(
+            strings.isRu
+                ? 'Выбор фото доступен только на мобильных устройствах.'
+                : 'Photo picking is available only on mobile devices.',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Ок'),
+              child: Text(strings.ok),
             ),
           ],
         );
@@ -538,27 +613,22 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
   Future<void> _showHumiditySheet(BuildContext context) async {
     // Влажность задается в процентах через slider.
     final palette = keeperPalette(context);
+    final strings = AppStrings.of(widget.language);
     double humidity = widget.spider.humidity.toDouble();
 
     await showModalBottomSheet<void>(
       context: context,
-      backgroundColor: palette.surface,
+      backgroundColor: palette.background,
+      isScrollControlled: true,
       builder: (context) {
         return Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
           child: StatefulBuilder(
             builder: (context, setSheetState) {
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Влажность',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                  ),
-                  const SizedBox(height: 12),
                   Text(
                     '${humidity.round()}%',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -574,14 +644,14 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
                       setSheetState(() => humidity = value);
                     },
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   FilledButton(
                     onPressed: () {
                       widget.onHumidityUpdated(humidity.round());
                       setState(() {});
                       Navigator.of(context).pop();
                     },
-                    child: const Text('Сохранить'),
+                    child: Text(strings.save),
                   ),
                 ],
               );
@@ -598,10 +668,12 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
     final latinController = TextEditingController(text: widget.spider.latinName);
     final formKey = GlobalKey<FormState>();
     var sex = widget.spider.sex;
+    final strings = AppStrings.of(widget.language);
 
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      backgroundColor: keeperPalette(context).background,
       builder: (context) {
         return Padding(
           padding: EdgeInsets.fromLTRB(
@@ -619,7 +691,7 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Редактировать паука',
+                      strings.editSpider,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.w700,
                           ),
@@ -627,39 +699,41 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: nameController,
-                      decoration: const InputDecoration(labelText: 'Имя'),
+                      decoration: InputDecoration(labelText: strings.name),
                       validator: (value) =>
-                          value == null || value.trim().isEmpty ? 'Введите имя' : null,
+                          value == null || value.trim().isEmpty
+                              ? strings.enterName
+                              : null,
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: latinController,
-                      decoration: const InputDecoration(labelText: 'Вид'),
+                      decoration: InputDecoration(labelText: strings.species),
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Пол',
+                      strings.sex,
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 10),
                     SizedBox(
                       width: double.infinity,
                       child: SegmentedButton<SpiderSex>(
-                        segments: const [
+                        segments: [
                           ButtonSegment(
                             value: SpiderSex.female,
-                            label: Text('Самка'),
-                            icon: Icon(Icons.female_rounded),
+                            label: Text(strings.female),
+                            icon: const Icon(Icons.female_rounded),
                           ),
                           ButtonSegment(
                             value: SpiderSex.male,
-                            label: Text('Самец'),
-                            icon: Icon(Icons.male_rounded),
+                            label: Text(strings.male),
+                            icon: const Icon(Icons.male_rounded),
                           ),
                           ButtonSegment(
                             value: SpiderSex.unknown,
-                            label: Text('Не знаю'),
-                            icon: Icon(Icons.help_outline_rounded),
+                            label: Text(strings.dontKnow),
+                            icon: const Icon(Icons.help_outline_rounded),
                           ),
                         ],
                         selected: {sex},
@@ -668,7 +742,16 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
                         },
                         style: ButtonStyle(
                           padding: WidgetStateProperty.all(
-                            const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                          ),
+                          side: WidgetStateProperty.all(BorderSide.none),
+                          backgroundColor: WidgetStateProperty.all(
+                            Theme.of(context).colorScheme.surfaceContainerLow,
+                          ),
+                          shape: WidgetStateProperty.all(
+                            RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(18),
+                            ),
                           ),
                         ),
                       ),
@@ -687,7 +770,7 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
                         setState(() {});
                         Navigator.of(context).pop();
                       },
-                      child: const Text('Сохранить'),
+                      child: Text(strings.save),
                     ),
                   ],
                 ),
@@ -704,12 +787,10 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
     MoltEntry entry,
     List<MoltEntry> sortedEntries,
   ) async {
-    final picked = await showDatePicker(
+    final strings = AppStrings.of(widget.language);
+    final picked = await _showThemedDatePicker(
       context: context,
       initialDate: entry.date,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now().add(const Duration(days: 1)),
-      locale: const Locale('ru'),
     );
     if (picked == null || !context.mounted) {
       return;
@@ -720,12 +801,12 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Изменить линьку'),
+          title: Text(strings.editMolt),
           content: StatefulBuilder(
             builder: (context, setState) {
               return InputDecorator(
-                decoration: const InputDecoration(
-                  labelText: 'Возраст',
+                decoration: InputDecoration(
+                  labelText: strings.age,
                 ),
                 child: Text(stage),
               );
@@ -734,7 +815,7 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Отмена'),
+              child: Text(strings.cancel),
             ),
             FilledButton(
               onPressed: () {
@@ -743,7 +824,7 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
                 Navigator.of(context).pop();
                 setState(() {});
               },
-              child: const Text('Сохранить'),
+              child: Text(strings.save),
             ),
           ],
         );
@@ -802,41 +883,66 @@ class _EditableDateTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final palette = keeperPalette(context);
-    return _DetailGroupCard(
-      position: position,
-      color: color,
-      padding: EdgeInsets.zero,
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
-        minVerticalPadding: 0,
-        title: Text(
-          title,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w500,
-            color: palette.textPrimary,
-          ),
-        ),
-        subtitle: subtitle == null
-            ? null
-            : Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  subtitle!,
-                  style: TextStyle(color: palette.textMuted),
-                ),
-              ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
+    final iconTone = Color.alphaBlend(
+      palette.badgeBackground.withValues(alpha: 0.38),
+      color,
+    );
+    return SizedBox(
+      width: double.infinity,
+      child: _DetailGroupCard(
+        position: position,
+        color: color,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        child: Stack(
           children: [
-            IconButton(
-              onPressed: onEdit,
-              icon: Icon(Icons.edit_rounded, color: palette.textPrimary),
+            Padding(
+              padding: const EdgeInsets.only(right: 88),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w500,
+                    color: palette.textPrimary,
+                  ),
+                ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle!,
+                      style: TextStyle(color: palette.textMuted),
+                    ),
+                  ],
+                ],
+              ),
             ),
-            IconButton(
-              onPressed: onDelete,
-              icon: Icon(
-                Icons.delete_outline_rounded,
-                color: palette.textMuted,
+            Positioned(
+              right: 0,
+              top: 0,
+              bottom: 0,
+              child: Row(
+                children: [
+                  IconButton(
+                    onPressed: onEdit,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                    visualDensity: VisualDensity.compact,
+                    icon: Icon(Icons.edit_rounded, color: iconTone),
+                  ),
+                  const SizedBox(width: 10),
+                  IconButton(
+                    onPressed: onDelete,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                    visualDensity: VisualDensity.compact,
+                    icon: Icon(
+                      Icons.delete_outline_rounded,
+                      color: iconTone,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -970,4 +1076,50 @@ String _sexLabel(SpiderSex sex) {
     SpiderSex.male => 'Самец',
     SpiderSex.unknown => 'Пол неизвестен',
   };
+}
+
+Future<DateTime?> _showThemedDatePicker({
+  required BuildContext context,
+  required DateTime initialDate,
+}) {
+  final palette = keeperPalette(context);
+  final base = Theme.of(context);
+  return showDatePicker(
+    context: context,
+    initialDate: initialDate,
+    firstDate: DateTime(2020),
+    lastDate: DateTime.now().add(const Duration(days: 1)),
+    locale: const Locale('ru'),
+    builder: (context, child) {
+      return Theme(
+        data: base.copyWith(
+          colorScheme: base.colorScheme.copyWith(
+            primary: palette.accent,
+            onPrimary: base.colorScheme.onPrimary,
+            surface: palette.surface,
+            onSurface: palette.textPrimary,
+          ),
+          dialogTheme: DialogThemeData(
+            backgroundColor: palette.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+            ),
+          ),
+          datePickerTheme: DatePickerThemeData(
+            backgroundColor: palette.surface,
+            headerBackgroundColor: palette.surfaceHigh,
+            headerForegroundColor: palette.textPrimary,
+            dayForegroundColor: WidgetStateProperty.all(palette.textPrimary),
+            todayForegroundColor: WidgetStateProperty.all(palette.accent),
+            todayBackgroundColor:
+                WidgetStateProperty.all(palette.accent.withValues(alpha: 0.16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+            ),
+          ),
+        ),
+        child: child!,
+      );
+    },
+  );
 }

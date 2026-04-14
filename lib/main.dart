@@ -37,6 +37,7 @@ class _KeeperAppState extends State<KeeperApp> {
   // и snackBar из любого сценария внутри приложения.
   final _navigatorKey = GlobalKey<NavigatorState>();
   final _scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
+  OverlayEntry? _topNoticeEntry;
   late AppSettings _settings;
   late List<SpiderProfile> _spiders;
   var _currentTab = 0;
@@ -81,6 +82,7 @@ class _KeeperAppState extends State<KeeperApp> {
   Widget build(BuildContext context) {
     final activeSpiders = _spiders.where((spider) => !spider.archived).toList();
     final analyticsSpiders = _filteredAnalyticsSpiders(activeSpiders);
+    final sortedActiveSpiders = _sortSpiders(activeSpiders);
     final strings = AppStrings.of(_settings.language);
     // Все вкладки живут в одном MaterialApp, а тема пересобирается от выбранного
     // акцентного цвета.
@@ -104,12 +106,12 @@ class _KeeperAppState extends State<KeeperApp> {
       ],
       theme: buildKeeperTheme(_settings.accentColor),
       home: Scaffold(
-        body: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 250),
-          child: switch (_currentTab) {
-            0 => HomeScreen(
+        body: IndexedStack(
+          index: _currentTab,
+          children: [
+            HomeScreen(
                 key: const ValueKey('home'),
-                spiders: activeSpiders,
+                spiders: sortedActiveSpiders,
                 accent: _settings.accentColor,
                 language: _settings.language,
                 onSpiderTap: _openSpider,
@@ -117,14 +119,15 @@ class _KeeperAppState extends State<KeeperApp> {
                 onFeedTap: (spider) => _confirmFeeding(spider, DateTime.now()),
                 onFeedLongPress: _pickFeedingDate,
                 onCreateSpider: _createSpider,
+                onOpenSort: _openSortSheet,
               ),
-            1 => AnalyticsPlaceholderScreen(
+            AnalyticsPlaceholderScreen(
                 key: const ValueKey('analytics'),
                 spiders: analyticsSpiders,
                 accent: _settings.accentColor,
                 language: _settings.language,
               ),
-            _ => SettingsScreen(
+            SettingsScreen(
                 key: const ValueKey('settings'),
                 currentAccent: _settings.accentColor,
                 currentLanguage: _settings.language,
@@ -144,7 +147,7 @@ class _KeeperAppState extends State<KeeperApp> {
                 onOpenArchive: _openArchiveSheet,
                 onOpenAnalytics: _openAnalyticsSheet,
               ),
-          },
+          ],
         ),
         bottomNavigationBar: NavigationBar(
           height: 76,
@@ -180,28 +183,19 @@ class _KeeperAppState extends State<KeeperApp> {
       context: dialogContext,
       builder: (context) {
         return AlertDialog(
-          titlePadding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
-          title: Row(
-            children: [
-              Expanded(
-                child: Text(strings.feedSpiderTitle(spider.name)),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: Text(strings.cancel),
-              ),
-              const SizedBox(width: 8),
-              FilledButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: Text(strings.confirm),
-              ),
-            ],
-          ),
+          title: Text(strings.feedSpiderTitle(spider.name)),
           content: Text(
             strings.feedMarkPrompt(
               DateFormat('d MMMM yyyy', strings.localeCode).format(date),
             ),
           ),
+          actionsAlignment: MainAxisAlignment.end,
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(strings.confirm),
+            ),
+          ],
         );
       },
     );
@@ -211,15 +205,13 @@ class _KeeperAppState extends State<KeeperApp> {
         spider.feedings.add(FeedingEntry(date: _normalizeDate(date)));
       });
       _saveState();
-      _scaffoldMessengerKey.currentState?.showSnackBar(
-        SnackBar(
-          content: Text(
-            strings.feedingMarked(
-              spider.name,
-              DateFormat('d MMMM', strings.localeCode).format(date),
-            ),
-          ),
+      _showTopNotice(
+        _navigatorKey.currentContext!,
+        message: strings.feedingMarked(
+          spider.name,
+          DateFormat('d MMMM', strings.localeCode).format(date),
         ),
+        accent: keeperPalette(_navigatorKey.currentContext!).accent,
       );
     }
   }
@@ -239,6 +231,138 @@ class _KeeperAppState extends State<KeeperApp> {
     if (picked != null) {
       await _confirmFeeding(spider, picked);
     }
+  }
+
+  List<SpiderProfile> _sortSpiders(List<SpiderProfile> spiders) {
+    final items = spiders.toList();
+    final descending = _settings.sortDescending;
+    final field = _settings.sortField;
+
+    int compare(SpiderProfile a, SpiderProfile b) {
+      switch (field) {
+        case SortField.name:
+          return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+        case SortField.feedingDate:
+          final aDate = a.lastFeeding?.date;
+          final bDate = b.lastFeeding?.date;
+          if (aDate == null && bDate == null) return 0;
+          if (aDate == null) return 1;
+          if (bDate == null) return -1;
+          return aDate.compareTo(bDate);
+        case SortField.createdDate:
+          return a.createdAt.compareTo(b.createdAt);
+      }
+    }
+
+    items.sort((a, b) => descending ? -compare(a, b) : compare(a, b));
+    return items;
+  }
+
+  void _openSortSheet() {
+    final context = _navigatorKey.currentContext!;
+    final palette = keeperPalette(context);
+    final strings = AppStrings.of(_settings.language);
+
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: palette.background,
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          child: StatefulBuilder(
+            builder: (context, setLocalState) {
+              Widget buildOption({
+                required String title,
+                required SortField field,
+              }) {
+                final selected = _settings.sortField == field;
+                final descending = _settings.sortDescending;
+                final label = field == SortField.name
+                    ? (strings.isRu
+                        ? (descending ? 'Я - А' : 'А - Я')
+                        : (descending ? 'Z - A' : 'A - Z'))
+                    : (descending ? '↓' : '↑');
+                final position = field == SortField.name
+                    ? _ArchiveTilePosition.top
+                    : field == SortField.createdDate
+                        ? _ArchiveTilePosition.bottom
+                        : _ArchiveTilePosition.middle;
+                final radius = switch (position) {
+                  _ArchiveTilePosition.single => BorderRadius.circular(18),
+                  _ArchiveTilePosition.top => const BorderRadius.only(
+                      topLeft: Radius.circular(18),
+                      topRight: Radius.circular(18),
+                      bottomLeft: Radius.circular(10),
+                      bottomRight: Radius.circular(10),
+                    ),
+                  _ArchiveTilePosition.middle => BorderRadius.circular(10),
+                  _ArchiveTilePosition.bottom => const BorderRadius.only(
+                      topLeft: Radius.circular(10),
+                      topRight: Radius.circular(10),
+                      bottomLeft: Radius.circular(18),
+                      bottomRight: Radius.circular(18),
+                    ),
+                };
+
+                return Material(
+                  color: Theme.of(context).colorScheme.surfaceContainerLow,
+                  borderRadius: radius,
+                  child: InkWell(
+                    borderRadius: radius,
+                    onTap: () {
+                      setState(() {
+                        if (_settings.sortField == field) {
+                          _settings.sortDescending = !_settings.sortDescending;
+                        } else {
+                          _settings.sortField = field;
+                          _settings.sortDescending = false;
+                        }
+                      });
+                      _saveState();
+                      setLocalState(() {});
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              title,
+                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                            ),
+                          ),
+                          if (selected) Text(label),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }
+
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                  buildOption(title: strings.sortByName, field: SortField.name),
+                  const SizedBox(height: 8),
+                  buildOption(
+                    title: strings.sortByFeedingDate,
+                    field: SortField.feedingDate,
+                  ),
+                  const SizedBox(height: 8),
+                  buildOption(
+                    title: strings.sortByCreatedDate,
+                    field: SortField.createdDate,
+                  ),
+                ],
+              );
+            },
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _openSpider(SpiderProfile spider) async {
@@ -291,7 +415,7 @@ class _KeeperAppState extends State<KeeperApp> {
                   refresh();
                 },
                 onMoltAdded: () async {
-                  final result = await _showCreateMoltDialog(context);
+                  final result = await _showCreateMoltDialog(context, spider);
                   if (result != null) {
                     spider.molts.add(result);
                     refresh();
@@ -331,6 +455,7 @@ class _KeeperAppState extends State<KeeperApp> {
     final created = await showModalBottomSheet<SpiderProfile>(
       context: sheetContext,
       isScrollControlled: true,
+      backgroundColor: keeperPalette(sheetContext).background,
       builder: (context) {
         String stage = strings.missingValue;
         SpiderSex sex = SpiderSex.unknown;
@@ -360,7 +485,13 @@ class _KeeperAppState extends State<KeeperApp> {
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: nameController,
-                        decoration: InputDecoration(labelText: strings.name),
+                        decoration: InputDecoration(
+                          labelText: strings.name,
+                          filled: true,
+                          fillColor: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerLow,
+                        ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
                             return strings.enterName;
@@ -371,7 +502,13 @@ class _KeeperAppState extends State<KeeperApp> {
                       const SizedBox(height: 12),
                       TextFormField(
                         controller: latinController,
-                        decoration: InputDecoration(labelText: strings.species),
+                        decoration: InputDecoration(
+                          labelText: strings.species,
+                          filled: true,
+                          fillColor: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerLow,
+                        ),
                       ),
                       const SizedBox(height: 12),
                       Text(
@@ -405,7 +542,16 @@ class _KeeperAppState extends State<KeeperApp> {
                           },
                           style: ButtonStyle(
                             padding: WidgetStateProperty.all(
-                              const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                            ),
+                            side: WidgetStateProperty.all(BorderSide.none),
+                            backgroundColor: WidgetStateProperty.all(
+                              Theme.of(context).colorScheme.surfaceContainerLow,
+                            ),
+                            shape: WidgetStateProperty.all(
+                              RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(18),
+                              ),
                             ),
                           ),
                         ),
@@ -419,17 +565,34 @@ class _KeeperAppState extends State<KeeperApp> {
                             setState(() => stage = picked);
                           }
                         },
-                        child: InputDecorator(
-                          decoration: InputDecoration(
-                            labelText: strings.currentStage,
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(stage),
-                              const Icon(Icons.keyboard_arrow_down_rounded),
-                            ],
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              strings.currentStage,
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .surfaceContainerLow,
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(stage),
+                                  const Icon(Icons.keyboard_arrow_down_rounded),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 18),
@@ -493,59 +656,143 @@ class _KeeperAppState extends State<KeeperApp> {
         _spiders.insert(0, created);
       });
       _saveState();
-      _scaffoldMessengerKey.currentState?.showSnackBar(
-        SnackBar(content: Text(strings.spiderAdded(created.name))),
+      _showTopNotice(
+        _navigatorKey.currentContext!,
+        message: strings.spiderAdded(created.name),
+        accent: keeperPalette(_navigatorKey.currentContext!).accent,
       );
     }
   }
 
-  Future<MoltEntry?> _showCreateMoltDialog(BuildContext context) async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now().add(const Duration(days: 1)),
-      locale: const Locale('ru'),
-    );
-    if (date == null || !context.mounted) {
-      return null;
-    }
+  Future<MoltEntry?> _showCreateMoltDialog(
+    BuildContext context,
+    SpiderProfile spider,
+  ) async {
+    final palette = keeperPalette(context);
+    final strings = AppStrings.of(_settings.language);
+    final lastStage = spider.molts.isEmpty
+        ? null
+        : (spider.molts.toList()
+              ..sort((a, b) => b.date.compareTo(a.date)))
+            .first
+            .stage;
+    String stage = _nextMoltStage(lastStage) ?? strings.missingValue;
+    DateTime date = DateTime.now();
 
-    String stage = 'Неизвестно';
-    final pickedStage = await _pickMoltStage(context, stage);
-    if (pickedStage != null) {
-      stage = pickedStage;
-    }
-    final saved = await showDialog<bool>(
+    final result = await showModalBottomSheet<bool>(
       context: context,
+      backgroundColor: palette.background,
+      isScrollControlled: true,
       builder: (context) {
-        return AlertDialog(
-          title: const Text('Новая линька'),
-          content: StatefulBuilder(
-            builder: (context, setState) {
-              return InputDecorator(
-                decoration: const InputDecoration(
-                  labelText: 'Возраст',
+        return StatefulBuilder(
+          builder: (context, setState) {
+            Widget buildTile({
+              required String title,
+              required String value,
+              required VoidCallback onTap,
+              required _ArchiveTilePosition position,
+            }) {
+              final radius = switch (position) {
+                _ArchiveTilePosition.single => BorderRadius.circular(18),
+                _ArchiveTilePosition.top => const BorderRadius.only(
+                    topLeft: Radius.circular(18),
+                    topRight: Radius.circular(18),
+                    bottomLeft: Radius.circular(10),
+                    bottomRight: Radius.circular(10),
+                  ),
+                _ArchiveTilePosition.middle => BorderRadius.circular(10),
+                _ArchiveTilePosition.bottom => const BorderRadius.only(
+                    topLeft: Radius.circular(10),
+                    topRight: Radius.circular(10),
+                    bottomLeft: Radius.circular(18),
+                    bottomRight: Radius.circular(18),
+                  ),
+              };
+
+              return Material(
+                color: Theme.of(context).colorScheme.surfaceContainerLow,
+                borderRadius: radius,
+                child: InkWell(
+                  borderRadius: radius,
+                  onTap: onTap,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            title,
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: keeperPalette(context).textMuted,
+                                ),
+                          ),
+                        ),
+                        Text(
+                          value,
+                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                fontWeight: FontWeight.w500,
+                              ),
+                        ),
+                        const SizedBox(width: 8),
+                        const Icon(Icons.keyboard_arrow_down_rounded),
+                      ],
+                    ),
+                  ),
                 ),
-                child: Text(stage),
               );
-            },
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Отмена'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Создать'),
-            ),
-          ],
+            }
+
+            return Padding(
+              padding: EdgeInsets.fromLTRB(
+                20,
+                16,
+                20,
+                MediaQuery.of(context).viewInsets.bottom + 20,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  buildTile(
+                    title: strings.moltLabel,
+                    value: stage,
+                    position: _ArchiveTilePosition.top,
+                    onTap: () async {
+                      final picked = await _pickMoltStage(context, stage);
+                      if (picked != null) {
+                        setState(() => stage = picked);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 6),
+                  buildTile(
+                    title: strings.dateLabel,
+                    value: DateFormat('d MMMM yyyy', 'ru').format(date),
+                    position: _ArchiveTilePosition.bottom,
+                    onTap: () async {
+                      final picked = await _showThemedDatePicker(
+                        context: context,
+                        initialDate: date,
+                      );
+                      if (picked != null) {
+                        setState(() => date = picked);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  FilledButton(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    child: Text(strings.create),
+                  ),
+                ],
+              ),
+            );
+          },
         );
       },
     );
 
-    if (saved != true) {
+    if (result != true) {
       return null;
     }
 
@@ -556,22 +803,75 @@ class _KeeperAppState extends State<KeeperApp> {
   }
 
   Future<String?> _pickMoltStage(BuildContext context, String current) async {
-    final result = await showDialog<String>(
+    final palette = keeperPalette(context);
+    final initialIndex = _moltStageOptions.indexOf(current);
+    final controller = FixedExtentScrollController(
+      initialItem: initialIndex >= 0 ? initialIndex : 0,
+    );
+
+    final result = await showModalBottomSheet<String>(
       context: context,
+      backgroundColor: palette.background,
       builder: (context) {
-        return SimpleDialog(
-          title: const Text('Текущий возраст'),
-          children: _moltStageOptions
-              .map(
-                (value) => SimpleDialogOption(
-                  onPressed: () => Navigator.of(context).pop(value),
-                  child: Text(value),
+        String selected = _moltStageOptions[
+            initialIndex >= 0 ? initialIndex : 0];
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return SizedBox(
+              height: MediaQuery.of(context).size.height * 0.38,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                child: Column(
+                  children: [
+                    SizedBox(
+                      height: 180,
+                      child: ListWheelScrollView.useDelegate(
+                        controller: controller,
+                        itemExtent: 36,
+                        physics: const FixedExtentScrollPhysics(),
+                        onSelectedItemChanged: (index) {
+                          setState(() => selected = _moltStageOptions[index]);
+                        },
+                        childDelegate: ListWheelChildBuilderDelegate(
+                          builder: (context, index) {
+                            final value = _moltStageOptions[index];
+                            final isSelected = value == selected;
+                            return Center(
+                              child: AnimatedDefaultTextStyle(
+                                duration: const Duration(milliseconds: 180),
+                                style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                                      fontSize: isSelected ? 22 : 16,
+                                      fontWeight:
+                                          isSelected ? FontWeight.w700 : FontWeight.w500,
+                                      color: isSelected
+                                          ? palette.badgeForeground
+                                          : Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium
+                                              ?.color,
+                                    ),
+                                child: Text(value),
+                              ),
+                            );
+                          },
+                          childCount: _moltStageOptions.length,
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                    FilledButton(
+                      onPressed: () => Navigator.of(context).pop(selected),
+                      child: const Text('Выбрать'),
+                    ),
+                  ],
                 ),
-              )
-              .toList(),
+              ),
+            );
+          },
         );
       },
     );
+
     return result ?? (current == '—' ? null : current);
   }
 
@@ -583,38 +883,151 @@ class _KeeperAppState extends State<KeeperApp> {
     return activeSpiders.where((spider) => ids.contains(spider.id)).toList();
   }
 
+  Future<DateTime?> _showThemedDatePicker({
+    required BuildContext context,
+    required DateTime initialDate,
+  }) {
+    final palette = keeperPalette(context);
+    final base = Theme.of(context);
+    return showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now().add(const Duration(days: 1)),
+      locale: const Locale('ru'),
+      builder: (context, child) {
+        return Theme(
+        data: base.copyWith(
+          colorScheme: base.colorScheme.copyWith(
+            primary: palette.accent,
+            onPrimary: base.colorScheme.onPrimary,
+            surface: palette.surface,
+            onSurface: palette.textPrimary,
+          ),
+          dialogTheme: DialogThemeData(
+            backgroundColor: palette.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+            ),
+          ),
+          datePickerTheme: DatePickerThemeData(
+            backgroundColor: palette.surface,
+            headerBackgroundColor: palette.surfaceHigh,
+            headerForegroundColor: palette.textPrimary,
+            dayForegroundColor: WidgetStateProperty.all(palette.textPrimary),
+            todayForegroundColor: WidgetStateProperty.all(palette.accent),
+            todayBackgroundColor:
+                WidgetStateProperty.all(palette.accent.withValues(alpha: 0.16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+            ),
+          ),
+        ),
+          child: child!,
+        );
+      },
+    );
+  }
+
+  String? _nextMoltStage(String? current) {
+    if (current == null || current == 'Неизвестно' || current == '—') {
+      return 'Неизвестно';
+    }
+    final match = RegExp(r'^L(\d+)$').firstMatch(current);
+    if (match == null) {
+      return current;
+    }
+    final value = int.tryParse(match.group(1) ?? '');
+    if (value == null) {
+      return current;
+    }
+    final next = value + 1;
+    if (next > 15) {
+      return 'L15';
+    }
+    return 'L$next';
+  }
+
   void _showSpiderActions(SpiderProfile spider) {
     final palette = keeperPalette(_navigatorKey.currentContext!);
     final strings = AppStrings.of(_settings.language);
     showModalBottomSheet<void>(
       context: _navigatorKey.currentContext!,
-      backgroundColor: palette.surface,
+      backgroundColor: palette.background,
       builder: (context) {
+        Widget buildActionTile({
+          required String title,
+          required IconData icon,
+          required _ArchiveTilePosition position,
+          required VoidCallback onTap,
+          Color? backgroundColor,
+          Color? iconColor,
+          Color? textColor,
+        }) {
+          final radius = switch (position) {
+            _ArchiveTilePosition.single => BorderRadius.circular(18),
+            _ArchiveTilePosition.top => const BorderRadius.only(
+                topLeft: Radius.circular(18),
+                topRight: Radius.circular(18),
+                bottomLeft: Radius.circular(10),
+                bottomRight: Radius.circular(10),
+              ),
+            _ArchiveTilePosition.middle => BorderRadius.circular(10),
+            _ArchiveTilePosition.bottom => const BorderRadius.only(
+                topLeft: Radius.circular(10),
+                topRight: Radius.circular(10),
+                bottomLeft: Radius.circular(18),
+                bottomRight: Radius.circular(18),
+              ),
+          };
+
+          return Material(
+            color: backgroundColor ?? Theme.of(context).colorScheme.surfaceContainerLow,
+            borderRadius: radius,
+            child: InkWell(
+              borderRadius: radius,
+              onTap: onTap,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  children: [
+                    Icon(icon, color: iconColor),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              color: textColor,
+                              fontWeight: FontWeight.w500,
+                            ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+
         return Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              ListTile(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                tileColor: Theme.of(context).colorScheme.surfaceContainerLow,
-                leading: const Icon(Icons.edit_rounded),
-                title: Text(strings.edit),
+              buildActionTile(
+                title: strings.edit,
+                icon: Icons.edit_rounded,
+                position: _ArchiveTilePosition.top,
                 onTap: () {
                   Navigator.of(context).pop();
                   _showEditSpiderSheetFromMenu(spider);
                 },
               ),
-              const SizedBox(height: 8),
-              ListTile(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                tileColor: Theme.of(context).colorScheme.surfaceContainerLow,
-                leading: const Icon(Icons.archive_outlined),
-                title: Text(strings.moveToArchive),
+              const SizedBox(height: 6),
+              buildActionTile(
+                title: strings.moveToArchive,
+                icon: Icons.archive_outlined,
+                position: _ArchiveTilePosition.middle,
                 onTap: () {
                   Navigator.of(context).pop();
                   setState(() {
@@ -625,17 +1038,15 @@ class _KeeperAppState extends State<KeeperApp> {
                   _saveState();
                 },
               ),
-              const SizedBox(height: 8),
-              ListTile(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                tileColor:
+              const SizedBox(height: 6),
+              buildActionTile(
+                title: strings.delete,
+                icon: Icons.delete_outline_rounded,
+                position: _ArchiveTilePosition.bottom,
+                backgroundColor:
                     Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.34),
                 iconColor: Theme.of(context).colorScheme.error,
                 textColor: Theme.of(context).colorScheme.error,
-                leading: const Icon(Icons.delete_outline_rounded),
-                title: Text(strings.delete),
                 onTap: () {
                   Navigator.of(context).pop();
                   _confirmDelete(spider);
@@ -656,11 +1067,8 @@ class _KeeperAppState extends State<KeeperApp> {
         return AlertDialog(
           title: Text(strings.deleteSpiderTitle),
           content: Text(strings.deleteSpiderMessage(spider.name)),
+          actionsAlignment: MainAxisAlignment.end,
           actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(strings.cancel),
-            ),
             FilledButton(
               onPressed: () {
                 Navigator.of(context).pop();
@@ -688,7 +1096,7 @@ class _KeeperAppState extends State<KeeperApp> {
     await showModalBottomSheet<void>(
       context: _navigatorKey.currentContext!,
       isScrollControlled: true,
-      backgroundColor: keeperPalette(_navigatorKey.currentContext!).surface,
+      backgroundColor: keeperPalette(_navigatorKey.currentContext!).background,
       builder: (context) {
         return Padding(
           padding: EdgeInsets.fromLTRB(
@@ -759,7 +1167,16 @@ class _KeeperAppState extends State<KeeperApp> {
                         },
                         style: ButtonStyle(
                           padding: WidgetStateProperty.all(
-                            const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                          ),
+                          side: WidgetStateProperty.all(BorderSide.none),
+                          backgroundColor: WidgetStateProperty.all(
+                            Theme.of(context).colorScheme.surfaceContainerLow,
+                          ),
+                          shape: WidgetStateProperty.all(
+                            RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(18),
+                            ),
                           ),
                         ),
                       ),
@@ -810,9 +1227,18 @@ class _KeeperAppState extends State<KeeperApp> {
     final archived = _spiders.where((spider) => spider.archived).toList()
       ..sort((a, b) => a.name.compareTo(b.name));
 
+    if (archived.isEmpty) {
+      _showTopNotice(
+        context,
+        message: strings.archiveEmpty,
+        accent: palette.accent,
+      );
+      return;
+    }
+
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: palette.surface,
+      backgroundColor: palette.background,
       isScrollControlled: true,
       builder: (context) {
         return Padding(
@@ -829,9 +1255,12 @@ class _KeeperAppState extends State<KeeperApp> {
               ),
               const SizedBox(height: 12),
               if (archived.isEmpty)
-                Text(
-                  strings.archiveEmpty,
-                  style: Theme.of(context).textTheme.bodyMedium,
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    strings.archiveEmpty,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                 )
               else
                 ...archived.map((spider) {
@@ -924,6 +1353,57 @@ class _KeeperAppState extends State<KeeperApp> {
     );
   }
 
+  void _showTopNotice(
+    BuildContext context, {
+    required String message,
+    required Color accent,
+  }) {
+    final overlay = _navigatorKey.currentState?.overlay;
+    if (overlay == null) return;
+
+    _topNoticeEntry?.remove();
+    _topNoticeEntry = OverlayEntry(
+      builder: (context) {
+        final topPadding = MediaQuery.of(context).padding.top;
+        final background = Color.alphaBlend(
+          accent.withValues(alpha: 0.18),
+          Theme.of(context).colorScheme.surfaceContainerLow,
+        );
+        return Positioned(
+          left: 16,
+          right: 16,
+          top: topPadding + 12,
+          child: Material(
+            color: background,
+            elevation: 0,
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline_rounded, color: accent),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      message,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    overlay.insert(_topNoticeEntry!);
+    Future.delayed(const Duration(seconds: 3), () {
+      _topNoticeEntry?.remove();
+      _topNoticeEntry = null;
+    });
+  }
+
   void _openAnalyticsSheet() {
     final context = _navigatorKey.currentContext!;
     final palette = keeperPalette(context);
@@ -936,7 +1416,7 @@ class _KeeperAppState extends State<KeeperApp> {
 
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: palette.surface,
+      backgroundColor: palette.background,
       isScrollControlled: true,
       builder: (context) {
         return StatefulBuilder(

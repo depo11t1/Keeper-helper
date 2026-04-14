@@ -61,10 +61,18 @@ class AppStrings {
       isRu ? 'Пока нет записей о кормлении' : 'No feeding records yet';
   String get noMoltsAdded =>
       isRu ? 'Пока нет записей о линьках' : 'No molt records yet';
-  String get avgEats => isRu ? 'В среднем ест' : 'Average feeding';
-  String get avgMolts => isRu ? 'В среднем линяет' : 'Average molt';
+  String get avgEats => isRu ? 'В среднем едят' : 'Average feeding';
+  String get avgMolts => isRu ? 'В среднем линяют' : 'Average molt';
   String get feedsSlowest => isRu ? 'Кто ест реже всех' : 'Feeds the least';
   String get feedsFastest => isRu ? 'Кто ест чаще всех' : 'Feeds the most';
+  String get moltsFastest => isRu ? 'Кто линяет чаще всех' : 'Molts the most';
+  String get sortByName => isRu ? 'Имя' : 'Name';
+  String get sortByFeedingDate => isRu ? 'Дата кормления' : 'Feeding date';
+  String get sortByCreatedDate => isRu ? 'Дата добавления' : 'Date added';
+  String get moltLabel => isRu ? 'Линька' : 'Molt';
+  String get dateLabel => isRu ? 'Дата' : 'Date';
+  String get eatsShort => isRu ? 'Едят' : 'Feeds';
+  String get moltsShort => isRu ? 'Линяют' : 'Molts';
   String get archiveStub =>
       isRu ? 'Заглушка. Здесь будет экспорт данных приложения.' : 'Stub. App data export will appear here.';
   String get restoreStub =>

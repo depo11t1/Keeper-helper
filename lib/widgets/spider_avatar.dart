@@ -41,6 +41,8 @@ class SpiderAvatar extends StatelessWidget {
                   fit: BoxFit.cover,
                   width: size,
                   height: size,
+                  gaplessPlayback: true,
+                  filterQuality: FilterQuality.low,
                 ),
               )
             : hasPreview
