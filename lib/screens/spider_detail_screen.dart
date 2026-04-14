@@ -172,7 +172,9 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              '${widget.spider.humidity}%',
+                              widget.spider.humidity < 0
+                                  ? strings.missingValue
+                                  : '${widget.spider.humidity}%',
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w500,
                                 color: palette.badgeForeground,
@@ -183,41 +185,42 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
                       ),
                     ),
                     const SizedBox(width: 10),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Color.alphaBlend(
-                          palette.badgeBackground,
-                          scheme.surfaceContainerLow,
+                    if (widget.spider.sex != SpiderSex.unknown)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
                         ),
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            widget.spider.sex == SpiderSex.female
-                                ? Icons.female_rounded
-                                : widget.spider.sex == SpiderSex.male
-                                    ? Icons.male_rounded
-                                    : Icons.help_outline_rounded,
-                            size: 18,
-                            color: palette.badgeForeground,
+                        decoration: BoxDecoration(
+                          color: Color.alphaBlend(
+                            palette.badgeBackground,
+                            scheme.surfaceContainerLow,
                           ),
-                          const SizedBox(width: 8),
-                          Text(
-                            _sexLabel(widget.spider.sex),
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w500,
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              widget.spider.sex == SpiderSex.female
+                                  ? Icons.female_rounded
+                                  : Icons.male_rounded,
+                              size: 18,
                               color: palette.badgeForeground,
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 8),
+                            Text(
+                              widget.spider.sex == SpiderSex.female
+                                  ? strings.female
+                                  : strings.male,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w500,
+                                color: palette.badgeForeground,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
                   ],
                 ),
               ],
@@ -265,7 +268,8 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
                         : index == visibleFeedings.length - 1
                             ? _DetailGroupPosition.bottom
                             : _DetailGroupPosition.middle,
-                    title: DateFormat('d MMMM yyyy', 'ru').format(entry.date),
+                    title: DateFormat('d MMMM yyyy', strings.localeCode)
+                        .format(entry.date),
                     subtitle: null,
                     accent: widget.globalAccent,
                     color: scheme.surfaceContainerLow,
@@ -273,6 +277,7 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
                       final picked = await _showThemedDatePicker(
                         context: context,
                         initialDate: entry.date,
+                        language: widget.language,
                       );
                       if (picked != null) {
                         final originalIndex = feedings.indexOf(entry);
@@ -379,7 +384,7 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
                             ? _DetailGroupPosition.bottom
                             : _DetailGroupPosition.middle,
                     title:
-                        '${entry.stage} • ${DateFormat('d MMMM yyyy', 'ru').format(entry.date)}',
+                        '${entry.stage} • ${DateFormat('d MMMM yyyy', strings.localeCode).format(entry.date)}',
                     subtitle: null,
                     accent: widget.globalAccent,
                     color: scheme.surfaceContainerLow,
@@ -630,9 +635,9 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${humidity.round()}%',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
+                    '${strings.humidity} ${humidity.round()}%',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
                         ),
                   ),
                   Slider(
@@ -791,6 +796,7 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
     final picked = await _showThemedDatePicker(
       context: context,
       initialDate: entry.date,
+      language: widget.language,
     );
     if (picked == null || !context.mounted) {
       return;
@@ -892,11 +898,11 @@ class _EditableDateTile extends StatelessWidget {
       child: _DetailGroupCard(
         position: position,
         color: color,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
         child: Stack(
           children: [
             Padding(
-              padding: const EdgeInsets.only(right: 88),
+              padding: const EdgeInsets.only(right: 68),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1070,26 +1076,20 @@ class _SexChoiceChip extends StatelessWidget {
   }
 }
 
-String _sexLabel(SpiderSex sex) {
-  return switch (sex) {
-    SpiderSex.female => 'Самка',
-    SpiderSex.male => 'Самец',
-    SpiderSex.unknown => 'Пол неизвестен',
-  };
-}
-
 Future<DateTime?> _showThemedDatePicker({
   required BuildContext context,
   required DateTime initialDate,
+  required AppLanguage language,
 }) {
   final palette = keeperPalette(context);
   final base = Theme.of(context);
+  final localeCode = AppStrings.of(language).localeCode;
   return showDatePicker(
     context: context,
     initialDate: initialDate,
     firstDate: DateTime(2020),
     lastDate: DateTime.now().add(const Duration(days: 1)),
-    locale: const Locale('ru'),
+    locale: Locale(localeCode),
     builder: (context, child) {
       return Theme(
         data: base.copyWith(

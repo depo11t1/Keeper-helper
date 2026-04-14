@@ -6,103 +6,1024 @@ class AppStrings {
   final AppLanguage language;
 
   bool get isRu => language == AppLanguage.ru;
-  String get localeCode => isRu ? 'ru' : 'en';
+  bool get isHi => language == AppLanguage.hi;
+  bool get isFr => language == AppLanguage.fr;
+  bool get isDe => language == AppLanguage.de;
+  bool get isEs => language == AppLanguage.es;
+  bool get isSv => language == AppLanguage.sv;
+  bool get isNl => language == AppLanguage.nl;
+  bool get isPt => language == AppLanguage.pt;
+  bool get isJa => language == AppLanguage.ja;
+  String get localeCode => switch (language) {
+        AppLanguage.ru => 'ru',
+        AppLanguage.hi => 'hi',
+        AppLanguage.fr => 'fr',
+        AppLanguage.de => 'de',
+        AppLanguage.es => 'es',
+        AppLanguage.sv => 'sv',
+        AppLanguage.nl => 'nl',
+        AppLanguage.pt => 'pt',
+        AppLanguage.ja => 'ja',
+        AppLanguage.en => 'en',
+      };
 
   static AppStrings of(AppLanguage language) => AppStrings._(language);
 
+  String _t({
+    required String ru,
+    required String en,
+    required String hi,
+    required String fr,
+    required String de,
+    required String es,
+    required String sv,
+    required String nl,
+    required String pt,
+    required String ja,
+  }) =>
+      switch (language) {
+        AppLanguage.ru => ru,
+        AppLanguage.hi => hi,
+        AppLanguage.fr => fr,
+        AppLanguage.de => de,
+        AppLanguage.es => es,
+        AppLanguage.sv => sv,
+        AppLanguage.nl => nl,
+        AppLanguage.pt => pt,
+        AppLanguage.ja => ja,
+        AppLanguage.en => en,
+      };
+
   String get appTitle => 'Keeper';
-  String get menu => isRu ? 'Меню' : 'Menu';
-  String get analytics => isRu ? 'Аналитика' : 'Analytics';
-  String get settings => isRu ? 'Настройки' : 'Settings';
-  String get backup => isRu ? 'Бекап' : 'Backup';
-  String get restore => isRu ? 'Восстановление' : 'Restore';
-  String get aboutApp => isRu ? 'О приложении' : 'About';
-  String get archive => isRu ? 'Архив' : 'Archive';
-  String get languageLabel => isRu ? 'Язык' : 'Language';
+  String get menu => _t(
+        ru: 'Меню',
+        en: 'Menu',
+        hi: 'मेनू',
+        fr: 'Menu',
+        de: 'Menü',
+        es: 'Menú',
+        sv: 'Meny',
+        nl: 'Menu',
+        pt: 'Menu',
+        ja: 'メニュー',
+      );
+  String get analytics => _t(
+        ru: 'Аналитика',
+        en: 'Analytics',
+        hi: 'विश्लेषण',
+        fr: 'Analytique',
+        de: 'Analytik',
+        es: 'Analítica',
+        sv: 'Analys',
+        nl: 'Analyse',
+        pt: 'Analítica',
+        ja: '分析',
+      );
+  String get settings => _t(
+        ru: 'Настройки',
+        en: 'Settings',
+        hi: 'सेटिंग्स',
+        fr: 'Paramètres',
+        de: 'Einstellungen',
+        es: 'Ajustes',
+        sv: 'Inställningar',
+        nl: 'Instellingen',
+        pt: 'Definições',
+        ja: '設定',
+      );
+  String get backup => _t(
+        ru: 'Бекап',
+        en: 'Backup',
+        hi: 'बैकअप',
+        fr: 'Sauvegarde',
+        de: 'Backup',
+        es: 'Copia de seguridad',
+        sv: 'Säkerhetskopia',
+        nl: 'Back-up',
+        pt: 'Backup',
+        ja: 'バックアップ',
+      );
+  String get restore => _t(
+        ru: 'Восстановление',
+        en: 'Restore',
+        hi: 'पुनर्स्थापना',
+        fr: 'Restaurer',
+        de: 'Wiederherstellung',
+        es: 'Restaurar',
+        sv: 'Återställ',
+        nl: 'Herstellen',
+        pt: 'Restaurar',
+        ja: '復元',
+      );
+  String get aboutApp => _t(
+        ru: 'О приложении',
+        en: 'About',
+        hi: 'ऐप के बारे में',
+        fr: 'À propos',
+        de: 'Über die App',
+        es: 'Acerca de',
+        sv: 'Om appen',
+        nl: 'Over de app',
+        pt: 'Sobre',
+        ja: 'このアプリについて',
+      );
+  String get archive => _t(
+        ru: 'Архив',
+        en: 'Archive',
+        hi: 'संग्रह',
+        fr: 'Archive',
+        de: 'Archiv',
+        es: 'Archivo',
+        sv: 'Arkiv',
+        nl: 'Archief',
+        pt: 'Arquivo',
+        ja: 'アーカイブ',
+      );
+  String get languageLabel => _t(
+        ru: 'Язык',
+        en: 'Language',
+        hi: 'भाषा',
+        fr: 'Langue',
+        de: 'Sprache',
+        es: 'Idioma',
+        sv: 'Språk',
+        nl: 'Taal',
+        pt: 'Idioma',
+        ja: '言語',
+      );
   String get english => 'English';
   String get russian => 'Русский';
-  String get ok => isRu ? 'Ок' : 'OK';
-  String get cancel => isRu ? 'Отмена' : 'Cancel';
-  String get confirm => isRu ? 'Подтвердить' : 'Confirm';
-  String get save => isRu ? 'Сохранить' : 'Save';
-  String get create => isRu ? 'Создать' : 'Create';
-  String get edit => isRu ? 'Редактировать' : 'Edit';
-  String get delete => isRu ? 'Удалить' : 'Delete';
-  String get moveToArchive => isRu ? 'В архив' : 'Archive';
-  String get returnAction => isRu ? 'Вернуть' : 'Restore';
-  String get newSpider => isRu ? 'Новый паук' : 'New spider';
-  String get name => isRu ? 'Имя' : 'Name';
-  String get species => isRu ? 'Вид' : 'Species';
-  String get sex => isRu ? 'Пол' : 'Sex';
-  String get female => isRu ? 'Самка' : 'Female';
-  String get male => isRu ? 'Самец' : 'Male';
-  String get dontKnow => isRu ? 'Не знаю' : 'Unknown';
-  String get currentStage => isRu ? 'Текущий возраст' : 'Current stage';
-  String get age => isRu ? 'Возраст' : 'Stage';
-  String get choose => isRu ? 'Выбрать' : 'Choose';
-  String get humidity => isRu ? 'Влажность' : 'Humidity';
-  String get createMolt => isRu ? 'Новая линька' : 'New molt';
-  String get editMolt => isRu ? 'Изменить линьку' : 'Edit molt';
-  String get molts => isRu ? 'Линьки' : 'Molts';
-  String get feeding => isRu ? 'Кормление' : 'Feeding';
-  String get speciesPlaceholder => isRu ? 'Вид неизвестен' : 'Species unknown';
+  String get hindi => 'हिन्दी';
+  String get french => 'Français';
+  String get spanish => 'Español';
+  String get german => 'Deutsch';
+  String get portuguese => 'Português';
+  String get dutch => 'Nederlands';
+  String get swedish => 'Svenska';
+  String get japanese => '日本語';
+  String get placeholderSuffix => _t(
+        ru: ' (заглушка)',
+        en: ' (placeholder)',
+        hi: ' (प्लेसहोल्डर)',
+        fr: ' (placeholder)',
+        de: ' (Platzhalter)',
+        es: ' (marcador)',
+        sv: ' (platshållare)',
+        nl: ' (placeholder)',
+        pt: ' (placeholder)',
+        ja: '（プレースホルダー）',
+      );
+  String get placeholderMessage => _t(
+        ru: 'Пока это заглушка.',
+        en: 'This is a placeholder.',
+        hi: 'यह एक प्लेसहोल्डर है।',
+        fr: 'Ceci est un placeholder.',
+        de: 'Dies ist ein Platzhalter.',
+        es: 'Esto es un marcador.',
+        sv: 'Detta är en platshållare.',
+        nl: 'Dit is een placeholder.',
+        pt: 'Isto é um placeholder.',
+        ja: 'これはプレースホルダーです。',
+      );
+  String languageName(AppLanguage language) => switch (language) {
+        AppLanguage.ru => russian,
+        AppLanguage.en => english,
+        AppLanguage.hi => hindi,
+        AppLanguage.fr => french,
+        AppLanguage.de => german,
+        AppLanguage.es => spanish,
+        AppLanguage.sv => swedish,
+        AppLanguage.nl => dutch,
+        AppLanguage.pt => portuguese,
+        AppLanguage.ja => japanese,
+      };
+  String get ok => _t(
+        ru: 'Ок',
+        en: 'OK',
+        hi: 'ठीक',
+        fr: 'OK',
+        de: 'OK',
+        es: 'OK',
+        sv: 'OK',
+        nl: 'OK',
+        pt: 'OK',
+        ja: 'OK',
+      );
+  String get cancel => _t(
+        ru: 'Отмена',
+        en: 'Cancel',
+        hi: 'रद्द',
+        fr: 'Annuler',
+        de: 'Abbrechen',
+        es: 'Cancelar',
+        sv: 'Avbryt',
+        nl: 'Annuleren',
+        pt: 'Cancelar',
+        ja: 'キャンセル',
+      );
+  String get confirm => _t(
+        ru: 'Подтвердить',
+        en: 'Confirm',
+        hi: 'पुष्टि',
+        fr: 'Confirmer',
+        de: 'Bestätigen',
+        es: 'Confirmar',
+        sv: 'Bekräfta',
+        nl: 'Bevestigen',
+        pt: 'Confirmar',
+        ja: '確定',
+      );
+  String get save => _t(
+        ru: 'Сохранить',
+        en: 'Save',
+        hi: 'सहेजें',
+        fr: 'Enregistrer',
+        de: 'Speichern',
+        es: 'Guardar',
+        sv: 'Spara',
+        nl: 'Opslaan',
+        pt: 'Guardar',
+        ja: '保存',
+      );
+  String get create => _t(
+        ru: 'Создать',
+        en: 'Create',
+        hi: 'बनाएं',
+        fr: 'Créer',
+        de: 'Erstellen',
+        es: 'Crear',
+        sv: 'Skapa',
+        nl: 'Aanmaken',
+        pt: 'Criar',
+        ja: '作成',
+      );
+  String get edit => _t(
+        ru: 'Редактировать',
+        en: 'Edit',
+        hi: 'संपादित करें',
+        fr: 'Modifier',
+        de: 'Bearbeiten',
+        es: 'Editar',
+        sv: 'Redigera',
+        nl: 'Bewerken',
+        pt: 'Editar',
+        ja: '編集',
+      );
+  String get delete => _t(
+        ru: 'Удалить',
+        en: 'Delete',
+        hi: 'हटाएँ',
+        fr: 'Supprimer',
+        de: 'Löschen',
+        es: 'Eliminar',
+        sv: 'Ta bort',
+        nl: 'Verwijderen',
+        pt: 'Eliminar',
+        ja: '削除',
+      );
+  String get moveToArchive => _t(
+        ru: 'В архив',
+        en: 'Archive',
+        hi: 'संग्रह में',
+        fr: 'Archiver',
+        de: 'Archivieren',
+        es: 'Archivar',
+        sv: 'Arkivera',
+        nl: 'Archiveren',
+        pt: 'Arquivar',
+        ja: 'アーカイブへ',
+      );
+  String get returnAction => _t(
+        ru: 'Вернуть',
+        en: 'Restore',
+        hi: 'वापस',
+        fr: 'Restaurer',
+        de: 'Wiederherstellen',
+        es: 'Restaurar',
+        sv: 'Återställ',
+        nl: 'Herstellen',
+        pt: 'Restaurar',
+        ja: '復元',
+      );
+  String get newSpider => _t(
+        ru: 'Новый паук',
+        en: 'New spider',
+        hi: 'नया मकड़ी',
+        fr: 'Nouvelle araignée',
+        de: 'Neue Spinne',
+        es: 'Nueva araña',
+        sv: 'Ny spindel',
+        nl: 'Nieuwe spin',
+        pt: 'Nova aranha',
+        ja: '新しいクモ',
+      );
+  String get name => _t(
+        ru: 'Имя',
+        en: 'Name',
+        hi: 'नाम',
+        fr: 'Nom',
+        de: 'Name',
+        es: 'Nombre',
+        sv: 'Namn',
+        nl: 'Naam',
+        pt: 'Nome',
+        ja: '名前',
+      );
+  String get species => _t(
+        ru: 'Вид',
+        en: 'Species',
+        hi: 'प्रजाति',
+        fr: 'Espèce',
+        de: 'Art',
+        es: 'Especie',
+        sv: 'Art',
+        nl: 'Soort',
+        pt: 'Espécie',
+        ja: '種',
+      );
+  String get sex => _t(
+        ru: 'Пол',
+        en: 'Sex',
+        hi: 'लिंग',
+        fr: 'Sexe',
+        de: 'Geschlecht',
+        es: 'Sexo',
+        sv: 'Kön',
+        nl: 'Geslacht',
+        pt: 'Sexo',
+        ja: '性別',
+      );
+  String get female => _t(
+        ru: 'Самка',
+        en: 'Female',
+        hi: 'मादा',
+        fr: 'Femelle',
+        de: 'Weibchen',
+        es: 'Hembra',
+        sv: 'Hona',
+        nl: 'Vrouwtje',
+        pt: 'Fêmea',
+        ja: 'メス',
+      );
+  String get male => _t(
+        ru: 'Самец',
+        en: 'Male',
+        hi: 'नर',
+        fr: 'Mâle',
+        de: 'Männchen',
+        es: 'Macho',
+        sv: 'Hane',
+        nl: 'Mannetje',
+        pt: 'Macho',
+        ja: 'オス',
+      );
+  String get sexUnknown => _t(
+        ru: 'Пол неизвестно',
+        en: 'Sex unknown',
+        hi: 'लिंग अज्ञात',
+        fr: 'Sexe inconnu',
+        de: 'Geschlecht unbekannt',
+        es: 'Sexo desconocido',
+        sv: 'Kön okänt',
+        nl: 'Geslacht onbekend',
+        pt: 'Sexo desconhecido',
+        ja: '不明',
+      );
+  String get dontKnow => _t(
+        ru: 'Не знаю',
+        en: "I don't know",
+        hi: 'मुझे नहीं पता',
+        fr: 'Je ne sais pas',
+        de: 'Weiß ich nicht',
+        es: 'No lo sé',
+        sv: 'Vet inte',
+        nl: 'Weet ik niet',
+        pt: 'Não sei',
+        ja: '不明',
+      );
+  String get currentStage => _t(
+        ru: 'Текущий возраст',
+        en: 'Current stage',
+        hi: 'वर्तमान चरण',
+        fr: 'Stade actuel',
+        de: 'Aktuelles Stadium',
+        es: 'Etapa actual',
+        sv: 'Nuvarande stadium',
+        nl: 'Huidig stadium',
+        pt: 'Estágio atual',
+        ja: '現在のステージ',
+      );
+  String get age => _t(
+        ru: 'Возраст',
+        en: 'Stage',
+        hi: 'चरण',
+        fr: 'Stade',
+        de: 'Stadium',
+        es: 'Etapa',
+        sv: 'Stadium',
+        nl: 'Stadium',
+        pt: 'Estágio',
+        ja: 'ステージ',
+      );
+  String get choose => _t(
+        ru: 'Выбрать',
+        en: 'Choose',
+        hi: 'चुनें',
+        fr: 'Choisir',
+        de: 'Auswählen',
+        es: 'Elegir',
+        sv: 'Välj',
+        nl: 'Kies',
+        pt: 'Escolher',
+        ja: '選択',
+      );
+  String get humidity => _t(
+        ru: 'Влажность',
+        en: 'Humidity',
+        hi: 'आर्द्रता',
+        fr: 'Humidité',
+        de: 'Luftfeuchtigkeit',
+        es: 'Humedad',
+        sv: 'Luftfuktighet',
+        nl: 'Luchtvochtigheid',
+        pt: 'Umidade',
+        ja: '湿度',
+      );
+  String get createMolt => _t(
+        ru: 'Новая линька',
+        en: 'New molt',
+        hi: 'नया मोल्ट',
+        fr: 'Nouvelle mue',
+        de: 'Neue Häutung',
+        es: 'Nueva muda',
+        sv: 'Ny ömsning',
+        nl: 'Nieuwe vervelling',
+        pt: 'Nova muda',
+        ja: '新しい脱皮',
+      );
+  String get editMolt => _t(
+        ru: 'Изменить линьку',
+        en: 'Edit molt',
+        hi: 'मोल्ट संपादित करें',
+        fr: 'Modifier la mue',
+        de: 'Häutung bearbeiten',
+        es: 'Editar muda',
+        sv: 'Redigera ömsning',
+        nl: 'Vervelling bewerken',
+        pt: 'Editar muda',
+        ja: '脱皮を編集',
+      );
+  String get molts => _t(
+        ru: 'Линьки',
+        en: 'Molts',
+        hi: 'मोल्ट्स',
+        fr: 'Mues',
+        de: 'Häutungen',
+        es: 'Mudas',
+        sv: 'Ömsningar',
+        nl: 'Vervellingen',
+        pt: 'Mudas',
+        ja: '脱皮',
+      );
+  String get feeding => _t(
+        ru: 'Кормление',
+        en: 'Feeding',
+        hi: 'खिलाना',
+        fr: 'Nourrissage',
+        de: 'Fütterung',
+        es: 'Alimentación',
+        sv: 'Matning',
+        nl: 'Voeding',
+        pt: 'Alimentação',
+        ja: '給餌',
+      );
+  String get speciesPlaceholder => _t(
+        ru: 'Вид неизвестен',
+        en: 'Species unknown',
+        hi: 'प्रजाति अज्ञात',
+        fr: 'Espèce inconnue',
+        de: 'Art unbekannt',
+        es: 'Especie desconocida',
+        sv: 'Art okänd',
+        nl: 'Soort onbekend',
+        pt: 'Espécie desconhecida',
+        ja: '種不明',
+      );
   String get missingValue => '—';
-  String get archiveEmpty => isRu ? 'Архив пуст' : 'Archive is empty';
-  String get archivedSince => isRu ? 'В архиве с' : 'Archived since';
-  String get noActiveCards =>
-      isRu ? 'Нет активных карточек.' : 'No active cards.';
-  String get analyticsChoose =>
-      isRu ? 'Выбери, кто будет участвовать в аналитике.' : 'Choose who participates in analytics.';
-  String get noData => isRu ? 'Нет данных' : 'No data';
-  String get littleData => isRu ? 'Мало данных' : 'Not enough data';
-  String get noFeedings => isRu ? 'Нет кормлений' : 'No feedings';
-  String get noMolts => isRu ? 'Нет линек' : 'No molts';
-  String get noFeedingRecords =>
-      isRu ? 'Пока нет записей о кормлении' : 'No feeding records yet';
-  String get noMoltsAdded =>
-      isRu ? 'Пока нет записей о линьках' : 'No molt records yet';
-  String get avgEats => isRu ? 'В среднем едят' : 'Average feeding';
-  String get avgMolts => isRu ? 'В среднем линяют' : 'Average molt';
-  String get feedsSlowest => isRu ? 'Кто ест реже всех' : 'Feeds the least';
-  String get feedsFastest => isRu ? 'Кто ест чаще всех' : 'Feeds the most';
-  String get moltsFastest => isRu ? 'Кто линяет чаще всех' : 'Molts the most';
-  String get sortByName => isRu ? 'Имя' : 'Name';
-  String get sortByFeedingDate => isRu ? 'Дата кормления' : 'Feeding date';
-  String get sortByCreatedDate => isRu ? 'Дата добавления' : 'Date added';
-  String get moltLabel => isRu ? 'Линька' : 'Molt';
-  String get dateLabel => isRu ? 'Дата' : 'Date';
-  String get eatsShort => isRu ? 'Едят' : 'Feeds';
-  String get moltsShort => isRu ? 'Линяют' : 'Molts';
-  String get archiveStub =>
-      isRu ? 'Заглушка. Здесь будет экспорт данных приложения.' : 'Stub. App data export will appear here.';
-  String get restoreStub =>
-      isRu ? 'Заглушка. Здесь будет восстановление данных из бекапа.' : 'Stub. Backup restore will appear here.';
-  String get aboutStub =>
-      isRu ? 'Keeper\n\nУчет кормлений, линек и карточек пауков.' : 'Keeper\n\nTrack feedings, molts, and spider cards.';
-  String get enterName => isRu ? 'Введите имя' : 'Enter a name';
-  String get photoStyle => isRu ? 'Выбрать фото-стиль' : 'Choose photo style';
-  String get changePhoto => isRu ? 'Изменить фото' : 'Change photo';
-  String get removePhoto => isRu ? 'Удалить фото' : 'Remove photo';
-  String get editSpider => isRu ? 'Редактировать паука' : 'Edit spider';
-  String get deleteSpiderTitle =>
-      isRu ? 'Удалить карточку?' : 'Delete this card?';
-  String deleteSpiderMessage(String name) => isRu
-      ? 'Карточка $name будет удалена безвозвратно.'
-      : '$name will be deleted permanently.';
-  String feedSpiderTitle(String name) =>
-      isRu ? 'Кормить $name?' : 'Feed $name?';
-  String feedMarkPrompt(String formattedDate) => isRu
-      ? 'Отметить кормление на $formattedDate?'
-      : 'Mark feeding on $formattedDate?';
-  String feedingMarked(String name, String formattedDate) => isRu
-      ? 'Кормление для $name отмечено на $formattedDate'
-      : 'Feeding for $name was marked on $formattedDate';
-  String spiderAdded(String name) =>
-      isRu ? '$name добавлен в Keeper' : '$name added to Keeper';
-  String everyDays(int days) =>
-      isRu ? 'каждые $days дн.' : 'every $days d';
-  String daysAgo(int days) =>
-      isRu ? '$days дн. назад' : '$days d ago';
-  String get today => isRu ? 'сегодня' : 'today';
-  String get removeFromAnalyticsDone => isRu ? 'Сохранить' : 'Save';
+  String get archiveEmpty => _t(
+        ru: 'Архив пуст',
+        en: 'Archive is empty',
+        hi: 'संग्रह खाली है',
+        fr: 'Archive vide',
+        de: 'Archiv ist leer',
+        es: 'El archivo está vacío',
+        sv: 'Arkivet är tomt',
+        nl: 'Het archief is leeg',
+        pt: 'O arquivo está vazio',
+        ja: 'アーカイブは空です',
+      );
+  String get archivedSince => _t(
+        ru: 'В архиве с',
+        en: 'Archived since',
+        hi: 'संग्रह में से',
+        fr: 'Archivé depuis',
+        de: 'Im Archiv seit',
+        es: 'Archivado desde',
+        sv: 'Arkiverad sedan',
+        nl: 'Gearchiveerd sinds',
+        pt: 'Arquivado desde',
+        ja: 'アーカイブ日',
+      );
+  String get noActiveCards => _t(
+        ru: 'Нет активных карточек.',
+        en: 'No active cards.',
+        hi: 'कोई सक्रिय कार्ड नहीं।',
+        fr: 'Aucune carte active.',
+        de: 'Keine aktiven Karten.',
+        es: 'No hay tarjetas activas.',
+        sv: 'Inga aktiva kort.',
+        nl: 'Geen actieve kaarten.',
+        pt: 'Não há cartões ativos.',
+        ja: 'アクティブなカードはありません。',
+      );
+  String get analyticsChoose => _t(
+        ru: 'Выбери, кто будет участвовать в аналитике.',
+        en: 'Choose who participates in analytics.',
+        hi: 'विश्लेषण में कौन शामिल होगा चुनें।',
+        fr: 'Choisissez qui participe aux analyses.',
+        de: 'Wähle, wer an den Analysen teilnimmt.',
+        es: 'Elige quién participa en la analítica.',
+        sv: 'Välj vem som ska vara med i analysen.',
+        nl: 'Kies wie aan de analyse meedoet.',
+        pt: 'Escolha quem participa nas análises.',
+        ja: '分析に参加する個体を選んでください。',
+      );
+  String get noData => _t(
+        ru: 'Нет данных',
+        en: 'No data',
+        hi: 'डेटा नहीं',
+        fr: 'Pas de données',
+        de: 'Keine Daten',
+        es: 'Sin datos',
+        sv: 'Ingen data',
+        nl: 'Geen gegevens',
+        pt: 'Sem dados',
+        ja: 'データなし',
+      );
+  String get littleData => _t(
+        ru: 'Мало данных',
+        en: 'Not enough data',
+        hi: 'पर्याप्त डेटा नहीं',
+        fr: 'Pas assez de données',
+        de: 'Zu wenig Daten',
+        es: 'Datos insuficientes',
+        sv: 'För lite data',
+        nl: 'Onvoldoende gegevens',
+        pt: 'Dados insuficientes',
+        ja: 'データ不足',
+      );
+  String get noFeedings => _t(
+        ru: 'Нет кормлений',
+        en: 'No feedings',
+        hi: 'कोई खिलाना नहीं',
+        fr: 'Aucun nourrissage',
+        de: 'Keine Fütterungen',
+        es: 'Sin alimentaciones',
+        sv: 'Inga matningar',
+        nl: 'Geen voedingen',
+        pt: 'Sem alimentações',
+        ja: '給餌なし',
+      );
+  String get noMolts => _t(
+        ru: 'Нет линек',
+        en: 'No molts',
+        hi: 'कोई मोल्ट नहीं',
+        fr: 'Aucune mue',
+        de: 'Keine Häutungen',
+        es: 'Sin mudas',
+        sv: 'Inga ömsningar',
+        nl: 'Geen vervellingen',
+        pt: 'Sem mudas',
+        ja: '脱皮なし',
+      );
+  String get noFeedingRecords => _t(
+        ru: 'Пока нет записей о кормлении',
+        en: 'No feeding records yet',
+        hi: 'अभी तक खिलाने का रिकॉर्ड नहीं',
+        fr: 'Aucun enregistrement de nourrissage',
+        de: 'Noch keine Fütterungseinträge',
+        es: 'Aún no hay registros de alimentación',
+        sv: 'Inga matningsposter än',
+        nl: 'Nog geen voedingsregistraties',
+        pt: 'Ainda não há registos de alimentação',
+        ja: '給餌記録はまだありません',
+      );
+  String get noMoltsAdded => _t(
+        ru: 'Пока нет записей о линьках',
+        en: 'No molt records yet',
+        hi: 'अभी तक मोल्ट रिकॉर्ड नहीं',
+        fr: 'Aucun enregistrement de mue',
+        de: 'Noch keine Häutungseinträge',
+        es: 'Aún no hay registros de mudas',
+        sv: 'Inga ömsningsposter än',
+        nl: 'Nog geen vervellingsregistraties',
+        pt: 'Ainda não há registos de mudas',
+        ja: '脱皮記録はまだありません',
+      );
+  String get avgEats => _t(
+        ru: 'В среднем едят',
+        en: 'Average feeding',
+        hi: 'औसतन खाते हैं',
+        fr: 'Moyenne des nourrissages',
+        de: 'Im Schnitt fressen',
+        es: 'Promedio de alimentación',
+        sv: 'Genomsnittlig matning',
+        nl: 'Gemiddelde voeding',
+        pt: 'Média de alimentação',
+        ja: '平均給餌',
+      );
+  String get avgMolts => _t(
+        ru: 'В среднем линяют',
+        en: 'Average molt',
+        hi: 'औसतन मोल्ट करते हैं',
+        fr: 'Moyenne des mues',
+        de: 'Im Schnitt häuten',
+        es: 'Promedio de mudas',
+        sv: 'Genomsnittlig ömsning',
+        nl: 'Gemiddelde vervelling',
+        pt: 'Média de mudas',
+        ja: '平均脱皮',
+      );
+  String get averageIntervals => _t(
+        ru: 'Средние интервалы',
+        en: 'Average intervals',
+        hi: 'औसत अंतराल',
+        fr: 'Intervalles moyens',
+        de: 'Durchschnittliche Intervalle',
+        es: 'Intervalos promedio',
+        sv: 'Genomsnittliga intervall',
+        nl: 'Gemiddelde intervallen',
+        pt: 'Intervalos médios',
+        ja: '平均間隔',
+      );
+  String get feedsSlowest => _t(
+        ru: 'Кто ест реже всех',
+        en: 'Feeds the least',
+        hi: 'सबसे कम खाते हैं',
+        fr: 'Mangent le moins',
+        de: 'Frisst am seltensten',
+        es: 'Quienes comen menos',
+        sv: 'Äter mest sällan',
+        nl: 'Eet het minst vaak',
+        pt: 'Quem come menos',
+        ja: '最も少ない給餌',
+      );
+  String get feedsFastest => _t(
+        ru: 'Кто ест чаще всех',
+        en: 'Feeds the most',
+        hi: 'सबसे ज्यादा खाते हैं',
+        fr: 'Mangent le plus',
+        de: 'Frisst am häufigsten',
+        es: 'Quienes comen más',
+        sv: 'Äter oftast',
+        nl: 'Eet het vaakst',
+        pt: 'Quem come mais',
+        ja: '最も多い給餌',
+      );
+  String get moltsFastest => _t(
+        ru: 'Кто линяет чаще всех',
+        en: 'Molts the most',
+        hi: 'सबसे ज्यादा मोल्ट करते हैं',
+        fr: 'Muent le plus',
+        de: 'Häutet sich am häufigsten',
+        es: 'Quienes mudan más',
+        sv: 'Ömsar oftast',
+        nl: 'Vervelt het vaakst',
+        pt: 'Quem muda mais',
+        ja: '最も多い脱皮',
+      );
+  String get sortByName => _t(
+        ru: 'Имя',
+        en: 'Name',
+        hi: 'नाम',
+        fr: 'Nom',
+        de: 'Name',
+        es: 'Nombre',
+        sv: 'Namn',
+        nl: 'Naam',
+        pt: 'Nome',
+        ja: '名前',
+      );
+  String get sortByFeedingDate => _t(
+        ru: 'Дата кормления',
+        en: 'Feeding date',
+        hi: 'खिलाने की तारीख',
+        fr: 'Date de nourrissage',
+        de: 'Fütterungsdatum',
+        es: 'Fecha de alimentación',
+        sv: 'Matningsdatum',
+        nl: 'Voedingsdatum',
+        pt: 'Data de alimentação',
+        ja: '給餌日',
+      );
+  String get sortByCreatedDate => _t(
+        ru: 'Дата добавления',
+        en: 'Date added',
+        hi: 'जोड़ी गई तारीख',
+        fr: 'Date d’ajout',
+        de: 'Erstellungsdatum',
+        es: 'Fecha de creación',
+        sv: 'Skapad datum',
+        nl: 'Aanmaakdatum',
+        pt: 'Data de criação',
+        ja: '追加日',
+      );
+  String get moltLabel => _t(
+        ru: 'Линька',
+        en: 'Molt',
+        hi: 'मोल्ट',
+        fr: 'Mue',
+        de: 'Häutung',
+        es: 'Muda',
+        sv: 'Ömsning',
+        nl: 'Vervelling',
+        pt: 'Muda',
+        ja: '脱皮',
+      );
+  String get dateLabel => _t(
+        ru: 'Дата',
+        en: 'Date',
+        hi: 'तारीख',
+        fr: 'Date',
+        de: 'Datum',
+        es: 'Fecha',
+        sv: 'Datum',
+        nl: 'Datum',
+        pt: 'Data',
+        ja: '日付',
+      );
+  String get eatsShort => _t(
+        ru: 'Едят',
+        en: 'Feeds',
+        hi: 'खाते हैं',
+        fr: 'Mangent',
+        de: 'Fressen',
+        es: 'Comen',
+        sv: 'Äter',
+        nl: 'Eten',
+        pt: 'Comem',
+        ja: '給餌',
+      );
+  String get moltsShort => _t(
+        ru: 'Линяют',
+        en: 'Molts',
+        hi: 'मोल्ट',
+        fr: 'Muent',
+        de: 'Häuten',
+        es: 'Mudan',
+        sv: 'Ömsar',
+        nl: 'Vervellen',
+        pt: 'Mudam',
+        ja: '脱皮',
+      );
+  String get archiveStub => _t(
+        ru: 'Заглушка. Здесь будет экспорт данных приложения.',
+        en: 'Stub. App data export will appear here.',
+        hi: 'यहाँ ऐप डेटा निर्यात होगा।',
+        fr: 'Ici, l’export des données apparaîtra.',
+        de: 'Platzhalter. Hier erscheint der Datenexport der App.',
+        es: 'Marcador. Aquí aparecerá la exportación de datos de la app.',
+        sv: 'Platshållare. Här visas export av appdata.',
+        nl: 'Placeholder. Hier verschijnt de export van app-gegevens.',
+        pt: 'Placeholder. Aqui aparecerá a exportação dos dados do app.',
+        ja: 'プレースホルダー。ここにアプリデータのエクスポートが表示されます。',
+      );
+  String get restoreStub => _t(
+        ru: 'Заглушка. Здесь будет восстановление данных из бекапа.',
+        en: 'Stub. Backup restore will appear here.',
+        hi: 'यहाँ बैकअप से पुनर्स्थापना होगी।',
+        fr: 'Ici, la restauration des données apparaîtra.',
+        de: 'Platzhalter. Hier erscheint die Wiederherstellung aus dem Backup.',
+        es: 'Marcador. Aquí aparecerá la restauración del respaldo.',
+        sv: 'Platshållare. Här visas återställning från säkerhetskopia.',
+        nl: 'Placeholder. Hier verschijnt het herstellen van de back-up.',
+        pt: 'Placeholder. Aqui aparecerá a restauração do backup.',
+        ja: 'プレースホルダー。ここにバックアップからの復元が表示されます。',
+      );
+  String get aboutStub => _t(
+        ru: 'Keeper помогает владельцам экзотических животных вести учет кормлений и линек, а также показывает интересную аналитику.',
+        en: 'Keeper helps exotic pet owners track feedings and molts and also provides insightful analytics.',
+        hi: 'Keeper विदेशी पालतू जानवरों के मालिकों को खिलाने और मोल्ट्स का रिकॉर्ड रखने में मदद करता है और उपयोगी विश्लेषण भी दिखाता है।',
+        fr: 'Keeper aide les propriétaires d’animaux exotiques à suivre les nourrissages et les mues, et fournit aussi des analyses utiles.',
+        de: 'Keeper hilft Besitzern exotischer Tiere, Fütterungen und Häutungen zu protokollieren, und bietet zudem hilfreiche Analysen.',
+        es: 'Keeper ayuda a los dueños de animales exóticos a registrar alimentaciones y mudas, y también ofrece analítica útil.',
+        sv: 'Keeper hjälper ägare av exotiska djur att spåra matningar och ömsningar och visar även intressant analys.',
+        nl: 'Keeper helpt eigenaren van exotische dieren om voedingen en vervellingen bij te houden en toont ook interessante analyses.',
+        pt: 'Keeper ajuda donos de animais exóticos a registrar alimentações e mudas e também oferece análises úteis.',
+        ja: 'Keeperは外来ペットの飼い主が給餌と脱皮を記録できるようにし、興味深い分析も提供します。',
+      );
+  String get aboutSource => _t(
+        ru: 'Keeper — исходный код',
+        en: 'Keeper — source code',
+        hi: 'Keeper — स्रोत कोड',
+        fr: 'Keeper — code source',
+        de: 'Keeper — Quellcode',
+        es: 'Keeper — código fuente',
+        sv: 'Keeper — källkod',
+        nl: 'Keeper — broncode',
+        pt: 'Keeper — código‑fonte',
+        ja: 'Keeper — ソースコード',
+      );
+  String get aboutVersion => _t(
+        ru: 'Версия 0.9.1',
+        en: 'Version 0.9.1',
+        hi: 'संस्करण 0.9.1',
+        fr: 'Version 0.9.1',
+        de: 'Version 0.9.1',
+        es: 'Versión 0.9.1',
+        sv: 'Version 0.9.1',
+        nl: 'Versie 0.9.1',
+        pt: 'Versão 0.9.1',
+        ja: 'バージョン 0.9.1',
+      );
+  String get enterName => _t(
+        ru: 'Введите имя',
+        en: 'Enter a name',
+        hi: 'नाम दर्ज करें',
+        fr: 'Entrez un nom',
+        de: 'Name eingeben',
+        es: 'Introduce un nombre',
+        sv: 'Ange ett namn',
+        nl: 'Voer een naam in',
+        pt: 'Digite um nome',
+        ja: '名前を入力',
+      );
+  String get photoStyle => _t(
+        ru: 'Выбрать фото-стиль',
+        en: 'Choose photo style',
+        hi: 'फोटो शैली चुनें',
+        fr: 'Choisir le style photo',
+        de: 'Fotostil wählen',
+        es: 'Elegir estilo de foto',
+        sv: 'Välj fotostil',
+        nl: 'Kies fotostijl',
+        pt: 'Escolher estilo de foto',
+        ja: '写真スタイルを選択',
+      );
+  String get changePhoto => _t(
+        ru: 'Изменить фото',
+        en: 'Change photo',
+        hi: 'फोटो बदलें',
+        fr: 'Changer la photo',
+        de: 'Foto ändern',
+        es: 'Cambiar foto',
+        sv: 'Byt foto',
+        nl: 'Foto wijzigen',
+        pt: 'Alterar foto',
+        ja: '写真を変更',
+      );
+  String get removePhoto => _t(
+        ru: 'Удалить фото',
+        en: 'Remove photo',
+        hi: 'फोटो हटाएँ',
+        fr: 'Supprimer la photo',
+        de: 'Foto entfernen',
+        es: 'Eliminar foto',
+        sv: 'Ta bort foto',
+        nl: 'Foto verwijderen',
+        pt: 'Remover foto',
+        ja: '写真を削除',
+      );
+  String get editSpider => _t(
+        ru: 'Редактировать паука',
+        en: 'Edit spider',
+        hi: 'मकड़ी संपादित करें',
+        fr: 'Modifier l’araignée',
+        de: 'Spinne bearbeiten',
+        es: 'Editar araña',
+        sv: 'Redigera spindel',
+        nl: 'Spin bewerken',
+        pt: 'Editar aranha',
+        ja: 'クモを編集',
+      );
+  String get deleteSpiderTitle => _t(
+        ru: 'Удалить карточку?',
+        en: 'Delete this card?',
+        hi: 'कार्ड हटाएँ?',
+        fr: 'Supprimer la carte ?',
+        de: 'Karte löschen?',
+        es: '¿Eliminar esta tarjeta?',
+        sv: 'Ta bort kortet?',
+        nl: 'Deze kaart verwijderen?',
+        pt: 'Excluir este cartão?',
+        ja: 'カードを削除しますか？',
+      );
+  String deleteSpiderMessage(String name) => _t(
+        ru: 'Карточка $name будет удалена безвозвратно.',
+        en: '$name will be deleted permanently.',
+        hi: '$name का कार्ड स्थायी रूप से हट जाएगा।',
+        fr: 'La carte $name sera supprimée définitivement.',
+        de: 'Die Karte $name wird endgültig gelöscht.',
+        es: 'La tarjeta $name se eliminará permanentemente.',
+        sv: 'Kortet $name kommer att tas bort permanent.',
+        nl: 'De kaart $name wordt permanent verwijderd.',
+        pt: 'O cartão $name será removido permanentemente.',
+        ja: '$name のカードは完全に削除されます。',
+      );
+  String feedSpiderTitle(String name) => _t(
+        ru: 'Кормить $name?',
+        en: 'Feed $name?',
+        hi: '$name को खिलाएँ?',
+        fr: 'Nourrir $name ?',
+        de: '$name füttern?',
+        es: '¿Alimentar a $name?',
+        sv: 'Mata $name?',
+        nl: '$name voeren?',
+        pt: 'Alimentar $name?',
+        ja: '$name に給餌しますか？',
+      );
+  String feedMarkPrompt(String formattedDate) => _t(
+        ru: 'Отметить кормление на $formattedDate?',
+        en: 'Mark feeding on $formattedDate?',
+        hi: '$formattedDate को खिलाना चिह्नित करें?',
+        fr: 'Marquer le nourrissage le $formattedDate ?',
+        de: 'Fütterung am $formattedDate markieren?',
+        es: '¿Registrar alimentación el $formattedDate?',
+        sv: 'Registrera matning den $formattedDate?',
+        nl: 'Voeding registreren op $formattedDate?',
+        pt: 'Registrar alimentação em $formattedDate?',
+        ja: '$formattedDate の給餌として記録しますか？',
+      );
+  String feedingMarked(String name, String formattedDate) => _t(
+        ru: 'Кормление для $name отмечено на $formattedDate',
+        en: 'Feeding for $name was marked on $formattedDate',
+        hi: '$name के लिए $formattedDate को खिलाना दर्ज किया गया',
+        fr: 'Le nourrissage de $name a été noté le $formattedDate',
+        de: 'Fütterung für $name am $formattedDate markiert',
+        es: 'Se registró la alimentación de $name el $formattedDate',
+        sv: 'Matning för $name registrerad den $formattedDate',
+        nl: 'Voeding voor $name geregistreerd op $formattedDate',
+        pt: 'Alimentação de $name registrada em $formattedDate',
+        ja: '$name の給餌が $formattedDate に記録されました',
+      );
+  String spiderAdded(String name) => _t(
+        ru: '$name добавлен в Keeper',
+        en: '$name added to Keeper',
+        hi: '$name Keeper में जोड़ा गया',
+        fr: '$name a été ajouté à Keeper',
+        de: '$name wurde zu Keeper hinzugefügt',
+        es: '$name se añadió a Keeper',
+        sv: '$name lades till i Keeper',
+        nl: '$name is toegevoegd aan Keeper',
+        pt: '$name foi adicionado ao Keeper',
+        ja: '$name をKeeperに追加しました',
+      );
+  String everyDays(int days) => _t(
+        ru: 'каждые $days дн.',
+        en: 'every $days d',
+        hi: 'हर $days दिन',
+        fr: 'tous les $days j',
+        de: 'alle $days T.',
+        es: 'cada $days d',
+        sv: 'var $days dag',
+        nl: 'elke $days d',
+        pt: 'a cada $days d',
+        ja: '$days日ごと',
+      );
+  String daysAgo(int days) => _t(
+        ru: '$days дн. назад',
+        en: '$days d ago',
+        hi: '$days दिन पहले',
+        fr: 'il y a $days j',
+        de: 'vor $days T.',
+        es: 'hace $days d',
+        sv: 'för $days d sedan',
+        nl: '$days d geleden',
+        pt: 'há $days d',
+        ja: '$days日前',
+      );
+  String get today => _t(
+        ru: 'сегодня',
+        en: 'today',
+        hi: 'आज',
+        fr: 'aujourd’hui',
+        de: 'heute',
+        es: 'hoy',
+        sv: 'idag',
+        nl: 'vandaag',
+        pt: 'hoje',
+        ja: '今日',
+      );
+  String get removeFromAnalyticsDone => _t(
+        ru: 'Сохранить',
+        en: 'Save',
+        hi: 'सहेजें',
+        fr: 'Enregistrer',
+        de: 'Speichern',
+        es: 'Guardar',
+        sv: 'Spara',
+        nl: 'Opslaan',
+        pt: 'Guardar',
+        ja: '保存',
+      );
 }

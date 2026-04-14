@@ -3,6 +3,14 @@ import 'package:flutter/material.dart';
 enum AppLanguage {
   en,
   ru,
+  hi,
+  fr,
+  de,
+  es,
+  sv,
+  nl,
+  pt,
+  ja,
 }
 
 enum SortField {

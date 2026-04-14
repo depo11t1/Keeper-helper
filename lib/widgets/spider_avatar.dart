@@ -17,11 +17,14 @@ class SpiderAvatar extends StatelessWidget {
   final String? label;
   final double size;
   final String? photoPath;
+  static final Map<String, ImageProvider> _imageCache = {};
 
   @override
   Widget build(BuildContext context) {
     final hasPreview = seed >= 0;
     final hasPhoto = photoPath != null && File(photoPath!).existsSync();
+    final photoProvider =
+        hasPhoto ? _imageCache.putIfAbsent(photoPath!, () => FileImage(File(photoPath!))) : null;
 
     return Container(
       width: size,
@@ -36,8 +39,8 @@ class SpiderAvatar extends StatelessWidget {
         child: hasPhoto
             ? ClipRRect(
                 borderRadius: BorderRadius.circular(size * 0.26),
-                child: Image.file(
-                  File(photoPath!),
+                child: Image(
+                  image: photoProvider!,
                   fit: BoxFit.cover,
                   width: size,
                   height: size,

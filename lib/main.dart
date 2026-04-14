@@ -98,6 +98,14 @@ class _KeeperAppState extends State<KeeperApp> {
       supportedLocales: const [
         Locale('ru'),
         Locale('en'),
+        Locale('hi'),
+        Locale('fr'),
+        Locale('de'),
+        Locale('es'),
+        Locale('sv'),
+        Locale('nl'),
+        Locale('pt'),
+        Locale('ja'),
       ],
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
@@ -333,7 +341,15 @@ class _KeeperAppState extends State<KeeperApp> {
                                   ),
                             ),
                           ),
-                          if (selected) Text(label),
+                          if (selected)
+                            Text(
+                              label,
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    fontSize: field == SortField.name ? null : 16,
+                                    fontWeight: FontWeight.w400,
+                                    color: keeperPalette(context).accent,
+                                  ),
+                            ),
                         ],
                       ),
                     ),
@@ -491,6 +507,11 @@ class _KeeperAppState extends State<KeeperApp> {
                           fillColor: Theme.of(context)
                               .colorScheme
                               .surfaceContainerLow,
+                          floatingLabelBehavior: FloatingLabelBehavior.never,
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            borderSide: BorderSide.none,
+                          ),
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
@@ -508,6 +529,11 @@ class _KeeperAppState extends State<KeeperApp> {
                           fillColor: Theme.of(context)
                               .colorScheme
                               .surfaceContainerLow,
+                          floatingLabelBehavior: FloatingLabelBehavior.never,
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            borderSide: BorderSide.none,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -620,7 +646,7 @@ class _KeeperAppState extends State<KeeperApp> {
                                     name: nameController.text.trim(),
                                     latinName: latinController.text.trim(),
                                     sex: sex,
-                                    humidity: 70,
+                                    humidity: 71,
                                     avatarSeed: -1,
                                     accent: _settings.accentColor,
                                     archived: false,
@@ -767,7 +793,8 @@ class _KeeperAppState extends State<KeeperApp> {
                   const SizedBox(height: 6),
                   buildTile(
                     title: strings.dateLabel,
-                    value: DateFormat('d MMMM yyyy', 'ru').format(date),
+                    value: DateFormat('d MMMM yyyy', strings.localeCode)
+                        .format(date),
                     position: _ArchiveTilePosition.bottom,
                     onTap: () async {
                       final picked = await _showThemedDatePicker(
@@ -804,7 +831,9 @@ class _KeeperAppState extends State<KeeperApp> {
 
   Future<String?> _pickMoltStage(BuildContext context, String current) async {
     final palette = keeperPalette(context);
-    final initialIndex = _moltStageOptions.indexOf(current);
+    final strings = AppStrings.of(_settings.language);
+    final options = _moltStageOptions(strings);
+    final initialIndex = options.indexOf(current);
     final controller = FixedExtentScrollController(
       initialItem: initialIndex >= 0 ? initialIndex : 0,
     );
@@ -813,8 +842,7 @@ class _KeeperAppState extends State<KeeperApp> {
       context: context,
       backgroundColor: palette.background,
       builder: (context) {
-        String selected = _moltStageOptions[
-            initialIndex >= 0 ? initialIndex : 0];
+        String selected = options[initialIndex >= 0 ? initialIndex : 0];
         return StatefulBuilder(
           builder: (context, setState) {
             return SizedBox(
@@ -830,21 +858,21 @@ class _KeeperAppState extends State<KeeperApp> {
                         itemExtent: 36,
                         physics: const FixedExtentScrollPhysics(),
                         onSelectedItemChanged: (index) {
-                          setState(() => selected = _moltStageOptions[index]);
+                        setState(() => selected = options[index]);
                         },
                         childDelegate: ListWheelChildBuilderDelegate(
                           builder: (context, index) {
-                            final value = _moltStageOptions[index];
+                          final value = options[index];
                             final isSelected = value == selected;
                             return Center(
                               child: AnimatedDefaultTextStyle(
                                 duration: const Duration(milliseconds: 180),
-                                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                                      fontSize: isSelected ? 22 : 16,
-                                      fontWeight:
-                                          isSelected ? FontWeight.w700 : FontWeight.w500,
-                                      color: isSelected
-                                          ? palette.badgeForeground
+                              style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                                    fontSize: isSelected ? 24 : 16,
+                                    fontWeight:
+                                        isSelected ? FontWeight.w700 : FontWeight.w500,
+                                    color: isSelected
+                                        ? palette.badgeForeground
                                           : Theme.of(context)
                                               .textTheme
                                               .bodyMedium
@@ -854,15 +882,15 @@ class _KeeperAppState extends State<KeeperApp> {
                               ),
                             );
                           },
-                          childCount: _moltStageOptions.length,
+                        childCount: options.length,
                         ),
                       ),
                     ),
                     const Spacer(),
-                    FilledButton(
-                      onPressed: () => Navigator.of(context).pop(selected),
-                      child: const Text('Выбрать'),
-                    ),
+                  FilledButton(
+                    onPressed: () => Navigator.of(context).pop(selected),
+                    child: Text(strings.choose),
+                  ),
                   ],
                 ),
               ),
@@ -872,7 +900,7 @@ class _KeeperAppState extends State<KeeperApp> {
       },
     );
 
-    return result ?? (current == '—' ? null : current);
+    return result ?? (current == strings.missingValue ? null : current);
   }
 
   List<SpiderProfile> _filteredAnalyticsSpiders(List<SpiderProfile> activeSpiders) {
@@ -889,12 +917,13 @@ class _KeeperAppState extends State<KeeperApp> {
   }) {
     final palette = keeperPalette(context);
     final base = Theme.of(context);
+    final localeCode = AppStrings.of(_settings.language).localeCode;
     return showDatePicker(
       context: context,
       initialDate: initialDate,
       firstDate: DateTime(2020),
       lastDate: DateTime.now().add(const Duration(days: 1)),
-      locale: const Locale('ru'),
+      locale: Locale(localeCode),
       builder: (context, child) {
         return Theme(
         data: base.copyWith(
@@ -930,8 +959,11 @@ class _KeeperAppState extends State<KeeperApp> {
   }
 
   String? _nextMoltStage(String? current) {
-    if (current == null || current == 'Неизвестно' || current == '—') {
-      return 'Неизвестно';
+    final strings = AppStrings.of(_settings.language);
+    if (current == null ||
+        current == strings.missingValue ||
+        current == strings.dontKnow) {
+      return strings.dontKnow;
     }
     final match = RegExp(r'^L(\d+)$').firstMatch(current);
     if (match == null) {
@@ -1600,23 +1632,23 @@ class _SexChoiceChip extends StatelessWidget {
   }
 }
 
-const _moltStageOptions = [
-  'Неизвестно',
-  'L1',
-  'L2',
-  'L3',
-  'L4',
-  'L5',
-  'L6',
-  'L7',
-  'L8',
-  'L9',
-  'L10',
-  'L11',
-  'L12',
-  'L13',
-  'L14',
-  'L15',
-];
+List<String> _moltStageOptions(AppStrings strings) => [
+      strings.dontKnow,
+      'L1',
+      'L2',
+      'L3',
+      'L4',
+      'L5',
+      'L6',
+      'L7',
+      'L8',
+      'L9',
+      'L10',
+      'L11',
+      'L12',
+      'L13',
+      'L14',
+      'L15',
+    ];
 
 enum _ArchiveTilePosition { single, top, middle, bottom }

@@ -82,6 +82,7 @@ class _AnalyticsPlaceholderScreenState extends State<AnalyticsPlaceholderScreen>
         const SizedBox(height: 18),
         _AnalyticsListBlock(
           title: strings.feedsFastest,
+          icon: Icons.restaurant_rounded,
           items: feedingItems,
           showAll: _showAllFeeders,
           onToggle: () => setState(() => _showAllFeeders = !_showAllFeeders),
@@ -92,6 +93,7 @@ class _AnalyticsPlaceholderScreenState extends State<AnalyticsPlaceholderScreen>
         const SizedBox(height: 18),
         _AnalyticsListBlock(
           title: strings.moltsFastest,
+          icon: Icons.autorenew_rounded,
           items: moltItems,
           showAll: _showAllMolters,
           onToggle: () => setState(() => _showAllMolters = !_showAllMolters),
@@ -128,6 +130,7 @@ class _AnalyticsPlaceholderScreenState extends State<AnalyticsPlaceholderScreen>
 class _AnalyticsListBlock extends StatelessWidget {
   const _AnalyticsListBlock({
     required this.title,
+    required this.icon,
     required this.items,
     required this.showAll,
     required this.onToggle,
@@ -137,6 +140,7 @@ class _AnalyticsListBlock extends StatelessWidget {
   });
 
   final String title;
+  final IconData icon;
   final List<_StatItem> items;
   final bool showAll;
   final VoidCallback onToggle;
@@ -152,6 +156,7 @@ class _AnalyticsListBlock extends StatelessWidget {
         color: color,
         child: _AnalyticsSummary(
           title: title,
+          icon: icon,
           value: strings.noData,
           textColor: textColor,
         ),
@@ -165,31 +170,39 @@ class _AnalyticsListBlock extends StatelessWidget {
         color: color,
         child: _AnalyticsSummary(
           title: title,
+          icon: icon,
           value: '',
           textColor: textColor,
         ),
       ),
       const SizedBox(height: 6),
-      ...List.generate(visible.length, (index) {
-        final item = visible[index];
-        final position = visible.length == 1
-            ? _AnalyticsGroupPosition.bottom
-            : index == visible.length - 1
+      AnimatedSize(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeInOut,
+        alignment: Alignment.topCenter,
+        child: Column(
+          children: List.generate(visible.length, (index) {
+            final item = visible[index];
+            final position = visible.length == 1
                 ? _AnalyticsGroupPosition.bottom
-                : _AnalyticsGroupPosition.middle;
-        return Padding(
-          padding: EdgeInsets.only(bottom: index == visible.length - 1 ? 0 : 6),
-          child: _AnalyticsGroupCard(
-            position: position,
-            color: color,
-            child: _AnalyticsSummary(
-              title: item.name,
-              value: strings.everyDays(item.averageDays),
-              textColor: textColor,
-            ),
-          ),
-        );
-      }),
+                : index == visible.length - 1
+                    ? _AnalyticsGroupPosition.bottom
+                    : _AnalyticsGroupPosition.middle;
+            return Padding(
+              padding: EdgeInsets.only(bottom: index == visible.length - 1 ? 0 : 6),
+              child: _AnalyticsGroupCard(
+                position: position,
+                color: color,
+                child: _AnalyticsSummary(
+                  title: item.name,
+                  value: strings.everyDays(item.averageDays),
+                  textColor: textColor,
+                ),
+              ),
+            );
+          }),
+        ),
+      ),
     ];
 
     return Column(
@@ -268,17 +281,23 @@ class _AnalyticsSummary extends StatelessWidget {
     required this.title,
     required this.value,
     required this.textColor,
+    this.icon,
   });
 
   final String title;
   final String value;
   final Color textColor;
+  final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Row(
       children: [
+        if (icon != null) ...[
+          Icon(icon, size: 18, color: keeperPalette(context).accent),
+          const SizedBox(width: 8),
+        ],
         Expanded(
           child: Text(
             title,
@@ -292,9 +311,10 @@ class _AnalyticsSummary extends StatelessWidget {
           Text(
             value,
             style: theme.textTheme.labelLarge?.copyWith(
-                  fontWeight: FontWeight.w400,
-                  color: textColor,
-                ),
+              fontSize: 12,
+              fontWeight: FontWeight.w400,
+              color: textColor,
+            ),
           ),
       ],
     );
@@ -418,9 +438,10 @@ class _AnalyticsHero extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  strings.isRu ? 'Средние интервалы' : 'Average intervals',
+                  strings.averageIntervals,
                   style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
                     color: palette.textPrimary,
                   ),
                 ),
@@ -504,14 +525,15 @@ class _HeroStatPill extends StatelessWidget {
           Text(
             label,
             style: theme.textTheme.bodySmall?.copyWith(
-              color: palette.textMuted,
-              fontWeight: FontWeight.w500,
+              color: accent,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 6),
           Text(
             value,
             style: theme.textTheme.titleMedium?.copyWith(
+              fontSize: 12,
               color: palette.textPrimary,
               fontWeight: FontWeight.w700,
             ),
@@ -591,7 +613,7 @@ class _DualTimelinePainter extends CustomPainter {
       ..strokeWidth = 2.6
       ..strokeCap = StrokeCap.round;
     final dotPaintFeed = Paint()..color = accent;
-    final dotPaintMolt = Paint()..color = accent.withValues(alpha: 0.5);
+    final dotPaintMolt = Paint()..color = accent;
 
     final startX = 56.0;
     final endX = size.width - 10.0;

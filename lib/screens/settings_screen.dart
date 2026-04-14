@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../l10n/app_strings.dart';
 import '../models/app_settings.dart';
 import '../theme/app_theme.dart';
+import 'about_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({
@@ -101,8 +102,7 @@ class SettingsScreen extends StatelessWidget {
         _SettingsActionTile(
           position: _SettingsBlockPosition.top,
           icon: Icons.language_rounded,
-          title:
-              '${strings.languageLabel}: ${currentLanguage == AppLanguage.en ? strings.english : strings.russian}',
+          title: '${strings.languageLabel}: ${strings.languageName(currentLanguage)}',
           backgroundColor: scheme.surfaceContainerLow,
           iconColor: palette.badgeForeground,
           onTap: () => _showLanguageSheet(context, strings),
@@ -158,11 +158,13 @@ class SettingsScreen extends StatelessWidget {
           title: strings.aboutApp,
           backgroundColor: scheme.surfaceContainerLow,
           iconColor: palette.badgeForeground,
-          onTap: () => _showStub(
-            context,
-            strings.aboutApp,
-            strings.aboutStub,
-          ),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => AboutScreen(language: currentLanguage),
+              ),
+            );
+          },
         ),
               ],
             ),
@@ -196,35 +198,69 @@ class SettingsScreen extends StatelessWidget {
       context: context,
       backgroundColor: palette.background,
       builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _SettingsActionTile(
-                icon: Icons.translate_rounded,
-                title: strings.english,
-                position: _SettingsBlockPosition.top,
-                backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
-                iconColor: keeperPalette(context).badgeForeground,
-                onTap: () {
-                  onLanguageChanged(AppLanguage.en);
-                  Navigator.of(context).pop();
-                },
-              ),
-              const SizedBox(height: 8),
-              _SettingsActionTile(
-                icon: Icons.translate_rounded,
-                title: strings.russian,
-                position: _SettingsBlockPosition.bottom,
-                backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
-                iconColor: keeperPalette(context).badgeForeground,
-                onTap: () {
-                  onLanguageChanged(AppLanguage.ru);
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
+        final placeholderText = strings.placeholderSuffix;
+        final entries = [
+          (strings.dutch, true, AppLanguage.nl),
+          (strings.english, true, AppLanguage.en),
+          (strings.french, true, AppLanguage.fr),
+          (strings.german, true, AppLanguage.de),
+          (strings.hindi, true, AppLanguage.hi),
+          (strings.japanese, true, AppLanguage.ja),
+          (strings.portuguese, true, AppLanguage.pt),
+          (strings.russian, true, AppLanguage.ru),
+          (strings.spanish, true, AppLanguage.es),
+          (strings.swedish, true, AppLanguage.sv),
+        ]..sort((a, b) => a.$1.compareTo(b.$1));
+        return SizedBox(
+          height: MediaQuery.of(context).size.height * 0.6,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+            child: ListView(
+              children: [
+                ...entries.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final item = entry.value;
+                  final isFirst = index == 0;
+                  final isLast = index == entries.length - 1;
+                  final position = entries.length == 1
+                      ? _SettingsBlockPosition.single
+                      : isFirst
+                          ? _SettingsBlockPosition.top
+                          : isLast
+                              ? _SettingsBlockPosition.bottom
+                              : _SettingsBlockPosition.middle;
+                  return Padding(
+                    padding: EdgeInsets.only(bottom: isLast ? 0 : 8),
+                    child: _SettingsActionTile(
+                      icon: Icons.translate_rounded,
+                      title: item.$1,
+                      position: position,
+                      backgroundColor:
+                          Theme.of(context).colorScheme.surfaceContainerLow,
+                      iconColor: keeperPalette(context).badgeForeground,
+                      trailing: item.$2 && item.$3 == currentLanguage
+                          ? Icon(
+                              Icons.check_rounded,
+                              color: keeperPalette(context).badgeForeground,
+                            )
+                          : null,
+                      onTap: () {
+                        if (item.$2 && item.$3 != null) {
+                          onLanguageChanged(item.$3!);
+                          Navigator.of(context).pop();
+                        } else {
+                          _showStub(
+                            context,
+                            strings.languageLabel,
+                            strings.placeholderMessage,
+                          );
+                        }
+                      },
+                    ),
+                  );
+                }),
+              ],
+            ),
           ),
         );
       },
@@ -291,6 +327,7 @@ class _SettingsActionTile extends StatelessWidget {
     required this.onTap,
     required this.backgroundColor,
     required this.iconColor,
+    this.trailing,
     this.position = _SettingsBlockPosition.single,
   });
 
@@ -299,6 +336,7 @@ class _SettingsActionTile extends StatelessWidget {
   final VoidCallback onTap;
   final Color backgroundColor;
   final Color iconColor;
+  final Widget? trailing;
   final _SettingsBlockPosition position;
 
   BorderRadius _radius() {
@@ -350,10 +388,11 @@ class _SettingsActionTile extends StatelessWidget {
                     ),
                   ),
                 ),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: Theme.of(context).textTheme.bodyMedium?.color,
-                ),
+                trailing ??
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      color: Theme.of(context).textTheme.bodyMedium?.color,
+                    ),
               ],
             ),
           ),
