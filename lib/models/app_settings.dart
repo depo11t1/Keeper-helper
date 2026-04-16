@@ -25,6 +25,7 @@ class AppSettings {
     required this.language,
     this.sortField = SortField.name,
     this.sortDescending = false,
+    this.experimentalTintedBackground = false,
     Set<String>? analyticsIncludeIds,
   }) : analyticsIncludeIds = analyticsIncludeIds ?? <String>{};
 
@@ -32,6 +33,7 @@ class AppSettings {
   AppLanguage language;
   SortField sortField;
   bool sortDescending;
+  bool experimentalTintedBackground;
   Set<String> analyticsIncludeIds;
 
   Map<String, dynamic> toJson() => {
@@ -39,6 +41,7 @@ class AppSettings {
         'language': language.name,
         'sortField': sortField.name,
         'sortDescending': sortDescending,
+        'experimentalTintedBackground': experimentalTintedBackground,
         'analyticsIncludeIds': analyticsIncludeIds.toList(),
       };
 
@@ -48,6 +51,8 @@ class AppSettings {
       language: AppLanguage.values.byName(json['language'] as String? ?? 'ru'),
       sortField: SortField.values.byName(json['sortField'] as String? ?? 'name'),
       sortDescending: json['sortDescending'] as bool? ?? false,
+      experimentalTintedBackground:
+          json['experimentalTintedBackground'] as bool? ?? false,
       analyticsIncludeIds: (json['analyticsIncludeIds'] as List<dynamic>? ?? [])
           .map((id) => id as String)
           .toSet(),

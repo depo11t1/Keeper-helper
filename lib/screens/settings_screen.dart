@@ -10,8 +10,10 @@ class SettingsScreen extends StatelessWidget {
     super.key,
     required this.currentAccent,
     required this.currentLanguage,
+    required this.experimentalTintedBackground,
     required this.onAccentChanged,
     required this.onLanguageChanged,
+    required this.onExperimentalTintedBackgroundChanged,
     required this.onOpenArchive,
     required this.onOpenAnalytics,
     required this.onBackup,
@@ -19,8 +21,10 @@ class SettingsScreen extends StatelessWidget {
 
   final Color currentAccent;
   final AppLanguage currentLanguage;
+  final bool experimentalTintedBackground;
   final ValueChanged<Color> onAccentChanged;
   final ValueChanged<AppLanguage> onLanguageChanged;
+  final ValueChanged<bool> onExperimentalTintedBackgroundChanged;
   final VoidCallback onOpenArchive;
   final VoidCallback onOpenAnalytics;
   final VoidCallback onBackup;
@@ -62,95 +66,121 @@ class SettingsScreen extends StatelessWidget {
             delegate: SliverChildListDelegate(
               [
                 _SettingsBlockCard(
-          color: scheme.surfaceContainerLow,
-          padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: accentOptions.map((color) {
-              final selected = color.toARGB32() == currentAccent.toARGB32();
-              return InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: () => onAccentChanged(color),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 150),
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: selected
-                        ? scheme.surfaceContainerHighest
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Center(
-                    child: AnimatedScale(
-                      duration: const Duration(milliseconds: 150),
-                      scale: selected ? 1 : 0.94,
-                      child: Container(
-                        width: 28,
-                        height: 28,
-                        decoration: BoxDecoration(
-                          color: color,
-                          borderRadius: BorderRadius.circular(9),
+                  position: _SettingsBlockPosition.top,
+                  color: scheme.surfaceContainerLow,
+                  padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: accentOptions.map((color) {
+                      final selected =
+                          color.toARGB32() == currentAccent.toARGB32();
+                      return InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: () => onAccentChanged(color),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: selected
+                                ? scheme.surfaceContainerHighest
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Center(
+                            child: AnimatedScale(
+                              duration: const Duration(milliseconds: 150),
+                              scale: selected ? 1 : 0.94,
+                              child: Container(
+                                width: 28,
+                                height: 28,
+                                decoration: BoxDecoration(
+                                  color: color,
+                                  borderRadius: BorderRadius.circular(9),
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
+                      );
+                    }).toList(),
                   ),
                 ),
-              );
-            }).toList(),
-          ),
-        ),
-        const SizedBox(height: 18),
-        _SettingsActionTile(
-          position: _SettingsBlockPosition.top,
-          icon: Icons.language_rounded,
-          title: '${strings.languageLabel}: ${strings.languageName(currentLanguage)}',
-          backgroundColor: scheme.surfaceContainerLow,
-          iconColor: palette.badgeForeground,
-          onTap: () => _showLanguageSheet(context, strings),
-        ),
-        const SizedBox(height: 8),
-        _SettingsActionTile(
-          position: _SettingsBlockPosition.middle,
-          icon: Icons.archive_outlined,
-          title: strings.archive,
-          backgroundColor: scheme.surfaceContainerLow,
-          iconColor: palette.badgeForeground,
-          onTap: onOpenArchive,
-        ),
-        const SizedBox(height: 8),
-        _SettingsActionTile(
-          position: _SettingsBlockPosition.bottom,
-          icon: Icons.insights_rounded,
-          title: strings.analytics,
-          backgroundColor: scheme.surfaceContainerLow,
-          iconColor: palette.badgeForeground,
-          onTap: onOpenAnalytics,
-        ),
-        const SizedBox(height: 18),
-        _SettingsActionTile(
-          position: _SettingsBlockPosition.top,
-          icon: Icons.cloud_outlined,
-          title: strings.backup,
-          backgroundColor: scheme.surfaceContainerLow,
-          iconColor: palette.badgeForeground,
-          onTap: onBackup,
-        ),
-        const SizedBox(height: 8),
-        _SettingsActionTile(
-          position: _SettingsBlockPosition.bottom,
-          icon: Icons.info_outline_rounded,
-          title: strings.aboutApp,
-          backgroundColor: scheme.surfaceContainerLow,
-          iconColor: palette.badgeForeground,
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => AboutScreen(language: currentLanguage),
-              ),
-            );
-          },
-        ),
+                const SizedBox(height: 8),
+                _SettingsActionTile(
+                  position: _SettingsBlockPosition.bottom,
+                  icon: Icons.brightness_6_rounded,
+                  title: strings.tintedBackgroundMode,
+                  backgroundColor: scheme.surfaceContainerLow,
+                  iconColor: palette.badgeForeground,
+                  verticalPadding: 13,
+                  trailing: _SettingsAccentToggle(
+                    value: experimentalTintedBackground,
+                    accent: palette.badgeForeground,
+                    activeTrack: palette.badgeBackground.withValues(alpha: 0.72),
+                    inactiveTrack: Color.alphaBlend(
+                      palette.badgeBackground.withValues(alpha: 0.14),
+                      scheme.surfaceContainerHighest.withValues(alpha: 0.94),
+                    ),
+                    activeThumb: scheme.onPrimary,
+                    inactiveThumb: palette.textPrimary.withValues(alpha: 0.96),
+                  ),
+                  onTap: () => onExperimentalTintedBackgroundChanged(
+                    !experimentalTintedBackground,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                _SettingsActionTile(
+                  position: _SettingsBlockPosition.top,
+                  icon: Icons.language_rounded,
+                  title:
+                      '${strings.languageLabel}: ${strings.languageName(currentLanguage)}',
+                  backgroundColor: scheme.surfaceContainerLow,
+                  iconColor: palette.badgeForeground,
+                  onTap: () => _showLanguageSheet(context, strings),
+                ),
+                const SizedBox(height: 8),
+                _SettingsActionTile(
+                  position: _SettingsBlockPosition.middle,
+                  icon: Icons.archive_outlined,
+                  title: strings.archive,
+                  backgroundColor: scheme.surfaceContainerLow,
+                  iconColor: palette.badgeForeground,
+                  onTap: onOpenArchive,
+                ),
+                const SizedBox(height: 8),
+                _SettingsActionTile(
+                  position: _SettingsBlockPosition.bottom,
+                  icon: Icons.insights_rounded,
+                  title: strings.analytics,
+                  backgroundColor: scheme.surfaceContainerLow,
+                  iconColor: palette.badgeForeground,
+                  onTap: onOpenAnalytics,
+                ),
+                const SizedBox(height: 18),
+                _SettingsActionTile(
+                  position: _SettingsBlockPosition.top,
+                  icon: Icons.cloud_outlined,
+                  title: strings.backup,
+                  backgroundColor: scheme.surfaceContainerLow,
+                  iconColor: palette.badgeForeground,
+                  onTap: onBackup,
+                ),
+                const SizedBox(height: 8),
+                _SettingsActionTile(
+                  position: _SettingsBlockPosition.bottom,
+                  icon: Icons.info_outline_rounded,
+                  title: strings.aboutApp,
+                  backgroundColor: scheme.surfaceContainerLow,
+                  iconColor: palette.badgeForeground,
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => AboutScreen(language: currentLanguage),
+                      ),
+                    );
+                  },
+                ),
               ],
             ),
           ),
@@ -314,6 +344,7 @@ class _SettingsActionTile extends StatelessWidget {
     required this.iconColor,
     this.trailing,
     this.position = _SettingsBlockPosition.single,
+    this.verticalPadding = 18,
   });
 
   final IconData? icon;
@@ -323,6 +354,7 @@ class _SettingsActionTile extends StatelessWidget {
   final Color iconColor;
   final Widget? trailing;
   final _SettingsBlockPosition position;
+  final double verticalPadding;
 
   BorderRadius _radius() {
     switch (position) {
@@ -360,7 +392,10 @@ class _SettingsActionTile extends StatelessWidget {
           onTap: onTap,
           borderRadius: _radius(),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+            padding: EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: verticalPadding,
+            ),
             child: Row(
               children: [
                 if (icon != null) ...[
@@ -382,6 +417,56 @@ class _SettingsActionTile extends StatelessWidget {
                     ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsAccentToggle extends StatelessWidget {
+  const _SettingsAccentToggle({
+    required this.value,
+    required this.accent,
+    required this.activeTrack,
+    required this.inactiveTrack,
+    required this.activeThumb,
+    required this.inactiveThumb,
+  });
+
+  final bool value;
+  final Color accent;
+  final Color activeTrack;
+  final Color inactiveTrack;
+  final Color activeThumb;
+  final Color inactiveThumb;
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        width: 46,
+        height: 28,
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        decoration: BoxDecoration(
+          color: value ? activeTrack : inactiveTrack,
+          borderRadius: BorderRadius.circular(999),
+        ),
+        alignment: value ? Alignment.centerRight : Alignment.centerLeft,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          width: 20,
+          height: 20,
+          decoration: BoxDecoration(
+            color: value ? activeThumb : inactiveThumb,
+            borderRadius: BorderRadius.circular(999),
+            boxShadow: [
+              BoxShadow(
+                color: accent.withValues(alpha: value ? 0.22 : 0.10),
+                blurRadius: value ? 12 : 8,
+              ),
+            ],
           ),
         ),
       ),

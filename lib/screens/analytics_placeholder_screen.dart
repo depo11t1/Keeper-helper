@@ -72,10 +72,9 @@ class _AnalyticsPlaceholderScreenState extends State<AnalyticsPlaceholderScreen>
             delegate: SliverChildListDelegate(
               [
         _AnalyticsHero(
+          spiders: widget.spiders,
           feedAverage: feedingAverage,
           moltAverage: moltAverage,
-          feedDates: feedingDates,
-          moltDates: moltDates,
           accent: widget.accent,
           strings: strings,
         ),
@@ -414,28 +413,43 @@ class _AverageBars extends StatelessWidget {
   }
 }
 
-class _AnalyticsHero extends StatelessWidget {
+class _AnalyticsHero extends StatefulWidget {
   const _AnalyticsHero({
+    required this.spiders,
     required this.feedAverage,
     required this.moltAverage,
-    required this.feedDates,
-    required this.moltDates,
     required this.accent,
     required this.strings,
   });
 
+  final List<SpiderProfile> spiders;
   final int? feedAverage;
   final int? moltAverage;
-  final List<DateTime> feedDates;
-  final List<DateTime> moltDates;
   final Color accent;
   final AppStrings strings;
+
+  @override
+  State<_AnalyticsHero> createState() => _AnalyticsHeroState();
+}
+
+class _AnalyticsHeroState extends State<_AnalyticsHero> {
+  String? _selectedSpiderId;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final palette = keeperPalette(context);
     final base = Theme.of(context).colorScheme.surfaceContainerLow;
+    final points = _buildPoints(widget.spiders);
+    _AnalyticsHeroPoint? selectedPoint;
+    for (final point in points) {
+      if (point.id == _selectedSpiderId) {
+        selectedPoint = point;
+        break;
+      }
+    }
+    selectedPoint ??= points.isEmpty ? null : points.first;
+
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
@@ -449,7 +463,7 @@ class _AnalyticsHero extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  strings.averageIntervals,
+                  widget.strings.averageIntervals,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
@@ -457,30 +471,21 @@ class _AnalyticsHero extends StatelessWidget {
                   ),
                 ),
               ),
-              Icon(Icons.insights_rounded, color: accent),
+              Icon(Icons.insights_rounded, color: widget.accent),
             ],
-          ),
-          const SizedBox(height: 12),
-          _DualTimelineChart(
-            feedDates: feedDates,
-            moltDates: moltDates,
-            accent: accent,
-            labelColor: palette.textMuted,
-            feedLabel: strings.eatsShort,
-            moltLabel: strings.moltsShort,
           ),
           const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
                 child: _HeroStatPill(
-                  label: strings.avgEatsPlural,
-                  value: feedAverage == null
-                      ? strings.littleData
-                      : strings.everyDays(feedAverage!),
-                  accent: accent,
+                  label: widget.strings.avgEatsPlural,
+                  value: widget.feedAverage == null
+                      ? widget.strings.littleData
+                      : widget.strings.everyDays(widget.feedAverage!),
+                  accent: widget.accent,
                   background: Color.alphaBlend(
-                    accent.withValues(alpha: 0.14),
+                    widget.accent.withValues(alpha: 0.14),
                     base,
                   ),
                 ),
@@ -488,22 +493,233 @@ class _AnalyticsHero extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: _HeroStatPill(
-                  label: strings.avgMoltsPlural,
-                  value: moltAverage == null
-                      ? strings.littleData
-                      : strings.everyDays(moltAverage!),
-                  accent: accent,
+                  label: widget.strings.avgMoltsPlural,
+                  value: widget.moltAverage == null
+                      ? widget.strings.littleData
+                      : widget.strings.everyDays(widget.moltAverage!),
+                  accent: widget.accent,
                   background: Color.alphaBlend(
-                    accent.withValues(alpha: 0.14),
+                    widget.accent.withValues(alpha: 0.14),
                     base,
                   ),
                 ),
               ),
             ],
           ),
+          const SizedBox(height: 12),
+          Container(
+            height: 188,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: widget.accent.withValues(alpha: 0.16),
+              ),
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  widget.accent.withValues(alpha: 0.11),
+                  widget.accent.withValues(alpha: 0.03),
+                ],
+              ),
+            ),
+            child: points.isEmpty
+                ? Center(
+                    child: Text(
+                      widget.strings.noData,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: palette.textMuted,
+                      ),
+                    ),
+                  )
+                : LayoutBuilder(
+                    builder: (context, constraints) {
+                      const leftInset = 18.0;
+                      const rightInset = 18.0;
+                      const topInset = 58.0;
+                      const bottomInset = 30.0;
+                      final width =
+                          constraints.maxWidth - leftInset - rightInset;
+                      final height =
+                          constraints.maxHeight - topInset - bottomInset;
+                      final maxFeed = points
+                          .map((point) => point.feedAverage)
+                          .fold<int>(7, (a, b) => a > b ? a : b);
+                      final maxMolt = points
+                          .map((point) => point.moltAverage)
+                          .fold<int>(7, (a, b) => a > b ? a : b);
+
+                      Offset pointOffset(_AnalyticsHeroPoint point) {
+                        final x = leftInset +
+                            width * (point.feedAverage / maxFeed).clamp(0.0, 1.0);
+                        final y = topInset +
+                            height *
+                                (1 - (point.moltAverage / maxMolt).clamp(0.0, 1.0));
+                        return Offset(x, y);
+                      }
+
+                      return Stack(
+                        children: [
+                          Positioned.fill(
+                            child: CustomPaint(
+                              painter: _AnalyticsPlanePainter(
+                                accent: widget.accent,
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            left: 12,
+                            right: 12,
+                            top: 12,
+                            child: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 180),
+                              child: selectedPoint == null
+                                  ? Text(
+                                      widget.strings.noData,
+                                      key: const ValueKey('hero-empty'),
+                                      style:
+                                          theme.textTheme.bodyMedium?.copyWith(
+                                        color: palette.textMuted,
+                                      ),
+                                    )
+                                  : Container(
+                                      key: ValueKey(selectedPoint.id),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 10,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Color.alphaBlend(
+                                          widget.accent.withValues(alpha: 0.10),
+                                          base,
+                                        ),
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            selectedPoint.name,
+                                            style: theme.textTheme.titleMedium
+                                                ?.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            '${widget.strings.feeding}: ${widget.strings.everyDays(selectedPoint.feedAverage)}',
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(
+                                              color: palette.textMuted,
+                                            ),
+                                          ),
+                                          Text(
+                                            '${widget.strings.molts}: ${widget.strings.everyDays(selectedPoint.moltAverage)}',
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(
+                                              color: palette.textMuted,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                            ),
+                          ),
+                          for (final point in points)
+                            Builder(
+                              builder: (context) {
+                                final offset = pointOffset(point);
+                                final selected = point.id == selectedPoint?.id;
+                                return Positioned(
+                                  left: offset.dx - (selected ? 9 : 7),
+                                  top: offset.dy - (selected ? 9 : 7),
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        _selectedSpiderId = point.id;
+                                      });
+                                    },
+                                    child: AnimatedContainer(
+                                      duration:
+                                          const Duration(milliseconds: 180),
+                                      width: selected ? 18 : 14,
+                                      height: selected ? 18 : 14,
+                                      decoration: BoxDecoration(
+                                        color: widget.accent,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: Colors.white.withValues(
+                                            alpha: selected ? 0.95 : 0.75,
+                                          ),
+                                          width: selected ? 2.4 : 1.6,
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: widget.accent.withValues(
+                                              alpha: selected ? 0.36 : 0.18,
+                                            ),
+                                            blurRadius: selected ? 16 : 10,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          Positioned(
+                            left: 14,
+                            bottom: 10,
+                            child: Text(
+                              widget.strings.molts,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: palette.textMuted,
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            right: 14,
+                            bottom: 10,
+                            child: Text(
+                              widget.strings.feeding,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: palette.textMuted,
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+          ),
         ],
       ),
     );
+  }
+
+  List<_AnalyticsHeroPoint> _buildPoints(List<SpiderProfile> spiders) {
+    final points = <_AnalyticsHeroPoint>[];
+    for (final spider in spiders) {
+      final feedDates = spider.feedings.map((entry) => entry.date).toList()..sort();
+      final moltDates = spider.molts.map((entry) => entry.date).toList()..sort();
+      final feedAverage = TimelineChart.averageDays(feedDates);
+      final moltAverage = TimelineChart.averageDays(moltDates);
+      if (feedAverage == null || moltAverage == null) {
+        continue;
+      }
+      points.add(
+        _AnalyticsHeroPoint(
+          id: spider.id,
+          name: spider.name,
+          feedAverage: feedAverage,
+          moltAverage: moltAverage,
+        ),
+      );
+    }
+    points.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    return points;
   }
 }
 
@@ -555,123 +771,61 @@ class _HeroStatPill extends StatelessWidget {
   }
 }
 
-class _DualTimelineChart extends StatelessWidget {
-  const _DualTimelineChart({
-    required this.feedDates,
-    required this.moltDates,
-    required this.accent,
-    required this.labelColor,
-    required this.feedLabel,
-    required this.moltLabel,
+class _AnalyticsHeroPoint {
+  const _AnalyticsHeroPoint({
+    required this.id,
+    required this.name,
+    required this.feedAverage,
+    required this.moltAverage,
   });
 
-  final List<DateTime> feedDates;
-  final List<DateTime> moltDates;
-  final Color accent;
-  final Color labelColor;
-  final String feedLabel;
-  final String moltLabel;
-
-  @override
-  Widget build(BuildContext context) {
-    final sortedFeed = feedDates.toList()..sort();
-    final sortedMolt = moltDates.toList()..sort();
-    final feed = sortedFeed.length > 5
-        ? sortedFeed.sublist(sortedFeed.length - 5)
-        : sortedFeed;
-    final molt = sortedMolt.length > 5
-        ? sortedMolt.sublist(sortedMolt.length - 5)
-        : sortedMolt;
-
-    return SizedBox(
-      height: 72,
-      child: CustomPaint(
-        painter: _DualTimelinePainter(
-          feedDates: feed,
-          moltDates: molt,
-          accent: accent,
-          labelColor: labelColor,
-          feedLabel: feedLabel,
-          moltLabel: moltLabel,
-        ),
-        child: const SizedBox.expand(),
-      ),
-    );
-  }
+  final String id;
+  final String name;
+  final int feedAverage;
+  final int moltAverage;
 }
 
-class _DualTimelinePainter extends CustomPainter {
-  _DualTimelinePainter({
-    required this.feedDates,
-    required this.moltDates,
+class _AnalyticsPlanePainter extends CustomPainter {
+  const _AnalyticsPlanePainter({
     required this.accent,
-    required this.labelColor,
-    required this.feedLabel,
-    required this.moltLabel,
   });
 
-  final List<DateTime> feedDates;
-  final List<DateTime> moltDates;
   final Color accent;
-  final Color labelColor;
-  final String feedLabel;
-  final String moltLabel;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final linePaint = Paint()
-      ..color = accent.withValues(alpha: 0.5)
-      ..strokeWidth = 2.6
-      ..strokeCap = StrokeCap.round;
-    final dotPaintFeed = Paint()..color = accent;
-    final dotPaintMolt = Paint()..color = accent;
+    final gridPaint = Paint()
+      ..color = accent.withValues(alpha: 0.10)
+      ..strokeWidth = 1;
+    final strongPaint = Paint()
+      ..color = accent.withValues(alpha: 0.16)
+      ..strokeWidth = 1.2;
 
-    final startX = 56.0;
-    final endX = size.width - 10.0;
-    final feedY = 20.0;
-    final moltY = 50.0;
+    const leftInset = 18.0;
+    const rightInset = 18.0;
+    const topInset = 58.0;
+    const bottomInset = 30.0;
+    final chartWidth = size.width - leftInset - rightInset;
+    final chartHeight = size.height - topInset - bottomInset;
 
-    canvas.drawLine(Offset(startX, feedY), Offset(endX, feedY), linePaint);
-    canvas.drawLine(Offset(startX, moltY), Offset(endX, moltY), linePaint);
-
-    void drawSeries(List<DateTime> dates, double y, Paint dotPaint) {
-      if (dates.isEmpty) return;
-      final sorted = dates.toList()..sort();
-      final min = sorted.first.millisecondsSinceEpoch.toDouble();
-      final max = sorted.last.millisecondsSinceEpoch.toDouble();
-      final range = (max - min).abs() < 1 ? 1 : max - min;
-      for (final date in sorted) {
-        final t = (date.millisecondsSinceEpoch - min) / range;
-        final x = startX + (endX - startX) * t;
-        canvas.drawCircle(Offset(x, y), 4.8, dotPaint);
-      }
+    for (var i = 0; i <= 4; i++) {
+      final dx = leftInset + chartWidth * (i / 4);
+      final dy = topInset + chartHeight * (i / 4);
+      canvas.drawLine(
+        Offset(dx, topInset),
+        Offset(dx, size.height - bottomInset),
+        i == 4 ? strongPaint : gridPaint,
+      );
+      canvas.drawLine(
+        Offset(leftInset, dy),
+        Offset(size.width - rightInset, dy),
+        i == 0 ? strongPaint : gridPaint,
+      );
     }
-
-    drawSeries(feedDates, feedY, dotPaintFeed);
-    drawSeries(moltDates, moltY, dotPaintMolt);
-
-    final textStyle = TextStyle(
-      color: labelColor,
-      fontSize: 10,
-      fontWeight: FontWeight.w500,
-    );
-    final feedPainter = TextPainter(
-      text: TextSpan(text: feedLabel, style: textStyle),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    feedPainter.paint(canvas, Offset(0, feedY - 8));
-
-    final moltPainter = TextPainter(
-      text: TextSpan(text: moltLabel, style: textStyle),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    moltPainter.paint(canvas, Offset(0, moltY - 8));
   }
 
   @override
-  bool shouldRepaint(covariant _DualTimelinePainter oldDelegate) {
-    return oldDelegate.feedDates != feedDates ||
-        oldDelegate.moltDates != moltDates ||
-        oldDelegate.accent != accent;
+  bool shouldRepaint(covariant _AnalyticsPlanePainter oldDelegate) {
+    return oldDelegate.accent != accent;
   }
 }

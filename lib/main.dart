@@ -25,17 +25,115 @@ import 'screens/backup_screen.dart';
 import 'screens/spider_detail_screen.dart';
 import 'theme/app_theme.dart';
 
+const _storageKey = 'keeper_state_v1';
+
+class _BootstrapState {
+  const _BootstrapState({
+    required this.settings,
+    required this.spiders,
+  });
+
+  final AppSettings settings;
+  final List<SpiderProfile> spiders;
+}
+
+AppLanguage _resolveSystemLanguage() {
+  final locales = WidgetsBinding.instance.platformDispatcher.locales;
+  for (final locale in locales) {
+    final code = locale.languageCode.toLowerCase();
+    switch (code) {
+      case 'ru':
+        return AppLanguage.ru;
+      case 'en':
+        return AppLanguage.en;
+      case 'hi':
+        return AppLanguage.hi;
+      case 'fr':
+        return AppLanguage.fr;
+      case 'de':
+        return AppLanguage.de;
+      case 'es':
+        return AppLanguage.es;
+      case 'sv':
+        return AppLanguage.sv;
+      case 'nl':
+        return AppLanguage.nl;
+      case 'pt':
+        return AppLanguage.pt;
+      case 'ja':
+        return AppLanguage.ja;
+    }
+  }
+  return AppLanguage.en;
+}
+
+Future<void> _preparePhotoThumbs(List<SpiderProfile> spiders) async {
+  for (final spider in spiders) {
+    final path = spider.photoPath;
+    if (path == null) {
+      continue;
+    }
+    final file = File(path);
+    if (!file.existsSync()) {
+      continue;
+    }
+    final thumbPath = await SpiderAvatar.ensureThumbnail(path);
+    if (thumbPath != null) {
+      await SpiderAvatar.cacheFileForPath(thumbPath);
+    }
+  }
+}
+
+Future<_BootstrapState> _loadBootstrapState() async {
+  final defaultSettings = buildInitialSettings(
+    language: _resolveSystemLanguage(),
+  );
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_storageKey);
+    if (raw == null) {
+      return _BootstrapState(settings: defaultSettings, spiders: []);
+    }
+    final data = jsonDecode(raw) as Map<String, dynamic>;
+    final settingsJson = data['settings'] as Map<String, dynamic>? ?? {};
+    final spidersJson = data['spiders'] as List<dynamic>? ?? [];
+    final settings = AppSettings.fromJson(settingsJson);
+    final spiders = spidersJson
+        .map((entry) => SpiderProfile.fromJson(entry as Map<String, dynamic>))
+        .toList();
+    await _preparePhotoThumbs(spiders);
+    return _BootstrapState(settings: settings, spiders: spiders);
+  } catch (_) {
+    return _BootstrapState(settings: defaultSettings, spiders: []);
+  }
+}
+
 // Точка входа приложения.
 // Здесь включаем русскую локаль и запускаем корневой виджет KeeperApp.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting();
   Intl.defaultLocale = 'en';
-  runApp(const KeeperApp());
+  final bootstrap = await _loadBootstrapState();
+  Intl.defaultLocale =
+      AppStrings.of(bootstrap.settings.language).localeCode;
+  runApp(
+    KeeperApp(
+      initialSettings: bootstrap.settings,
+      initialSpiders: bootstrap.spiders,
+    ),
+  );
 }
 
 class KeeperApp extends StatefulWidget {
-  const KeeperApp({super.key});
+  const KeeperApp({
+    super.key,
+    required this.initialSettings,
+    required this.initialSpiders,
+  });
+
+  final AppSettings initialSettings;
+  final List<SpiderProfile> initialSpiders;
 
   @override
   State<KeeperApp> createState() => _KeeperAppState();
@@ -50,85 +148,14 @@ class _KeeperAppState extends State<KeeperApp> {
   late AppSettings _settings;
   late List<SpiderProfile> _spiders;
   var _currentTab = 0;
-  static const _storageKey = 'keeper_state_v1';
 
   @override
   void initState() {
     super.initState();
-    _settings = buildInitialSettings(language: _resolveSystemLanguage());
-    _spiders = [];
+    _settings = widget.initialSettings;
+    _spiders = List<SpiderProfile>.from(widget.initialSpiders);
     Intl.defaultLocale = AppStrings.of(_settings.language).localeCode;
-    _loadState();
     WidgetsBinding.instance.addPostFrameCallback((_) => _precachePhotos());
-  }
-
-  Future<void> _loadState() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_storageKey);
-    if (raw == null) {
-      return;
-    }
-    final data = jsonDecode(raw) as Map<String, dynamic>;
-    final settingsJson = data['settings'] as Map<String, dynamic>? ?? {};
-    final spidersJson = data['spiders'] as List<dynamic>? ?? [];
-    final settings = AppSettings.fromJson(settingsJson);
-    final spiders = spidersJson
-        .map((entry) => SpiderProfile.fromJson(entry as Map<String, dynamic>))
-        .toList();
-    await _ensurePhotoThumbs(spiders);
-    setState(() {
-      _settings = settings;
-      _spiders = spiders;
-      Intl.defaultLocale = AppStrings.of(_settings.language).localeCode;
-    });
-    _precachePhotos();
-  }
-
-  AppLanguage _resolveSystemLanguage() {
-    final locales = WidgetsBinding.instance.platformDispatcher.locales;
-    for (final locale in locales) {
-      final code = locale.languageCode.toLowerCase();
-      switch (code) {
-        case 'ru':
-          return AppLanguage.ru;
-        case 'en':
-          return AppLanguage.en;
-        case 'hi':
-          return AppLanguage.hi;
-        case 'fr':
-          return AppLanguage.fr;
-        case 'de':
-          return AppLanguage.de;
-        case 'es':
-          return AppLanguage.es;
-        case 'sv':
-          return AppLanguage.sv;
-        case 'nl':
-          return AppLanguage.nl;
-        case 'pt':
-          return AppLanguage.pt;
-        case 'ja':
-          return AppLanguage.ja;
-      }
-    }
-    return AppLanguage.en;
-  }
-
-  Future<void> _ensurePhotoThumbs(List<SpiderProfile> spiders) async {
-    for (final spider in spiders) {
-      final path = spider.photoPath;
-      if (path == null) {
-        continue;
-      }
-      final file = File(path);
-      if (!file.existsSync()) {
-        continue;
-      }
-      final thumbPath = await SpiderAvatar.ensureThumbnail(path);
-      if (thumbPath != null) {
-        await SpiderAvatar.cacheFileForPath(thumbPath);
-      }
-    }
   }
 
   void _precachePhotos() {
@@ -361,7 +388,7 @@ class _KeeperAppState extends State<KeeperApp> {
         mergedById[spider.id] = spider;
       }
       final mergedSpiders = mergedById.values.toList();
-      await _ensurePhotoThumbs(mergedSpiders);
+      await _preparePhotoThumbs(mergedSpiders);
       setState(() {
         _settings = AppSettings.fromJson(settingsJson);
         _spiders = mergedSpiders;
@@ -437,7 +464,11 @@ class _KeeperAppState extends State<KeeperApp> {
         GlobalCupertinoLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
       ],
-      theme: buildKeeperTheme(_settings.accentColor),
+      theme: buildKeeperTheme(
+        _settings.accentColor,
+        experimentalTintedBackground:
+            _settings.experimentalTintedBackground,
+      ),
       home: Scaffold(
         body: IndexedStack(
           index: _currentTab,
@@ -464,6 +495,8 @@ class _KeeperAppState extends State<KeeperApp> {
                 key: const ValueKey('settings'),
                 currentAccent: _settings.accentColor,
                 currentLanguage: _settings.language,
+                experimentalTintedBackground:
+                    _settings.experimentalTintedBackground,
                 onAccentChanged: (color) {
                   setState(() {
                     _settings.accentColor = color;
@@ -474,6 +507,12 @@ class _KeeperAppState extends State<KeeperApp> {
                   setState(() {
                     _settings.language = language;
                     Intl.defaultLocale = AppStrings.of(language).localeCode;
+                  });
+                  _saveState();
+                },
+                onExperimentalTintedBackgroundChanged: (enabled) {
+                  setState(() {
+                    _settings.experimentalTintedBackground = enabled;
                   });
                   _saveState();
                 },
@@ -1911,25 +1950,9 @@ class _KeeperAppState extends State<KeeperApp> {
                               ),
                               child: Row(
                                 children: [
-                                  Checkbox(
-                                    value: checked,
-                                    onChanged: (_) {
-                                      setLocalState(() {
-                                        if (checked) {
-                                          selected.remove(spider.id);
-                                        } else {
-                                          selected.add(spider.id);
-                                        }
-                                      });
-                                      setState(() {
-                                        if (selected.length == activeSpiders.length) {
-                                          _settings.analyticsIncludeIds = <String>{};
-                                        } else {
-                                          _settings.analyticsIncludeIds = selected;
-                                        }
-                                      });
-                                      _saveState();
-                                    },
+                                  _RoundSelectionIndicator(
+                                    checked: checked,
+                                    accent: keeperPalette(context).badgeForeground,
                                   ),
                                   const SizedBox(width: 8),
                                   Expanded(
@@ -2025,3 +2048,40 @@ List<String> _moltStageOptions(AppStrings strings) => [
     ];
 
 enum _ArchiveTilePosition { single, top, middle, bottom }
+
+class _RoundSelectionIndicator extends StatelessWidget {
+  const _RoundSelectionIndicator({
+    required this.checked,
+    required this.accent,
+  });
+
+  final bool checked;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      width: 22,
+      height: 22,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: checked
+            ? accent.withValues(alpha: 0.24)
+            : scheme.surfaceContainerHighest.withValues(alpha: 0.88),
+        border: Border.all(
+          color: checked ? accent : accent.withValues(alpha: 0.34),
+          width: 1.5,
+        ),
+      ),
+      child: checked
+          ? Icon(
+              Icons.check_rounded,
+              size: 14,
+              color: accent,
+            )
+          : null,
+    );
+  }
+}

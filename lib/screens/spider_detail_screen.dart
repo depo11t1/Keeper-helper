@@ -239,7 +239,9 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
           ),
           const SizedBox(height: 6),
           _DetailGroupCard(
-            position: _DetailGroupPosition.middle,
+            position: feedings.isEmpty
+                ? _DetailGroupPosition.bottom
+                : _DetailGroupPosition.middle,
             color: scheme.surfaceContainerLow,
             padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
             child: TimelineChart(
@@ -354,7 +356,9 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
           ),
           const SizedBox(height: 6),
           _DetailGroupCard(
-            position: _DetailGroupPosition.middle,
+            position: molts.isEmpty
+                ? _DetailGroupPosition.bottom
+                : _DetailGroupPosition.middle,
             color: scheme.surfaceContainerLow,
             padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
             child: TimelineChart(

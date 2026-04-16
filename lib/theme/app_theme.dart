@@ -79,9 +79,15 @@ KeeperPalette keeperPalette(BuildContext context) {
   return Theme.of(context).extension<KeeperTheme>()!.palette;
 }
 
-ThemeData buildKeeperTheme(Color accentColor) {
+ThemeData buildKeeperTheme(
+  Color accentColor, {
+  bool experimentalTintedBackground = false,
+}) {
   // Общая Material 3 тема пересчитывается от акцентного цвета пользователя.
-  final palette = _paletteFor(accentColor);
+  final palette = _paletteFor(
+    accentColor,
+    experimentalTintedBackground: experimentalTintedBackground,
+  );
   final scheme = ColorScheme.fromSeed(
     seedColor: palette.accent,
     brightness: Brightness.dark,
@@ -205,8 +211,17 @@ ThemeData buildKeeperTheme(Color accentColor) {
       ),
     ),
     bottomSheetTheme: BottomSheetThemeData(
-      backgroundColor: palette.surface,
+      backgroundColor: experimentalTintedBackground
+          ? Color.lerp(
+              palette.background,
+              palette.accent,
+              _isVioletAccent(accentColor) ? 0.052 : 0.046,
+            )!
+          : palette.background,
       surfaceTintColor: Colors.transparent,
+      showDragHandle: true,
+      dragHandleColor: palette.textMuted.withValues(alpha: 0.68),
+      dragHandleSize: const Size(36, 4),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
       ),
@@ -278,7 +293,10 @@ ThemeData buildKeeperTheme(Color accentColor) {
   );
 }
 
-KeeperPalette _paletteFor(Color accentColor) {
+KeeperPalette _paletteFor(
+  Color accentColor, {
+  bool experimentalTintedBackground = false,
+}) {
   // База взята как AMOLED-палитра, а потом мягко тонируется выбранным акцентом.
   const base = KeeperPalette(
     background: Color(0xFF000000),
@@ -296,19 +314,45 @@ KeeperPalette _paletteFor(Color accentColor) {
     badgeForeground: Color(0xFF99F6E4),
   );
 
+  final isVioletAccent = _isVioletAccent(accentColor);
+  final surfaceBlend = isVioletAccent ? 0.032 : 0.02;
+  final surfaceHighBlend = isVioletAccent ? 0.036 : 0.02;
+  final surfaceHigherBlend = isVioletAccent ? 0.04 : 0.02;
+  final answerBackgroundBlend = isVioletAccent ? 0.03 : 0.02;
+  final borderBlend = isVioletAccent ? 0.075 : 0.06;
+  final heroBlend = isVioletAccent ? 0.10 : 0.08;
+  final badgeAlpha = isVioletAccent ? 0.23 : 0.2;
+  final surface = Color.lerp(base.surface, accentColor, surfaceBlend)!;
+  final surfaceHigh =
+      Color.lerp(base.surfaceHigh, accentColor, surfaceHighBlend)!;
+  final surfaceHigher =
+      Color.lerp(base.surfaceHigher, accentColor, surfaceHigherBlend)!;
+  final answerBackground =
+      Color.lerp(base.answerBackground, accentColor, answerBackgroundBlend)!;
+  final answerBorder =
+      Color.lerp(base.answerBorder, accentColor, borderBlend)!;
+  final heroStart = Color.lerp(base.heroStart, accentColor, heroBlend)!;
+  final outline = Color.lerp(base.outline, accentColor, borderBlend)!;
+  final background = experimentalTintedBackground
+      ? Color.lerp(base.background, accentColor, isVioletAccent ? 0.062 : 0.056)!
+      : base.background;
+
   return KeeperPalette(
-    background: base.background,
-    surface: Color.lerp(base.surface, accentColor, 0.02)!,
-    surfaceHigh: Color.lerp(base.surfaceHigh, accentColor, 0.02)!,
-    surfaceHigher: Color.lerp(base.surfaceHigher, accentColor, 0.02)!,
-    answerBackground: Color.lerp(base.answerBackground, accentColor, 0.02)!,
-    answerBorder: Color.lerp(base.answerBorder, accentColor, 0.06)!,
-    heroStart: Color.lerp(base.heroStart, accentColor, 0.08)!,
-    outline: Color.lerp(base.outline, accentColor, 0.06)!,
+    background: background,
+    surface: surface,
+    surfaceHigh: surfaceHigh,
+    surfaceHigher: surfaceHigher,
+    answerBackground: answerBackground,
+    answerBorder: answerBorder,
+    heroStart: heroStart,
+    outline: outline,
     accent: accentColor,
     textPrimary: base.textPrimary,
     textMuted: base.textMuted,
-    badgeBackground: accentColor.withValues(alpha: 0.2),
+    badgeBackground: accentColor.withValues(alpha: badgeAlpha),
     badgeForeground: accentColor,
   );
 }
+
+bool _isVioletAccent(Color accentColor) =>
+    accentColor.toARGB32() == const Color(0xFFA78BFA).toARGB32();

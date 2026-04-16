@@ -91,6 +91,42 @@ class AppStrings {
         pt: 'Definições',
         ja: '設定',
       );
+  String get experimentalColors => _t(
+        ru: 'Экспериментальные цвета',
+        en: 'Experimental colors',
+        hi: 'प्रयोगात्मक रंग',
+        fr: 'Couleurs expérimentales',
+        de: 'Experimentelle Farben',
+        es: 'Colores experimentales',
+        sv: 'Experimentella färger',
+        nl: 'Experimentele kleuren',
+        pt: 'Cores experimentais',
+        ja: '実験的な色',
+      );
+  String get tintedBackgroundMode => _t(
+        ru: 'Черный цвет',
+        en: 'Black color',
+        hi: 'काला रंग',
+        fr: 'Couleur noire',
+        de: 'Schwarze Farbe',
+        es: 'Color negro',
+        sv: 'Svart färg',
+        nl: 'Zwarte kleur',
+        pt: 'Cor preta',
+        ja: '黒色',
+      );
+  String get tintedBackgroundModeHint => _t(
+        ru: 'Отключает чистый AMOLED-чёрный и подмешивает акцентный цвет в фон и нижние меню.',
+        en: 'Turns off pure AMOLED black and softly tints the background and bottom sheets with the accent color.',
+        hi: 'शुद्ध AMOLED काला बंद करता है और बैकग्राउंड व नीचे के मेनू में हल्का एक्सेंट रंग मिलाता है।',
+        fr: 'Désactive le noir AMOLED pur et teinte légèrement le fond et les panneaux inférieurs avec la couleur d’accent.',
+        de: 'Schaltet reines AMOLED-Schwarz aus und tönt Hintergrund und Bottom Sheets sanft mit der Akzentfarbe.',
+        es: 'Desactiva el negro AMOLED puro y tiñe suavemente el fondo y los menús inferiores con el color de acento.',
+        sv: 'Stänger av ren AMOLED-svart och tonar bakgrund och bottenpaneler mjukt med accentfärgen.',
+        nl: 'Schakelt puur AMOLED-zwart uit en kleurt achtergrond en onderste panelen zacht met de accentkleur.',
+        pt: 'Desativa o preto AMOLED puro e colore suavemente o fundo e os menus inferiores com a cor de destaque.',
+        ja: '純粋な AMOLED ブラックを無効にし、背景と下部メニューにアクセントカラーをやわらかく混ぜます。',
+      );
   String get backup => _t(
         ru: 'Бекап',
         en: 'Backup',

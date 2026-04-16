@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../l10n/app_strings.dart';
 import '../models/app_settings.dart';
@@ -10,13 +11,15 @@ class AboutScreen extends StatelessWidget {
     required this.language,
   });
 
+  static final Uri _sourceUrl =
+      Uri.parse('https://github.com/depo11t1/Keeper-helper');
+
   final AppLanguage language;
 
   @override
   Widget build(BuildContext context) {
     final strings = AppStrings.of(language);
     final palette = keeperPalette(context);
-    final accent = palette.accent;
     return Scaffold(
       appBar: AppBar(
         title: Text(strings.aboutApp),
@@ -66,6 +69,12 @@ class AboutScreen extends StatelessWidget {
           const SizedBox(height: 8),
           _AboutGroupCard(
             position: _AboutGroupPosition.middle,
+            onTap: () async {
+              await launchUrl(
+                _sourceUrl,
+                mode: LaunchMode.externalApplication,
+              );
+            },
             child: Row(
               children: [
                 Icon(
@@ -106,10 +115,12 @@ class _AboutGroupCard extends StatelessWidget {
   const _AboutGroupCard({
     required this.child,
     required this.position,
+    this.onTap,
   });
 
   final Widget child;
   final _AboutGroupPosition position;
+  final VoidCallback? onTap;
 
   BorderRadius _radius() {
     switch (position) {
@@ -136,13 +147,17 @@ class _AboutGroupCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLow,
-        borderRadius: _radius(),
+    return Material(
+      color: Theme.of(context).colorScheme.surfaceContainerLow,
+      borderRadius: _radius(),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: child,
+        ),
       ),
-      child: child,
     );
   }
 }
