@@ -6,6 +6,31 @@ import '../models/spider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/timeline_chart.dart';
 
+int? _averageAcrossSpiders(
+  Iterable<SpiderProfile> spiders,
+  List<DateTime> Function(SpiderProfile spider) pickDates,
+) {
+  var totalDays = 0;
+  var intervals = 0;
+
+  for (final spider in spiders) {
+    final dates = pickDates(spider).toList()..sort();
+    if (dates.length < 2) {
+      continue;
+    }
+    for (var i = 1; i < dates.length; i++) {
+      totalDays += dates[i].difference(dates[i - 1]).inDays;
+      intervals++;
+    }
+  }
+
+  if (intervals == 0) {
+    return null;
+  }
+
+  return (totalDays / intervals).round();
+}
+
 // Вкладка аналитики: показываем короткие списки "кто ест чаще" и "кто линяет чаще".
 class AnalyticsPlaceholderScreen extends StatefulWidget {
   const AnalyticsPlaceholderScreen({
@@ -27,6 +52,9 @@ class AnalyticsPlaceholderScreen extends StatefulWidget {
 class _AnalyticsPlaceholderScreenState extends State<AnalyticsPlaceholderScreen> {
   var _showAllFeeders = false;
   var _showAllMolters = false;
+  _AnalyticsPeriod _period = _AnalyticsPeriod.allTime;
+  DateTime? _customStart;
+  DateTime? _customEnd;
 
   @override
   Widget build(BuildContext context) {
@@ -34,22 +62,49 @@ class _AnalyticsPlaceholderScreenState extends State<AnalyticsPlaceholderScreen>
     final palette = keeperPalette(context);
     final scheme = Theme.of(context).colorScheme;
     final strings = AppStrings.of(widget.language);
+    final range = _resolveRange();
 
     final sorted = widget.spiders.toList()
       ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
-    final feedingItems = _buildItems(sorted, isMolt: false);
-    final moltItems = _buildItems(sorted, isMolt: true);
+    final feedingItems = _buildItems(
+      sorted,
+      isMolt: false,
+      rangeStart: range.$1,
+      rangeEnd: range.$2,
+    );
+    final moltItems = _buildItems(
+      sorted,
+      isMolt: true,
+      rangeStart: range.$1,
+      rangeEnd: range.$2,
+    );
 
-    final feedingDates = widget.spiders
-        .expand((spider) => spider.feedings.map((entry) => entry.date))
-        .toList()
-      ..sort();
-    final moltDates = widget.spiders
-        .expand((spider) => spider.molts.map((entry) => entry.date))
-        .toList()
-      ..sort();
-    final feedingAverage = TimelineChart.averageDays(feedingDates);
-    final moltAverage = TimelineChart.averageDays(moltDates);
+    final feedingAverage = _averageAcrossSpiders(
+      widget.spiders,
+      (spider) => spider.feedings
+          .map((entry) => entry.date)
+          .where((date) => _isWithinRange(date, range.$1, range.$2))
+          .toList(),
+    );
+    final moltAverage = _averageAcrossSpiders(
+      widget.spiders,
+      (spider) => spider.molts
+          .map((entry) => entry.date)
+          .where((date) => _isWithinRange(date, range.$1, range.$2))
+          .toList(),
+    );
+    final totalFeedings = _countEvents(
+      widget.spiders,
+      range.$1,
+      range.$2,
+      (spider) => spider.feedings.map((entry) => entry.date),
+    );
+    final totalMolts = _countEvents(
+      widget.spiders,
+      range.$1,
+      range.$2,
+      (spider) => spider.molts.map((entry) => entry.date),
+    );
 
     return CustomScrollView(
       slivers: [
@@ -57,7 +112,7 @@ class _AnalyticsPlaceholderScreenState extends State<AnalyticsPlaceholderScreen>
           pinned: true,
           backgroundColor: palette.background,
           surfaceTintColor: Colors.transparent,
-          toolbarHeight: 64,
+          toolbarHeight: 68,
           titleSpacing: 20,
           title: Text(
             strings.analytics,
@@ -72,11 +127,21 @@ class _AnalyticsPlaceholderScreenState extends State<AnalyticsPlaceholderScreen>
             delegate: SliverChildListDelegate(
               [
         _AnalyticsHero(
-          spiders: widget.spiders,
+          period: _period,
+          customStart: _customStart,
+          customEnd: _customEnd,
+          totalFeedings: totalFeedings,
+          totalMolts: totalMolts,
           feedAverage: feedingAverage,
           moltAverage: moltAverage,
           accent: widget.accent,
           strings: strings,
+          onPeriodSelected: (period) {
+            setState(() {
+              _period = period;
+            });
+          },
+          onPickCustomRange: _pickCustomRange,
         ),
         const SizedBox(height: 18),
         _AnalyticsListBlock(
@@ -119,14 +184,22 @@ class _AnalyticsPlaceholderScreenState extends State<AnalyticsPlaceholderScreen>
     }
   }
 
-  List<_StatItem> _buildItems(List<SpiderProfile> spiders, {required bool isMolt}) {
+  List<_StatItem> _buildItems(
+    List<SpiderProfile> spiders, {
+    required bool isMolt,
+    required DateTime? rangeStart,
+    required DateTime? rangeEnd,
+  }) {
     final items = <_StatItem>[];
     for (final spider in spiders) {
       final dates = isMolt
           ? spider.molts.map((entry) => entry.date).toList()
           : spider.feedings.map((entry) => entry.date).toList();
-      dates.sort();
-      final avg = TimelineChart.averageDays(dates);
+      final filtered = dates
+          .where((date) => _isWithinRange(date, rangeStart, rangeEnd))
+          .toList()
+        ..sort();
+      final avg = TimelineChart.averageDays(filtered);
       if (avg == null) {
         continue;
       }
@@ -134,6 +207,77 @@ class _AnalyticsPlaceholderScreenState extends State<AnalyticsPlaceholderScreen>
     }
     items.sort((a, b) => a.averageDays.compareTo(b.averageDays));
     return items;
+  }
+
+  (DateTime?, DateTime?) _resolveRange() {
+    final now = DateTime.now();
+    switch (_period) {
+      case _AnalyticsPeriod.month:
+        return (DateTime(now.year, now.month - 1, now.day), null);
+      case _AnalyticsPeriod.year:
+        return (DateTime(now.year - 1, now.month, now.day), null);
+      case _AnalyticsPeriod.allTime:
+        return (null, null);
+      case _AnalyticsPeriod.custom:
+        return (_customStart, _customEnd);
+    }
+  }
+
+  bool _isWithinRange(DateTime date, DateTime? start, DateTime? end) {
+    if (start != null && date.isBefore(start)) {
+      return false;
+    }
+    if (end != null && date.isAfter(end)) {
+      return false;
+    }
+    return true;
+  }
+
+  int _countEvents(
+    List<SpiderProfile> spiders,
+    DateTime? start,
+    DateTime? end,
+    Iterable<DateTime> Function(SpiderProfile spider) pickDates,
+  ) {
+    var total = 0;
+    for (final spider in spiders) {
+      for (final date in pickDates(spider)) {
+        if (_isWithinRange(date, start, end)) {
+          total++;
+        }
+      }
+    }
+    return total;
+  }
+
+  Future<void> _pickCustomRange() async {
+    final now = DateTime.now();
+    final first = DateTime(2020);
+    final start = await showDatePicker(
+      context: context,
+      initialDate: _customStart ?? now,
+      firstDate: first,
+      lastDate: _customEnd ?? now,
+      locale: Locale(AppStrings.of(widget.language).localeCode),
+    );
+    if (start == null || !mounted) {
+      return;
+    }
+    final end = await showDatePicker(
+      context: context,
+      initialDate: _customEnd ?? now,
+      firstDate: start,
+      lastDate: now,
+      locale: Locale(AppStrings.of(widget.language).localeCode),
+    );
+    if (end == null) {
+      return;
+    }
+    setState(() {
+      _customStart = DateTime(start.year, start.month, start.day);
+      _customEnd = DateTime(end.year, end.month, end.day, 23, 59, 59);
+      _period = _AnalyticsPeriod.custom;
+    });
   }
 }
 
@@ -322,7 +466,7 @@ class _AnalyticsSummary extends StatelessWidget {
             value,
             style: theme.textTheme.labelLarge?.copyWith(
               fontSize: 12,
-              fontWeight: FontWeight.w400,
+              fontWeight: FontWeight.w600,
               color: textColor,
             ),
           ),
@@ -386,7 +530,7 @@ class _AverageBars extends StatelessWidget {
             value == null ? strings.littleData : strings.everyDays(value),
             style: theme.textTheme.bodyMedium?.copyWith(
               color: palette.textMuted,
-              fontWeight: FontWeight.w400,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
@@ -415,417 +559,316 @@ class _AverageBars extends StatelessWidget {
 
 class _AnalyticsHero extends StatefulWidget {
   const _AnalyticsHero({
-    required this.spiders,
+    required this.period,
+    required this.customStart,
+    required this.customEnd,
+    required this.totalFeedings,
+    required this.totalMolts,
     required this.feedAverage,
     required this.moltAverage,
     required this.accent,
     required this.strings,
+    required this.onPeriodSelected,
+    required this.onPickCustomRange,
   });
 
-  final List<SpiderProfile> spiders;
+  final _AnalyticsPeriod period;
+  final DateTime? customStart;
+  final DateTime? customEnd;
+  final int totalFeedings;
+  final int totalMolts;
   final int? feedAverage;
   final int? moltAverage;
   final Color accent;
   final AppStrings strings;
+  final ValueChanged<_AnalyticsPeriod> onPeriodSelected;
+  final VoidCallback onPickCustomRange;
 
   @override
   State<_AnalyticsHero> createState() => _AnalyticsHeroState();
 }
 
 class _AnalyticsHeroState extends State<_AnalyticsHero> {
-  String? _selectedSpiderId;
-
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final palette = keeperPalette(context);
+    final scheme = Theme.of(context).colorScheme;
     final base = Theme.of(context).colorScheme.surfaceContainerLow;
-    final points = _buildPoints(widget.spiders);
-    _AnalyticsHeroPoint? selectedPoint;
-    for (final point in points) {
-      if (point.id == _selectedSpiderId) {
-        selectedPoint = point;
-        break;
-      }
-    }
-    selectedPoint ??= points.isEmpty ? null : points.first;
 
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        color: base,
-      ),
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  widget.strings.averageIntervals,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: palette.textPrimary,
-                  ),
-                ),
-              ),
-              Icon(Icons.insights_rounded, color: widget.accent),
-            ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            _AnalyticsPeriodChip(
+              label: _periodLabel(_AnalyticsPeriod.month),
+              selected: widget.period == _AnalyticsPeriod.month,
+              accent: widget.accent,
+              onTap: () => widget.onPeriodSelected(_AnalyticsPeriod.month),
+            ),
+            _AnalyticsPeriodChip(
+              label: _periodLabel(_AnalyticsPeriod.year),
+              selected: widget.period == _AnalyticsPeriod.year,
+              accent: widget.accent,
+              onTap: () => widget.onPeriodSelected(_AnalyticsPeriod.year),
+            ),
+            _AnalyticsPeriodChip(
+              label: _periodLabel(_AnalyticsPeriod.allTime),
+              selected: widget.period == _AnalyticsPeriod.allTime,
+              accent: widget.accent,
+              onTap: () => widget.onPeriodSelected(_AnalyticsPeriod.allTime),
+            ),
+            _AnalyticsPlusChip(
+              selected: widget.period == _AnalyticsPeriod.custom,
+              accent: widget.accent,
+              onTap: widget.onPickCustomRange,
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        Container(
+          decoration: BoxDecoration(
+            color: base,
+            borderRadius: BorderRadius.circular(22),
           ),
-          const SizedBox(height: 12),
-          Row(
+          padding: const EdgeInsets.all(14),
+          child: Column(
             children: [
-              Expanded(
-                child: _HeroStatPill(
-                  label: widget.strings.avgEatsPlural,
-                  value: widget.feedAverage == null
-                      ? widget.strings.littleData
-                      : widget.strings.everyDays(widget.feedAverage!),
-                  accent: widget.accent,
-                  background: Color.alphaBlend(
-                    widget.accent.withValues(alpha: 0.14),
-                    base,
+              Row(
+                children: [
+                  Expanded(
+                    child: _HeroMetricRow(
+                      label: _totalFeedingsLabel(),
+                      value: '${widget.totalFeedings}',
+                      accent: widget.accent,
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _HeroStatPill(
-                  label: widget.strings.avgMoltsPlural,
-                  value: widget.moltAverage == null
-                      ? widget.strings.littleData
-                      : widget.strings.everyDays(widget.moltAverage!),
-                  accent: widget.accent,
-                  background: Color.alphaBlend(
-                    widget.accent.withValues(alpha: 0.14),
-                    base,
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _HeroMetricRow(
+                      label: _totalMoltsLabel(),
+                      value: '${widget.totalMolts}',
+                      accent: widget.accent,
+                    ),
                   ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Container(
-            height: 188,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: widget.accent.withValues(alpha: 0.16),
-              ),
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  widget.accent.withValues(alpha: 0.11),
-                  widget.accent.withValues(alpha: 0.03),
                 ],
               ),
-            ),
-            child: points.isEmpty
-                ? Center(
-                    child: Text(
-                      widget.strings.noData,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: palette.textMuted,
-                      ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: scheme.outline.withValues(alpha: 0.16),
+                ),
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: _HeroMetricRow(
+                      label: widget.strings.avgEatsPlural,
+                      value: widget.feedAverage == null
+                          ? widget.strings.littleData
+                          : widget.strings.everyDays(widget.feedAverage!),
+                      accent: widget.accent,
                     ),
-                  )
-                : LayoutBuilder(
-                    builder: (context, constraints) {
-                      const leftInset = 18.0;
-                      const rightInset = 18.0;
-                      const topInset = 58.0;
-                      const bottomInset = 30.0;
-                      final width =
-                          constraints.maxWidth - leftInset - rightInset;
-                      final height =
-                          constraints.maxHeight - topInset - bottomInset;
-                      final maxFeed = points
-                          .map((point) => point.feedAverage)
-                          .fold<int>(7, (a, b) => a > b ? a : b);
-                      final maxMolt = points
-                          .map((point) => point.moltAverage)
-                          .fold<int>(7, (a, b) => a > b ? a : b);
-
-                      Offset pointOffset(_AnalyticsHeroPoint point) {
-                        final x = leftInset +
-                            width * (point.feedAverage / maxFeed).clamp(0.0, 1.0);
-                        final y = topInset +
-                            height *
-                                (1 - (point.moltAverage / maxMolt).clamp(0.0, 1.0));
-                        return Offset(x, y);
-                      }
-
-                      return Stack(
-                        children: [
-                          Positioned.fill(
-                            child: CustomPaint(
-                              painter: _AnalyticsPlanePainter(
-                                accent: widget.accent,
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            left: 12,
-                            right: 12,
-                            top: 12,
-                            child: AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 180),
-                              child: selectedPoint == null
-                                  ? Text(
-                                      widget.strings.noData,
-                                      key: const ValueKey('hero-empty'),
-                                      style:
-                                          theme.textTheme.bodyMedium?.copyWith(
-                                        color: palette.textMuted,
-                                      ),
-                                    )
-                                  : Container(
-                                      key: ValueKey(selectedPoint.id),
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 10,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Color.alphaBlend(
-                                          widget.accent.withValues(alpha: 0.10),
-                                          base,
-                                        ),
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(
-                                            selectedPoint.name,
-                                            style: theme.textTheme.titleMedium
-                                                ?.copyWith(
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            '${widget.strings.feeding}: ${widget.strings.everyDays(selectedPoint.feedAverage)}',
-                                            style: theme.textTheme.bodySmall
-                                                ?.copyWith(
-                                              color: palette.textMuted,
-                                            ),
-                                          ),
-                                          Text(
-                                            '${widget.strings.molts}: ${widget.strings.everyDays(selectedPoint.moltAverage)}',
-                                            style: theme.textTheme.bodySmall
-                                                ?.copyWith(
-                                              color: palette.textMuted,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                            ),
-                          ),
-                          for (final point in points)
-                            Builder(
-                              builder: (context) {
-                                final offset = pointOffset(point);
-                                final selected = point.id == selectedPoint?.id;
-                                return Positioned(
-                                  left: offset.dx - (selected ? 9 : 7),
-                                  top: offset.dy - (selected ? 9 : 7),
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      setState(() {
-                                        _selectedSpiderId = point.id;
-                                      });
-                                    },
-                                    child: AnimatedContainer(
-                                      duration:
-                                          const Duration(milliseconds: 180),
-                                      width: selected ? 18 : 14,
-                                      height: selected ? 18 : 14,
-                                      decoration: BoxDecoration(
-                                        color: widget.accent,
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: Colors.white.withValues(
-                                            alpha: selected ? 0.95 : 0.75,
-                                          ),
-                                          width: selected ? 2.4 : 1.6,
-                                        ),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: widget.accent.withValues(
-                                              alpha: selected ? 0.36 : 0.18,
-                                            ),
-                                            blurRadius: selected ? 16 : 10,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          Positioned(
-                            left: 14,
-                            bottom: 10,
-                            child: Text(
-                              widget.strings.molts,
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: palette.textMuted,
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            right: 14,
-                            bottom: 10,
-                            child: Text(
-                              widget.strings.feeding,
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: palette.textMuted,
-                              ),
-                            ),
-                          ),
-                        ],
-                      );
-                    },
                   ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _HeroMetricRow(
+                      label: widget.strings.avgMoltsPlural,
+                      value: widget.moltAverage == null
+                          ? widget.strings.littleData
+                          : widget.strings.everyDays(widget.moltAverage!),
+                      accent: widget.accent,
+                    ),
+                  ),
+                ],
+              ),
+              if (widget.period == _AnalyticsPeriod.custom &&
+                  widget.customStart != null &&
+                  widget.customEnd != null) ...[
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: _CustomRangeLabel(
+                    start: widget.customStart!,
+                    end: widget.customEnd!,
+                    strings: widget.strings,
+                  ),
+                ),
+              ],
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  List<_AnalyticsHeroPoint> _buildPoints(List<SpiderProfile> spiders) {
-    final points = <_AnalyticsHeroPoint>[];
-    for (final spider in spiders) {
-      final feedDates = spider.feedings.map((entry) => entry.date).toList()..sort();
-      final moltDates = spider.molts.map((entry) => entry.date).toList()..sort();
-      final feedAverage = TimelineChart.averageDays(feedDates);
-      final moltAverage = TimelineChart.averageDays(moltDates);
-      if (feedAverage == null || moltAverage == null) {
-        continue;
-      }
-      points.add(
-        _AnalyticsHeroPoint(
-          id: spider.id,
-          name: spider.name,
-          feedAverage: feedAverage,
-          moltAverage: moltAverage,
+  String _periodLabel(_AnalyticsPeriod period) {
+    final ru = switch (period) {
+      _AnalyticsPeriod.month => 'Месяц',
+      _AnalyticsPeriod.year => 'Год',
+      _AnalyticsPeriod.allTime => 'Все время',
+      _AnalyticsPeriod.custom => '+',
+    };
+    final en = switch (period) {
+      _AnalyticsPeriod.month => 'Month',
+      _AnalyticsPeriod.year => 'Year',
+      _AnalyticsPeriod.allTime => 'All time',
+      _AnalyticsPeriod.custom => '+',
+    };
+    return widget.strings.isRu ? ru : en;
+  }
+
+  String _totalFeedingsLabel() =>
+      widget.strings.isRu ? 'Всего кормлений' : 'Total feedings';
+
+  String _totalMoltsLabel() =>
+      widget.strings.isRu ? 'Всего линек' : 'Total molts';
+}
+
+enum _AnalyticsPeriod { month, year, allTime, custom }
+
+class _AnalyticsPeriodChip extends StatelessWidget {
+  const _AnalyticsPeriodChip({
+    required this.label,
+    required this.selected,
+    required this.accent,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final Color accent;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = keeperPalette(context);
+    final scheme = Theme.of(context).colorScheme;
+
+    return Material(
+      color: selected
+          ? Color.alphaBlend(accent.withValues(alpha: 0.18), Colors.transparent)
+          : Colors.transparent,
+      borderRadius: BorderRadius.circular(999),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(999),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: selected ? palette.textPrimary : palette.textMuted,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+            ),
+          ),
         ),
-      );
-    }
-    points.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
-    return points;
+      ),
+    );
   }
 }
 
-class _HeroStatPill extends StatelessWidget {
-  const _HeroStatPill({
+class _AnalyticsPlusChip extends StatelessWidget {
+  const _AnalyticsPlusChip({
+    required this.selected,
+    required this.accent,
+    required this.onTap,
+  });
+
+  final bool selected;
+  final Color accent;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return FilledButton.tonal(
+      onPressed: onTap,
+      style: FilledButton.styleFrom(
+        backgroundColor: selected
+            ? accent
+            : Color.alphaBlend(
+                accent.withValues(alpha: 0.14),
+                scheme.surfaceContainerLow,
+              ),
+        foregroundColor: selected ? scheme.onPrimary : accent,
+        minimumSize: const Size(40, 40),
+        padding: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
+      ),
+      child: const Icon(Icons.add_rounded, size: 22),
+    );
+  }
+}
+
+class _HeroMetricRow extends StatelessWidget {
+  const _HeroMetricRow({
     required this.label,
     required this.value,
     required this.accent,
-    required this.background,
   });
 
   final String label;
   final String value;
   final Color accent;
-  final Color background;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final palette = keeperPalette(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: accent,
-              fontWeight: FontWeight.w600,
-            ),
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: theme.textTheme.bodySmall?.copyWith(
+            fontSize: 11,
+            color: accent,
+            fontWeight: FontWeight.w700,
           ),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontSize: 12,
-              color: palette.textPrimary,
-              fontWeight: FontWeight.w700,
-            ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: theme.textTheme.titleMedium?.copyWith(
+            color: palette.textPrimary,
+            fontWeight: FontWeight.w700,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
 
-class _AnalyticsHeroPoint {
-  const _AnalyticsHeroPoint({
-    required this.id,
-    required this.name,
-    required this.feedAverage,
-    required this.moltAverage,
+class _CustomRangeLabel extends StatelessWidget {
+  const _CustomRangeLabel({
+    required this.start,
+    required this.end,
+    required this.strings,
   });
 
-  final String id;
-  final String name;
-  final int feedAverage;
-  final int moltAverage;
-}
-
-class _AnalyticsPlanePainter extends CustomPainter {
-  const _AnalyticsPlanePainter({
-    required this.accent,
-  });
-
-  final Color accent;
+  final DateTime start;
+  final DateTime end;
+  final AppStrings strings;
 
   @override
-  void paint(Canvas canvas, Size size) {
-    final gridPaint = Paint()
-      ..color = accent.withValues(alpha: 0.10)
-      ..strokeWidth = 1;
-    final strongPaint = Paint()
-      ..color = accent.withValues(alpha: 0.16)
-      ..strokeWidth = 1.2;
-
-    const leftInset = 18.0;
-    const rightInset = 18.0;
-    const topInset = 58.0;
-    const bottomInset = 30.0;
-    final chartWidth = size.width - leftInset - rightInset;
-    final chartHeight = size.height - topInset - bottomInset;
-
-    for (var i = 0; i <= 4; i++) {
-      final dx = leftInset + chartWidth * (i / 4);
-      final dy = topInset + chartHeight * (i / 4);
-      canvas.drawLine(
-        Offset(dx, topInset),
-        Offset(dx, size.height - bottomInset),
-        i == 4 ? strongPaint : gridPaint,
-      );
-      canvas.drawLine(
-        Offset(leftInset, dy),
-        Offset(size.width - rightInset, dy),
-        i == 0 ? strongPaint : gridPaint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _AnalyticsPlanePainter oldDelegate) {
-    return oldDelegate.accent != accent;
+  Widget build(BuildContext context) {
+    final palette = keeperPalette(context);
+    final text =
+        '${start.day.toString().padLeft(2, '0')}.${start.month.toString().padLeft(2, '0')}.${start.year}'
+        ' - '
+        '${end.day.toString().padLeft(2, '0')}.${end.month.toString().padLeft(2, '0')}.${end.year}';
+    return Text(
+      text,
+      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: palette.textMuted,
+            fontWeight: FontWeight.w600,
+          ),
+    );
   }
 }

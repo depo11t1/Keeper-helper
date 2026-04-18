@@ -48,7 +48,7 @@ class HomeScreen extends StatelessWidget {
               pinned: true,
               backgroundColor: palette.background,
               surfaceTintColor: Colors.transparent,
-              toolbarHeight: 64,
+              toolbarHeight: 68,
               titleSpacing: 20,
               title: Text(
                 strings.appTitle,

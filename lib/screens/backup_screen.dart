@@ -90,12 +90,24 @@ class _BackupScreenState extends State<BackupScreen> {
                           size: 24,
                           key: const ValueKey('check'),
                         )
+                      : _exporting
+                          ? SizedBox(
+                              key: const ValueKey('progress'),
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.4,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  scheme.onPrimary,
+                                ),
+                              ),
+                            )
                       : ClipRRect(
+                          key: const ValueKey('play'),
                           borderRadius: BorderRadius.circular(6),
                           child: Icon(
                             Icons.play_arrow_rounded,
                             size: 26,
-                            key: const ValueKey('play'),
                           ),
                         ),
                 ),

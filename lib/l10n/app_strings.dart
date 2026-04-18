@@ -798,6 +798,30 @@ class AppStrings {
         pt: 'Data de criação',
         ja: '追加日',
       );
+  String get sortNewestFirst => _t(
+        ru: 'Недавно',
+        en: 'Newest',
+        hi: 'नए',
+        fr: 'Récent',
+        de: 'Neu',
+        es: 'Reciente',
+        sv: 'Senast',
+        nl: 'Nieuw',
+        pt: 'Recentes',
+        ja: '新しい順',
+      );
+  String get sortOldestFirst => _t(
+        ru: 'Давно',
+        en: 'Oldest',
+        hi: 'पुराने',
+        fr: 'Ancien',
+        de: 'Alt',
+        es: 'Antiguo',
+        sv: 'Äldst',
+        nl: 'Oud',
+        pt: 'Antigos',
+        ja: '古い順',
+      );
   String get moltLabel => _t(
         ru: 'Линька',
         en: 'Molt',
@@ -1123,7 +1147,7 @@ class AppStrings {
         ja: '$name をKeeperに追加しました',
       );
   String everyDays(int days) => _t(
-        ru: 'каждые $days дн.',
+        ru: 'Каждые $days дн.',
         en: 'every $days d',
         hi: 'हर $days दिन',
         fr: 'tous les $days j',

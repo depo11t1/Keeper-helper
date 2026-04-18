@@ -51,7 +51,7 @@ class SettingsScreen extends StatelessWidget {
           pinned: true,
           backgroundColor: palette.background,
           surfaceTintColor: Colors.transparent,
-          toolbarHeight: 64,
+          toolbarHeight: 68,
           titleSpacing: 20,
           title: Text(
             strings.settings,
@@ -119,11 +119,11 @@ class SettingsScreen extends StatelessWidget {
                     accent: palette.badgeForeground,
                     activeTrack: palette.badgeBackground.withValues(alpha: 0.72),
                     inactiveTrack: Color.alphaBlend(
-                      palette.badgeBackground.withValues(alpha: 0.14),
+                      palette.badgeBackground.withValues(alpha: 0.10),
                       scheme.surfaceContainerHighest.withValues(alpha: 0.94),
                     ),
-                    activeThumb: scheme.onPrimary,
-                    inactiveThumb: palette.textPrimary.withValues(alpha: 0.96),
+                    activeThumb: palette.textPrimary,
+                    inactiveThumb: palette.textMuted.withValues(alpha: 0.92),
                   ),
                   onTap: () => onExperimentalTintedBackgroundChanged(
                     !experimentalTintedBackground,

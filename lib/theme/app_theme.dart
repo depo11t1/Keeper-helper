@@ -119,7 +119,7 @@ ThemeData buildKeeperTheme(
       foregroundColor: palette.textPrimary,
       surfaceTintColor: Colors.transparent,
       scrolledUnderElevation: 0,
-      toolbarHeight: 54,
+      toolbarHeight: 58,
       titleTextStyle: TextStyle(
         color: palette.textPrimary,
         fontSize: 24,
@@ -258,7 +258,7 @@ ThemeData buildKeeperTheme(
       backgroundColor: palette.background,
       surfaceTintColor: Colors.transparent,
       indicatorColor: palette.badgeBackground,
-      height: 68,
+      height: 72,
       labelTextStyle: WidgetStateProperty.resolveWith((states) {
         final selected = states.contains(WidgetState.selected);
         return TextStyle(

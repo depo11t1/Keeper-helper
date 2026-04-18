@@ -496,7 +496,7 @@ class _KeeperAppState extends State<KeeperApp> {
                 currentAccent: _settings.accentColor,
                 currentLanguage: _settings.language,
                 experimentalTintedBackground:
-                    _settings.experimentalTintedBackground,
+                    !_settings.experimentalTintedBackground,
                 onAccentChanged: (color) {
                   setState(() {
                     _settings.accentColor = color;
@@ -512,7 +512,7 @@ class _KeeperAppState extends State<KeeperApp> {
                 },
                 onExperimentalTintedBackgroundChanged: (enabled) {
                   setState(() {
-                    _settings.experimentalTintedBackground = enabled;
+                    _settings.experimentalTintedBackground = !enabled;
                   });
                   _saveState();
                 },
@@ -523,7 +523,7 @@ class _KeeperAppState extends State<KeeperApp> {
           ],
         ),
         bottomNavigationBar: NavigationBar(
-          height: 76,
+          height: 80,
           selectedIndex: _currentTab,
           onDestinationSelected: (index) {
             setState(() => _currentTab = index);
@@ -667,7 +667,9 @@ class _KeeperAppState extends State<KeeperApp> {
                         : usesLatin
                             ? (descending ? 'Z - A' : 'A - Z')
                             : (descending ? '↓' : '↑'))
-                    : (descending ? '↓' : '↑');
+                    : descending
+                        ? strings.sortNewestFirst
+                        : strings.sortOldestFirst;
                 final position = field == SortField.name
                     ? _ArchiveTilePosition.top
                     : field == SortField.createdDate
@@ -758,6 +760,7 @@ class _KeeperAppState extends State<KeeperApp> {
       },
     );
   }
+
 
   Future<void> _openSpider(SpiderProfile spider) async {
     // Экран деталей работает поверх текущего списка, поэтому локальные
@@ -1809,10 +1812,7 @@ class _KeeperAppState extends State<KeeperApp> {
     _topNoticeEntry = OverlayEntry(
       builder: (context) {
         final topPadding = MediaQuery.of(context).padding.top;
-        final background = Color.alphaBlend(
-          accent.withValues(alpha: 0.18),
-          Theme.of(context).colorScheme.surfaceContainerLow,
-        );
+        final background = Theme.of(context).colorScheme.surfaceContainerLow;
         return Positioned(
           left: 16,
           right: 16,
@@ -1865,31 +1865,40 @@ class _KeeperAppState extends State<KeeperApp> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setLocalState) {
-            return Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    strings.analytics,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+            return SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(context).size.height * 0.72,
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    strings.analyticsChoose,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 12),
-                  if (activeSpiders.isEmpty)
-                    Text(
-                      strings.noActiveCards,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    )
-                  else
-                    ...activeSpiders.asMap().entries.map((entry) {
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        strings.analytics,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        strings.analyticsChoose,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: 12),
+                      if (activeSpiders.isEmpty)
+                        Text(
+                          strings.noActiveCards,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        )
+                      else
+                        Expanded(
+                          child: ListView(
+                            shrinkWrap: true,
+                            children: activeSpiders.asMap().entries.map((entry) {
                       final index = entry.key;
                       final spider = entry.value;
                       final position = activeSpiders.length == 1
@@ -1917,72 +1926,76 @@ class _KeeperAppState extends State<KeeperApp> {
                       };
 
                       final checked = selected.contains(spider.id);
-                      return Padding(
-                        padding: EdgeInsets.only(
-                          bottom: index == activeSpiders.length - 1 ? 0 : 6,
-                        ),
-                        child: Material(
-                          color: Theme.of(context).colorScheme.surfaceContainerLow,
-                          borderRadius: radius,
-                          child: InkWell(
-                            borderRadius: radius,
-                            onTap: () {
-                              setLocalState(() {
-                                if (checked) {
-                                  selected.remove(spider.id);
-                                } else {
-                                  selected.add(spider.id);
-                                }
-                              });
-                              setState(() {
-                                if (selected.length == activeSpiders.length) {
-                                  _settings.analyticsIncludeIds = <String>{};
-                                } else {
-                                  _settings.analyticsIncludeIds = selected;
-                                }
-                              });
-                              _saveState();
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 12,
-                              ),
-                              child: Row(
-                                children: [
-                                  _RoundSelectionIndicator(
-                                    checked: checked,
-                                    accent: keeperPalette(context).badgeForeground,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(spider.name),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          spider.latinName.trim().isEmpty
-                                              ? strings.speciesPlaceholder
-                                              : spider.latinName,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodySmall
-                                              ?.copyWith(
-                                                color: keeperPalette(context).textMuted,
-                                              ),
-                                        ),
-                                      ],
+                              return Padding(
+                                padding: EdgeInsets.only(
+                                  bottom: index == activeSpiders.length - 1 ? 0 : 6,
+                                ),
+                                child: Material(
+                                  color: Theme.of(context).colorScheme.surfaceContainerLow,
+                                  borderRadius: radius,
+                                  child: InkWell(
+                                    borderRadius: radius,
+                                    onTap: () {
+                                      setLocalState(() {
+                                        if (checked) {
+                                          selected.remove(spider.id);
+                                        } else {
+                                          selected.add(spider.id);
+                                        }
+                                      });
+                                      setState(() {
+                                        if (selected.length == activeSpiders.length) {
+                                          _settings.analyticsIncludeIds = <String>{};
+                                        } else {
+                                          _settings.analyticsIncludeIds = selected;
+                                        }
+                                      });
+                                      _saveState();
+                                    },
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 12,
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          _RoundSelectionIndicator(
+                                            checked: checked,
+                                            accent: keeperPalette(context).badgeForeground,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(spider.name),
+                                                const SizedBox(height: 2),
+                                                Text(
+                                                  spider.latinName.trim().isEmpty
+                                                      ? strings.speciesPlaceholder
+                                                      : spider.latinName,
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .bodySmall
+                                                      ?.copyWith(
+                                                        color: keeperPalette(context).textMuted,
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
-                                ],
-                              ),
-                            ),
+                                ),
+                              );
+                            }).toList(),
                           ),
                         ),
-                      );
-                    }),
-                ],
+                    ],
+                  ),
+                ),
               ),
             );
           },
@@ -2061,25 +2074,31 @@ class _RoundSelectionIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final fill = checked
+        ? accent
+        : Color.alphaBlend(
+            accent.withValues(alpha: 0.08),
+            scheme.surfaceContainerHighest.withValues(alpha: 0.96),
+          );
     return AnimatedContainer(
       duration: const Duration(milliseconds: 180),
       width: 22,
       height: 22,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: checked
-            ? accent.withValues(alpha: 0.24)
-            : scheme.surfaceContainerHighest.withValues(alpha: 0.88),
+        color: fill,
         border: Border.all(
-          color: checked ? accent : accent.withValues(alpha: 0.34),
-          width: 1.5,
+          color: checked
+              ? accent.withValues(alpha: 0.92)
+              : accent.withValues(alpha: 0.34),
+          width: checked ? 1.2 : 1.4,
         ),
       ),
       child: checked
           ? Icon(
               Icons.check_rounded,
               size: 14,
-              color: accent,
+              color: scheme.onPrimary,
             )
           : null,
     );

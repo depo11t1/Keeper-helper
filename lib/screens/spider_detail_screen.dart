@@ -232,9 +232,11 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
             color: scheme.surfaceContainerLow,
             child: _SummaryStrip(
               title: strings.avgEats,
-              value: feedingAverage == null
-                  ? strings.littleData
-                  : strings.everyDays(feedingAverage),
+              value: _summaryValue(
+                count: feedings.length,
+                averageDays: feedingAverage,
+                strings: strings,
+              ),
             ),
           ),
           const SizedBox(height: 6),
@@ -349,9 +351,11 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
             color: scheme.surfaceContainerLow,
             child: _SummaryStrip(
               title: strings.avgMolts,
-              value: moltAverage == null
-                  ? strings.littleData
-                  : strings.everyDays(moltAverage),
+              value: _summaryValue(
+                count: molts.length,
+                averageDays: moltAverage,
+                strings: strings,
+              ),
             ),
           ),
           const SizedBox(height: 6),
@@ -430,6 +434,20 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
         ],
       ),
     );
+  }
+
+  String _summaryValue({
+    required int count,
+    required int? averageDays,
+    required AppStrings strings,
+  }) {
+    if (count == 0) {
+      return strings.noData;
+    }
+    if (count == 1 || averageDays == null) {
+      return strings.littleData;
+    }
+    return strings.everyDays(averageDays);
   }
 
   Future<void> _showAvatarSheet(BuildContext context) async {
@@ -1297,7 +1315,7 @@ class _SummaryStrip extends StatelessWidget {
         Text(
           value,
           style: theme.textTheme.labelLarge?.copyWith(
-            fontWeight: FontWeight.w400,
+            fontWeight: FontWeight.w600,
             color: palette.textPrimary,
           ),
         ),
