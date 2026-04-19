@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../l10n/app_strings.dart';
@@ -54,6 +56,7 @@ class _BackupScreenState extends State<BackupScreen> {
     final strings = AppStrings.of(widget.language);
     final palette = keeperPalette(context);
     final scheme = Theme.of(context).colorScheme;
+    final usesDesktopFiles = !(Platform.isAndroid || Platform.isIOS);
 
     return Scaffold(
       appBar: AppBar(
@@ -122,7 +125,9 @@ class _BackupScreenState extends State<BackupScreen> {
             _SectionGroup(
               position: _GroupPosition.bottom,
               title: strings.restore,
-              description: strings.pickBackupFile,
+              description: usesDesktopFiles
+                  ? strings.pickBackupFileDesktop
+                  : strings.pickBackupFile,
               child: SizedBox(
                 width: double.infinity,
                 child: FilledButton(
@@ -141,7 +146,11 @@ class _BackupScreenState extends State<BackupScreen> {
                           fontWeight: FontWeight.w500,
                         ),
                   ),
-                  child: Text(strings.chooseFile),
+                  child: Text(
+                    usesDesktopFiles
+                        ? strings.chooseFileFromComputer
+                        : strings.chooseFile,
+                  ),
                 ),
               ),
             ),

@@ -111,6 +111,10 @@ ThemeData buildKeeperTheme(
     brightness: Brightness.dark,
     colorScheme: scheme,
     scaffoldBackgroundColor: palette.background,
+    splashFactory: InkRipple.splashFactory,
+    splashColor: palette.badgeForeground.withValues(alpha: 0.045),
+    highlightColor: palette.badgeForeground.withValues(alpha: 0.022),
+    hoverColor: palette.badgeForeground.withValues(alpha: 0.03),
     extensions: [
       KeeperTheme(palette: palette),
     ],

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../l10n/app_strings.dart';
@@ -490,39 +492,55 @@ class _SettingsTabletViewState extends State<_SettingsTabletView> {
               position: _SettingsBlockPosition.top,
               color: scheme.surfaceContainerLow,
               padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: SettingsScreen.accentOptions.map((color) {
-                  final selected =
-                      color.toARGB32() == widget.currentAccent.toARGB32();
-                  return InkWell(
-                    borderRadius: BorderRadius.circular(14),
-                    onTap: () => widget.onAccentChanged(color),
-                    child: SizedBox(
-                      width: 38,
-                      height: 38,
-                      child: Center(
-                        child: AnimatedScale(
-                          duration: const Duration(milliseconds: 220),
-                          curve: Curves.easeOutCubic,
-                          scale: selected ? 1.12 : 0.94,
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 220),
-                            curve: Curves.easeOutCubic,
-                            width: selected ? 30 : 28,
-                            height: selected ? 30 : 28,
-                            decoration: BoxDecoration(
-                              color: color,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  const gap = 10.0;
+                  final itemWidth =
+                      ((constraints.maxWidth - gap * 5) / 6).clamp(42.0, 72.0);
+
+                  return Row(
+                    children: List.generate(
+                      SettingsScreen.accentOptions.length,
+                      (index) {
+                        final color = SettingsScreen.accentOptions[index];
+                        final selected =
+                            color.toARGB32() == widget.currentAccent.toARGB32();
+                        return Expanded(
+                          child: Padding(
+                            padding: EdgeInsets.only(
+                              right: index == SettingsScreen.accentOptions.length - 1
+                                  ? 0
+                                  : gap,
+                            ),
+                            child: InkWell(
                               borderRadius: BorderRadius.circular(
-                                selected ? 10 : 9,
+                                selected ? 18 : 14,
+                              ),
+                              onTap: () => widget.onAccentChanged(color),
+                              child: SizedBox(
+                                height: 42,
+                                child: Center(
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 220),
+                                    curve: Curves.easeOutCubic,
+                                    width: selected ? itemWidth : itemWidth - 4,
+                                    height: selected ? 32 : 30,
+                                    decoration: BoxDecoration(
+                                      color: color,
+                                      borderRadius: BorderRadius.circular(
+                                        selected ? 16 : 12,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ),
+                        );
+                      },
                     ),
                   );
-                }).toList(),
+                },
               ),
             ),
             const SizedBox(height: 8),
@@ -668,6 +686,7 @@ class _SettingsTabletViewState extends State<_SettingsTabletView> {
           ],
         );
       case _SettingsTabletSection.backup:
+        final usesDesktopFiles = !(Platform.isAndroid || Platform.isIOS);
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -716,7 +735,9 @@ class _SettingsTabletViewState extends State<_SettingsTabletView> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    strings.pickBackupFile,
+                    usesDesktopFiles
+                        ? strings.pickBackupFileDesktop
+                        : strings.pickBackupFile,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: palette.textMuted,
                         ),
@@ -724,7 +745,11 @@ class _SettingsTabletViewState extends State<_SettingsTabletView> {
                   const SizedBox(height: 16),
                   FilledButton(
                     onPressed: widget.onRestoreBackup,
-                    child: Text(strings.chooseFile),
+                    child: Text(
+                      usesDesktopFiles
+                          ? strings.chooseFileFromComputer
+                          : strings.chooseFile,
+                    ),
                   ),
                 ],
               ),

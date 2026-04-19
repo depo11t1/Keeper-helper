@@ -115,6 +115,18 @@ class AppStrings {
         pt: 'Todo o período',
         ja: '全期間',
       );
+  String get emptyShort => _t(
+        ru: 'Пусто',
+        en: 'Empty',
+        hi: 'खाली',
+        fr: 'Vide',
+        de: 'Leer',
+        es: 'Vacío',
+        sv: 'Tomt',
+        nl: 'Leeg',
+        pt: 'Vazio',
+        ja: '空です',
+      );
   String get settings => _t(
         ru: 'Настройки',
         en: 'Settings',
@@ -774,6 +786,18 @@ class AppStrings {
         pt: 'Média',
         ja: '平均',
       );
+  String get averageEveryShort => _t(
+        ru: 'В среднем каждые',
+        en: 'On average every',
+        hi: 'औसतन हर',
+        fr: 'En moyenne tous les',
+        de: 'Im Schnitt alle',
+        es: 'En promedio cada',
+        sv: 'I snitt var',
+        nl: 'Gemiddeld elke',
+        pt: 'Em média a cada',
+        ja: '平均で',
+      );
   String get totalFeedings => _t(
         ru: 'Всего кормлений',
         en: 'Total feedings',
@@ -1038,6 +1062,30 @@ class AppStrings {
         pt: 'Escolher arquivo',
         ja: 'ファイルを選択',
       );
+  String get chooseFileFromComputer => _t(
+        ru: 'Выбрать файл на компьютере',
+        en: 'Choose file from computer',
+        hi: 'कंप्यूटर से फ़ाइल चुनें',
+        fr: 'Choisir un fichier sur l’ordinateur',
+        de: 'Datei vom Computer wählen',
+        es: 'Elegir archivo del ordenador',
+        sv: 'Välj fil från datorn',
+        nl: 'Bestand vanaf computer kiezen',
+        pt: 'Escolher arquivo do computador',
+        ja: 'コンピューターからファイルを選択',
+      );
+  String get pickBackupFileDesktop => _t(
+        ru: 'Восстановить данные из файла на компьютере',
+        en: 'Restore data from a file on your computer',
+        hi: 'कंप्यूटर की फ़ाइल से डेटा पुनर्स्थापित करें',
+        fr: 'Restaurer les données depuis un fichier sur l’ordinateur',
+        de: 'Daten aus einer Datei auf dem Computer wiederherstellen',
+        es: 'Restaurar datos desde un archivo del ordenador',
+        sv: 'Återställ data från en fil på datorn',
+        nl: 'Gegevens herstellen uit een bestand op de computer',
+        pt: 'Restaurar dados de um arquivo no computador',
+        ja: 'コンピューター上のファイルからデータを復元',
+      );
   String get restoreFailed => _t(
         ru: 'Не удалось восстановить бэкап',
         en: 'Failed to restore backup',
@@ -1121,6 +1169,18 @@ class AppStrings {
         nl: 'Foto wijzigen',
         pt: 'Alterar foto',
         ja: '写真を変更',
+      );
+  String get choosePhotoFromComputer => _t(
+        ru: 'Выбрать фото с компьютера',
+        en: 'Choose photo from computer',
+        hi: 'कंप्यूटर से फोटो चुनें',
+        fr: 'Choisir une photo sur l’ordinateur',
+        de: 'Foto vom Computer wählen',
+        es: 'Elegir foto del ordenador',
+        sv: 'Välj foto från datorn',
+        nl: 'Foto vanaf computer kiezen',
+        pt: 'Escolher foto do computador',
+        ja: 'コンピューターから写真を選択',
       );
   String get removePhoto => _t(
         ru: 'Удалить фото',

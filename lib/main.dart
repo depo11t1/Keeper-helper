@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
+import 'package:file_selector/file_selector.dart' as fs;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -324,15 +325,14 @@ class _KeeperAppState extends State<KeeperApp> {
     }
     final strings = AppStrings.of(_settings.language);
     try {
-      final result = await FilePicker.platform.pickFiles(
-        dialogTitle: strings.restore,
-        type: FileType.custom,
-        allowedExtensions: ['json', 'zip', 'kpr'],
-      );
-      if (result == null || result.files.isEmpty) {
+      final pickedPath = await _pickBackupFilePath(strings.restore);
+      if (pickedPath == null) {
         return;
       }
-      final file = File(result.files.single.path!);
+      final file = File(pickedPath);
+      if (!file.existsSync()) {
+        throw Exception('Invalid backup path');
+      }
       final fileBytes = await file.readAsBytes();
       Archive? archive;
       try {
@@ -421,8 +421,10 @@ class _KeeperAppState extends State<KeeperApp> {
       }
       final mergedSpiders = mergedById.values.toList();
       await _preparePhotoThumbs(mergedSpiders);
+      final restoredSettings = AppSettings.fromJson(settingsJson);
+      final restoredAccent = restoredSettings.accentColor;
       setState(() {
-        _settings = AppSettings.fromJson(settingsJson);
+        _settings = restoredSettings;
         _spiders = mergedSpiders;
         Intl.defaultLocale = AppStrings.of(_settings.language).localeCode;
       });
@@ -431,7 +433,7 @@ class _KeeperAppState extends State<KeeperApp> {
       _showTopNotice(
         context,
         message: strings.restoreDone,
-        accent: keeperPalette(context).accent,
+        accent: restoredAccent,
       );
     } catch (_) {
       _showTopNotice(
@@ -440,6 +442,36 @@ class _KeeperAppState extends State<KeeperApp> {
         accent: keeperPalette(context).accent,
       );
     }
+  }
+
+  Future<String?> _pickBackupFilePath(String title) async {
+    if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
+      final file = await fs.openFile(
+        acceptedTypeGroups: const [
+          fs.XTypeGroup(
+            label: 'Keeper Backup',
+            extensions: ['json', 'zip', 'kpr'],
+          ),
+        ],
+        confirmButtonText: title,
+      );
+      return file?.path;
+    }
+
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        dialogTitle: title,
+        type: FileType.custom,
+        allowedExtensions: ['json', 'zip', 'kpr'],
+      );
+      final path = result == null || result.files.isEmpty
+          ? null
+          : result.files.single.path;
+      if (path != null && path.isNotEmpty) {
+        return path;
+      }
+    } catch (_) {}
+    return null;
   }
 
   Future<Directory> _resolveDownloadsDir() async {
@@ -833,7 +865,7 @@ class _KeeperAppState extends State<KeeperApp> {
                               label,
                               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                     fontSize: field == SortField.name ? null : 16,
-                                    fontWeight: FontWeight.w400,
+                                    fontWeight: FontWeight.w600,
                                     color: keeperPalette(context).accent,
                                   ),
                             ),
@@ -1458,8 +1490,8 @@ class _KeeperAppState extends State<KeeperApp> {
       return current;
     }
     final next = value + 1;
-    if (next > 15) {
-      return 'L15';
+    if (next > 20) {
+      return 'L20';
     }
     return 'L$next';
   }
@@ -1984,7 +2016,7 @@ class _KeeperAppState extends State<KeeperApp> {
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
-                    maxHeight: MediaQuery.of(context).size.height * 0.72,
+                    maxHeight: MediaQuery.of(context).size.height * 0.62,
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -2048,6 +2080,11 @@ class _KeeperAppState extends State<KeeperApp> {
                                   borderRadius: radius,
                                   child: InkWell(
                                     borderRadius: radius,
+                                    splashColor: Colors.transparent,
+                                    highlightColor: Colors.transparent,
+                                    overlayColor: const WidgetStatePropertyAll<Color>(
+                                      Colors.transparent,
+                                    ),
                                     onTap: () {
                                       setLocalState(() {
                                         if (checked) {
@@ -2171,6 +2208,11 @@ List<String> _moltStageOptions(AppStrings strings) => [
       'L13',
       'L14',
       'L15',
+      'L16',
+      'L17',
+      'L18',
+      'L19',
+      'L20',
     ];
 
 enum _ArchiveTilePosition { single, top, middle, bottom }
@@ -2200,12 +2242,6 @@ class _RoundSelectionIndicator extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: fill,
-        border: Border.all(
-          color: checked
-              ? accent.withValues(alpha: 0.92)
-              : accent.withValues(alpha: 0.34),
-          width: checked ? 1.2 : 1.4,
-        ),
       ),
       child: checked
           ? Icon(

@@ -74,7 +74,20 @@ class HomeScreen extends StatelessWidget {
                 bottom: 110,
                 maxWidth: 1420,
               ),
-              sliver: SliverLayoutBuilder(
+              sliver: sortedSpiders.isEmpty
+                  ? SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(
+                        child: Text(
+                          strings.emptyShort,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            color: palette.textMuted.withValues(alpha: 0.9),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    )
+                  : SliverLayoutBuilder(
                 builder: (context, constraints) {
                   const gap = 14.0;
                   const minCardWidth = 330.0;

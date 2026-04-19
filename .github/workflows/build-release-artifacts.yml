@@ -1,0 +1,167 @@
+name: Build Release Artifacts
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    name: Android APKs
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build arm64-v8a APK
+        run: flutter build apk --release --target-platform android-arm64 --split-per-abi
+
+      - name: Build universal APK
+        run: flutter build apk --release
+
+      - name: Upload arm64-v8a APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: keeper-android-arm64-v8a-apk
+          path: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+
+      - name: Upload universal APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: keeper-android-universal-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+
+  build-linux:
+    name: Linux Bundle
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake libgtk-3-dev ninja-build pkg-config
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Enable Linux desktop
+        run: flutter config --enable-linux-desktop
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build Linux release bundle
+        run: flutter build linux --release
+
+      - name: Pack Linux tar.gz
+        run: |
+          cd build/linux/x64/release
+          tar -czf keeper-linux-x64.tar.gz bundle
+
+      - name: Prepare AppImage AppDir
+        run: |
+          rm -rf AppDir
+          mkdir -p AppDir/usr/lib/keeper
+          cp -r build/linux/x64/release/bundle/* AppDir/usr/lib/keeper/
+          cat > AppDir/AppRun <<'EOF'
+          #!/bin/sh
+          HERE="$(dirname "$(readlink -f "$0")")"
+          exec "$HERE/usr/lib/keeper/keeper" "$@"
+          EOF
+          chmod +x AppDir/AppRun
+          cat > AppDir/keeper.desktop <<'EOF'
+          [Desktop Entry]
+          Type=Application
+          Name=Keeper
+          Exec=keeper
+          Icon=keeper
+          Categories=Utility;
+          Terminal=false
+          EOF
+          echo 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9WnR8pUAAAAASUVORK5CYII=' | base64 -d > AppDir/keeper.png
+          ln -sf keeper.png AppDir/.DirIcon
+
+      - name: Build AppImage
+        run: |
+          wget -q https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage -O appimagetool.AppImage
+          chmod +x appimagetool.AppImage
+          ARCH=x86_64 ./appimagetool.AppImage --appimage-extract-and-run AppDir keeper-linux-x64.AppImage
+
+      - name: Upload Linux tar.gz
+        uses: actions/upload-artifact@v4
+        with:
+          name: keeper-linux-x64-tar-gz
+          path: build/linux/x64/release/keeper-linux-x64.tar.gz
+
+      - name: Upload Linux AppImage
+        uses: actions/upload-artifact@v4
+        with:
+          name: keeper-linux-x64-appimage
+          path: keeper-linux-x64.AppImage
+
+  build-windows:
+    name: Windows Release Zip
+    runs-on: windows-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Enable Windows desktop
+        run: flutter config --enable-windows-desktop
+
+      - name: Generate Windows platform
+        run: flutter create --platforms=windows .
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build Windows release
+        run: flutter build windows --release
+
+      - name: Pack Windows Release.zip
+        shell: pwsh
+        run: |
+          Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath keeper-windows-release.zip -Force
+
+      - name: Upload Windows Release.zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: keeper-windows-release-zip
+          path: keeper-windows-release.zip

@@ -728,7 +728,7 @@ class _AnalyticsHeroState extends State<_AnalyticsHero> {
           ),
           child: _HeroWideMetricRow(
             icon: Icons.restaurant_rounded,
-            label: widget.strings.averageShort,
+            label: widget.strings.averageEveryShort,
             value: widget.feedAverage == null
                 ? widget.strings.littleData
                 : '${widget.feedAverage} ${widget.strings.daysShort}',
@@ -748,7 +748,7 @@ class _AnalyticsHeroState extends State<_AnalyticsHero> {
           ),
           child: _HeroWideMetricRow(
             icon: Icons.autorenew_rounded,
-            label: widget.strings.averageShort,
+            label: widget.strings.averageEveryShort,
             value: widget.moltAverage == null
                 ? widget.strings.littleData
                 : '${widget.moltAverage} ${widget.strings.daysShort}',
@@ -791,26 +791,30 @@ class _AnalyticsPeriodChip extends StatelessWidget {
     final palette = keeperPalette(context);
     final radius = BorderRadius.circular(selected ? 999 : 16);
 
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        curve: Curves.easeInOutCubic,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: selected ? accent.withValues(alpha: 0.16) : background,
-          borderRadius: radius,
-        ),
-        child: AnimatedDefaultTextStyle(
-          duration: const Duration(milliseconds: 180),
-          curve: Curves.easeInOutCubic,
-          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-            color: selected
-                ? accent
-                : palette.textPrimary.withValues(alpha: 0.84),
-            fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: radius,
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        hoverColor: Colors.transparent,
+        overlayColor: const WidgetStatePropertyAll<Color>(Colors.transparent),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: selected ? accent.withValues(alpha: 0.11) : background,
+            borderRadius: radius,
           ),
-          child: Text(label),
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+              color: selected
+                  ? accent
+                  : palette.textPrimary.withValues(alpha: 0.86),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ),
       ),
     );
@@ -833,26 +837,32 @@ class _AnalyticsPlusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(16);
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        curve: Curves.easeInOutCubic,
-        constraints: const BoxConstraints(
-          minWidth: 42,
-          minHeight: 40,
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
-        decoration: BoxDecoration(
-          color: selected ? accent.withValues(alpha: 0.16) : background,
-          borderRadius: radius,
-        ),
-        child: Icon(
-          Icons.add_rounded,
-          size: 22,
-          color: selected
-              ? accent
-              : keeperPalette(context).textPrimary.withValues(alpha: 0.84),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: radius,
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        hoverColor: Colors.transparent,
+        overlayColor: const WidgetStatePropertyAll<Color>(Colors.transparent),
+        child: Container(
+          constraints: const BoxConstraints(
+            minWidth: 42,
+            minHeight: 40,
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+          decoration: BoxDecoration(
+            color: selected ? accent.withValues(alpha: 0.11) : background,
+            borderRadius: radius,
+          ),
+          child: Icon(
+            Icons.add_rounded,
+            size: 22,
+            color: selected
+                ? accent
+                : keeperPalette(context).textPrimary.withValues(alpha: 0.86),
+          ),
         ),
       ),
     );

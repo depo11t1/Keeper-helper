@@ -1,10 +1,10 @@
 import 'dart:io';
 
+import 'package:file_selector/file_selector.dart' as fs;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
-import 'package:file_picker/file_picker.dart';
 
 import '../l10n/app_strings.dart';
 import '../models/app_settings.dart';
@@ -91,7 +91,11 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
                 children: [
-                  const Icon(Icons.archive_outlined, size: 18),
+                  Icon(
+                    Icons.archive_outlined,
+                    size: 18,
+                    color: keeperPalette(context).accent,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     '${strings.archivedSince} '
@@ -568,12 +572,20 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               buildAction(
-                title: strings.changePhoto,
-                icon: Icons.photo_camera_back_rounded,
+                title: Platform.isAndroid || Platform.isIOS
+                    ? strings.changePhoto
+                    : strings.choosePhotoFromComputer,
+                icon: Platform.isAndroid || Platform.isIOS
+                    ? Icons.photo_camera_back_rounded
+                    : Icons.folder_open_rounded,
                 position: _DetailGroupPosition.top,
                 onTap: () {
                   Navigator.of(context).pop();
-                  _pickPhoto();
+                  if (Platform.isAndroid || Platform.isIOS) {
+                    _pickPhoto();
+                  } else {
+                    _pickPhotoFromComputer();
+                  }
                 },
               ),
               const SizedBox(height: 8),
@@ -686,9 +698,25 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
       return;
     }
 
-    final result = await FilePicker.platform.pickFiles(type: FileType.image);
-    final pathPicked = result?.files.single.path;
+    await _pickPhotoFromComputer();
+  }
+
+  Future<void> _pickPhotoFromComputer() async {
+    final strings = AppStrings.of(widget.language);
+    final file = await fs.openFile(
+      acceptedTypeGroups: const [
+        fs.XTypeGroup(
+          label: 'Images',
+          extensions: ['jpg', 'jpeg', 'png', 'webp', 'bmp', 'gif'],
+        ),
+      ],
+      confirmButtonText: strings.choosePhotoFromComputer,
+    );
+    final pathPicked = file?.path;
     if (pathPicked == null) {
+      return;
+    }
+    if (!File(pathPicked).existsSync()) {
       return;
     }
     final bytes = await File(pathPicked).readAsBytes();
@@ -736,29 +764,6 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
     final targetPath = path.join(photosDir.path, filename);
     final copied = await File(sourcePath).copy(targetPath);
     return copied.path;
-  }
-
-  void _showPhotoUnavailable() {
-    final strings = AppStrings.of(widget.language);
-    showDialog<void>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(strings.photoStyle),
-          content: Text(
-            strings.isRu
-                ? 'Выбор фото доступен только на мобильных устройствах.'
-                : 'Photo picking is available only on mobile devices.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(strings.ok),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   Future<void> _showHumiditySheet(BuildContext context) async {
@@ -1221,7 +1226,7 @@ class _EditableDateTile extends StatelessWidget {
                     visualDensity: VisualDensity.compact,
                     icon: Icon(Icons.edit_rounded, color: iconTone),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 2),
                   IconButton(
                     onPressed: onDelete,
                     padding: EdgeInsets.zero,
@@ -1430,6 +1435,11 @@ Future<String?> _pickMoltStage(
     'L13',
     'L14',
     'L15',
+    'L16',
+    'L17',
+    'L18',
+    'L19',
+    'L20',
   ];
   final options = <String>[strings.dontKnow, ...stages];
   final currentIndex = options.indexOf(current);

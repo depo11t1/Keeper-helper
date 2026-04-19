@@ -295,45 +295,32 @@ git push -u origin main
 В проект уже добавлен workflow:
 
 ```text
-.github/workflows/build-android-apk.yml
+.github/workflows/build-release-artifacts.yml
 ```
 
 Он делает следующее при каждом `push` в `main` или `master`:
 
-- поднимает Ubuntu runner
-- ставит Java 17
-- ставит Flutter stable
-- выполняет `flutter pub get`
-- собирает `arm64-v8a` APK
-- сохраняет готовый файл как artifact
+- Android:
+  - `arm64-v8a` APK
+  - universal APK
+- Linux:
+  - `tar.gz` bundle
+  - `AppImage`
+- Windows:
+  - `Release.zip`
 
-Используется именно такая команда сборки:
-
-```bash
-flutter build apk --release --target-platform android-arm64 --split-per-abi
-```
-
-Готовый файл внутри workflow получается здесь:
-
-```bash
-build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
-```
-
-После пуша APK можно скачать на GitHub так:
+После пуша артефакты можно скачать на GitHub так:
 
 1. Открой вкладку `Actions` в репозитории.
-2. Выбери последний запуск workflow `Build Android APK`.
-3. Внизу страницы скачай artifact `keeper-arm64-v8a-apk`.
+2. Выбери последний запуск workflow `Build Release Artifacts`.
+3. Внизу страницы скачай нужные artifacts:
+   - `keeper-android-arm64-v8a-apk`
+   - `keeper-android-universal-apk`
+   - `keeper-linux-x64-tar-gz`
+   - `keeper-linux-x64-appimage`
+   - `keeper-windows-release-zip`
 
-## Важный нюанс про Android
-
-Для GitHub-сборки в проекте должна существовать папка `android/`.
-
-Если ее еще нет, в корне проекта нужно один раз выполнить:
-
-```bash
-flutter create --platforms=android .
-```
+Windows-платформа в workflow генерируется автоматически на CI, так что отдельной папки `windows/` в репозитории сейчас не требуется.
 
 В этом проекте папка `android/` уже есть, поэтому workflow можно просто пушить в GitHub.
 

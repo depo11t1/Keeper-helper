@@ -29,7 +29,7 @@ class FeedingEntry {
   }
 }
 
-// Одна запись о линьке с датой и возрастной стадией L1-L15.
+// Одна запись о линьке с датой и возрастной стадией L1-L20.
 class MoltEntry {
   MoltEntry({
     required this.date,

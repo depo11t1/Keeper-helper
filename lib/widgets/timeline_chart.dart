@@ -97,10 +97,11 @@ class _TimelinePainter extends CustomPainter {
     final max = dates.last.millisecondsSinceEpoch.toDouble();
     final range = (max - min).abs() < 1 ? 1 : max - min;
 
+    final labels = <({double rawX, TextPainter painter})>[];
+
     for (final date in dates) {
       final t = (date.millisecondsSinceEpoch - min) / range;
       final x = startX + (endX - startX) * t;
-      canvas.drawCircle(Offset(x, centerY), 7.8, dotPaint);
 
       final textPainter = TextPainter(
         text: TextSpan(
@@ -113,13 +114,53 @@ class _TimelinePainter extends CustomPainter {
         ),
         textDirection: ui.TextDirection.ltr,
       )..layout();
-      textPainter.paint(
-        canvas,
-        Offset(
-          (x - textPainter.width / 2).clamp(0, size.width - textPainter.width),
-          48,
-        ),
-      );
+      labels.add((rawX: x, painter: textPainter));
+    }
+
+    if (labels.isEmpty) {
+      return;
+    }
+
+    final adjustedX = <double>[];
+    for (var i = 0; i < labels.length; i++) {
+      final current = labels[i];
+      if (i == 0) {
+        adjustedX.add(current.rawX);
+        continue;
+      }
+
+      final previous = labels[i - 1];
+      final minSpacing = previous.painter.width / 2 +
+          current.painter.width / 2 +
+          10;
+      final nextX = current.rawX < adjustedX[i - 1] + minSpacing
+          ? adjustedX[i - 1] + minSpacing
+          : current.rawX;
+      adjustedX.add(nextX);
+    }
+
+    final overflow = adjustedX.last - endX;
+    if (overflow > 0) {
+      for (var i = adjustedX.length - 1; i >= 0; i--) {
+        adjustedX[i] -= overflow;
+      }
+      if (adjustedX.first < startX) {
+        final shiftBack = startX - adjustedX.first;
+        for (var i = 0; i < adjustedX.length; i++) {
+          adjustedX[i] += shiftBack;
+        }
+      }
+    }
+
+    for (var i = 0; i < labels.length; i++) {
+      final label = labels[i];
+      final x = adjustedX[i].clamp(startX, endX).toDouble();
+      canvas.drawCircle(Offset(x, centerY), 7.8, dotPaint);
+
+      final textX = (x - label.painter.width / 2)
+          .clamp(0.0, size.width - label.painter.width)
+          .toDouble();
+      label.painter.paint(canvas, Offset(textX, 48));
     }
   }
 
