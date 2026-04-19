@@ -32,7 +32,7 @@ int? _averageAcrossSpiders(
   return (totalDays / intervals).round();
 }
 
-// Вкладка аналитики: показываем короткие списки "кто ест чаще" и "кто линяет чаще".
+// Экран аналитики: верхняя сводка по выбранному периоду и списки по частоте событий.
 class AnalyticsPlaceholderScreen extends StatefulWidget {
   const AnalyticsPlaceholderScreen({
     super.key,

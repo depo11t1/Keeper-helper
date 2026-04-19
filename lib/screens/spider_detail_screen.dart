@@ -505,7 +505,7 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
   }
 
   Future<void> _showAvatarActions(BuildContext context) async {
-    // Фото меняется не отдельной кнопкой, а по нажатию на саму аватарку.
+    // Bottom sheet с действиями для фото и аватарки.
     final palette = keeperPalette(context);
     final strings = AppStrings.of(widget.language);
     await showModalBottomSheet<void>(
@@ -767,7 +767,7 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
   }
 
   Future<void> _showHumiditySheet(BuildContext context) async {
-    // Влажность задается в процентах через slider.
+    // Меняем влажность через компактный slider в процентах.
     final palette = keeperPalette(context);
     final strings = AppStrings.of(widget.language);
     double humidity = widget.spider.humidity.toDouble();
@@ -819,7 +819,7 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
   }
 
   Future<void> _showEditSpiderSheet(BuildContext context) async {
-    // Редактирование базовых полей карточки.
+    // Нижний sheet для имени, вида и пола.
     final nameController = TextEditingController(text: widget.spider.name);
     final latinController = TextEditingController(text: widget.spider.latinName);
     final formKey = GlobalKey<FormState>();
