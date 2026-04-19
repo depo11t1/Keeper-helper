@@ -103,6 +103,8 @@ AppLanguage _resolveSystemLanguage() {
         return AppLanguage.pt;
       case 'ja':
         return AppLanguage.ja;
+      case 'zh':
+        return AppLanguage.zh;
     }
   }
   return AppLanguage.en;

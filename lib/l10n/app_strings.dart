@@ -14,6 +14,7 @@ class AppStrings {
   bool get isNl => language == AppLanguage.nl;
   bool get isPt => language == AppLanguage.pt;
   bool get isJa => language == AppLanguage.ja;
+  bool get isZh => language == AppLanguage.zh;
   String get localeCode => switch (language) {
         AppLanguage.ru => 'ru',
         AppLanguage.hi => 'hi',
@@ -24,6 +25,7 @@ class AppStrings {
         AppLanguage.nl => 'nl',
         AppLanguage.pt => 'pt',
         AppLanguage.ja => 'ja',
+        AppLanguage.zh => 'zh',
         AppLanguage.en => 'en',
       };
 
@@ -40,6 +42,7 @@ class AppStrings {
     required String nl,
     required String pt,
     required String ja,
+    String? zh,
   }) =>
       switch (language) {
         AppLanguage.ru => ru,
@@ -51,6 +54,7 @@ class AppStrings {
         AppLanguage.nl => nl,
         AppLanguage.pt => pt,
         AppLanguage.ja => ja,
+        AppLanguage.zh => zh ?? ja,
         AppLanguage.en => en,
       };
 
@@ -66,6 +70,7 @@ class AppStrings {
         nl: 'Menu',
         pt: 'Menu',
         ja: 'メニュー',
+        zh: '菜单',
       );
   String get analytics => _t(
         ru: 'Аналитика',
@@ -78,6 +83,7 @@ class AppStrings {
         nl: 'Analyse',
         pt: 'Analítica',
         ja: '分析',
+        zh: '分析',
       );
   String get analyticsMonth => _t(
         ru: 'Месяц',
@@ -90,6 +96,7 @@ class AppStrings {
         nl: 'Maand',
         pt: 'Mês',
         ja: '月',
+        zh: '月',
       );
   String get analyticsYear => _t(
         ru: 'Год',
@@ -102,6 +109,7 @@ class AppStrings {
         nl: 'Jaar',
         pt: 'Ano',
         ja: '年',
+        zh: '年',
       );
   String get analyticsAllTime => _t(
         ru: 'Все время',
@@ -114,6 +122,7 @@ class AppStrings {
         nl: 'Altijd',
         pt: 'Todo o período',
         ja: '全期間',
+        zh: '全部时间',
       );
   String get emptyShort => _t(
         ru: 'Пусто',
@@ -126,6 +135,7 @@ class AppStrings {
         nl: 'Leeg',
         pt: 'Vazio',
         ja: '空です',
+        zh: '空',
       );
   String get settings => _t(
         ru: 'Настройки',
@@ -138,6 +148,7 @@ class AppStrings {
         nl: 'Instellingen',
         pt: 'Definições',
         ja: '設定',
+        zh: '设置',
       );
   String get experimentalColors => _t(
         ru: 'Кастомизация',
@@ -150,6 +161,7 @@ class AppStrings {
         nl: 'Aanpassing',
         pt: 'Personalização',
         ja: 'カスタマイズ',
+        zh: '自定义',
       );
   String get tintedBackgroundMode => _t(
         ru: 'Черный цвет',
@@ -162,6 +174,7 @@ class AppStrings {
         nl: 'Zwarte kleur',
         pt: 'Cor preta',
         ja: '黒色',
+        zh: '黑色主题',
       );
   String get tintedBackgroundModeHint => _t(
         ru: 'Отключает чистый AMOLED-чёрный и подмешивает акцентный цвет в фон и нижние меню.',
@@ -186,6 +199,7 @@ class AppStrings {
         nl: 'Back-up',
         pt: 'Backup',
         ja: 'バックアップ',
+        zh: '备份',
       );
   String get restore => _t(
         ru: 'Восстановление',
@@ -198,6 +212,7 @@ class AppStrings {
         nl: 'Herstellen',
         pt: 'Restaurar',
         ja: '復元',
+        zh: '恢复',
       );
   String get aboutApp => _t(
         ru: 'О приложении',
@@ -210,6 +225,7 @@ class AppStrings {
         nl: 'Over de app',
         pt: 'Sobre',
         ja: 'このアプリについて',
+        zh: '关于应用',
       );
   String get archive => _t(
         ru: 'Архив',
@@ -222,6 +238,7 @@ class AppStrings {
         nl: 'Archief',
         pt: 'Arquivo',
         ja: 'アーカイブ',
+        zh: '归档',
       );
   String get languageLabel => _t(
         ru: 'Язык',
@@ -234,6 +251,7 @@ class AppStrings {
         nl: 'Taal',
         pt: 'Idioma',
         ja: '言語',
+        zh: '语言',
       );
   String get english => 'English';
   String get russian => 'Русский';
@@ -245,6 +263,7 @@ class AppStrings {
   String get dutch => 'Nederlands';
   String get swedish => 'Svenska';
   String get japanese => '日本語';
+  String get chinese => '中文';
   String get placeholderSuffix => _t(
         ru: ' (заглушка)',
         en: ' (placeholder)',
@@ -256,6 +275,7 @@ class AppStrings {
         nl: ' (placeholder)',
         pt: ' (placeholder)',
         ja: '（プレースホルダー）',
+        zh: '（占位）',
       );
   String get placeholderMessage => _t(
         ru: 'Пока это заглушка.',
@@ -268,6 +288,7 @@ class AppStrings {
         nl: 'Dit is een placeholder.',
         pt: 'Isto é um placeholder.',
         ja: 'これはプレースホルダーです。',
+        zh: '这是占位内容。',
       );
   String languageName(AppLanguage language) => switch (language) {
         AppLanguage.ru => russian,
@@ -280,6 +301,7 @@ class AppStrings {
         AppLanguage.nl => dutch,
         AppLanguage.pt => portuguese,
         AppLanguage.ja => japanese,
+        AppLanguage.zh => chinese,
       };
   String get ok => _t(
         ru: 'Ок',
@@ -292,6 +314,7 @@ class AppStrings {
         nl: 'OK',
         pt: 'OK',
         ja: 'OK',
+        zh: '确定',
       );
   String get cancel => _t(
         ru: 'Отмена',
@@ -304,6 +327,7 @@ class AppStrings {
         nl: 'Annuleren',
         pt: 'Cancelar',
         ja: 'キャンセル',
+        zh: '取消',
       );
   String get confirm => _t(
         ru: 'Подтвердить',
@@ -316,6 +340,7 @@ class AppStrings {
         nl: 'Bevestigen',
         pt: 'Confirmar',
         ja: '確定',
+        zh: '确认',
       );
   String get save => _t(
         ru: 'Сохранить',
@@ -328,6 +353,7 @@ class AppStrings {
         nl: 'Opslaan',
         pt: 'Guardar',
         ja: '保存',
+        zh: '保存',
       );
   String get create => _t(
         ru: 'Создать',
@@ -340,6 +366,7 @@ class AppStrings {
         nl: 'Aanmaken',
         pt: 'Criar',
         ja: '作成',
+        zh: '创建',
       );
   String get edit => _t(
         ru: 'Редактировать',
@@ -352,6 +379,7 @@ class AppStrings {
         nl: 'Bewerken',
         pt: 'Editar',
         ja: '編集',
+        zh: '编辑',
       );
   String get delete => _t(
         ru: 'Удалить',
@@ -364,6 +392,7 @@ class AppStrings {
         nl: 'Verwijderen',
         pt: 'Eliminar',
         ja: '削除',
+        zh: '删除',
       );
   String get moveToArchive => _t(
         ru: 'В архив',
@@ -376,6 +405,7 @@ class AppStrings {
         nl: 'Archiveren',
         pt: 'Arquivar',
         ja: 'アーカイブへ',
+        zh: '移到归档',
       );
   String get returnAction => _t(
         ru: 'Вернуть',
@@ -388,6 +418,7 @@ class AppStrings {
         nl: 'Herstellen',
         pt: 'Restaurar',
         ja: '復元',
+        zh: '恢复',
       );
   String get newSpider => _t(
         ru: 'Новый питомец',
@@ -400,6 +431,7 @@ class AppStrings {
         nl: 'Nieuw huisdier',
         pt: 'Novo pet',
         ja: '新しいペット',
+        zh: '新宠物',
       );
   String get name => _t(
         ru: 'Имя',
@@ -412,6 +444,7 @@ class AppStrings {
         nl: 'Naam',
         pt: 'Nome',
         ja: '名前',
+        zh: '名称',
       );
   String get species => _t(
         ru: 'Вид',
@@ -424,6 +457,7 @@ class AppStrings {
         nl: 'Soort',
         pt: 'Espécie',
         ja: '種',
+        zh: '品种',
       );
   String get sex => _t(
         ru: 'Пол',
@@ -436,6 +470,7 @@ class AppStrings {
         nl: 'Geslacht',
         pt: 'Sexo',
         ja: '性別',
+        zh: '性别',
       );
   String get female => _t(
         ru: 'Самка',
@@ -448,6 +483,7 @@ class AppStrings {
         nl: 'Vrouwtje',
         pt: 'Fêmea',
         ja: 'メス',
+        zh: '雌性',
       );
   String get male => _t(
         ru: 'Самец',
@@ -460,6 +496,7 @@ class AppStrings {
         nl: 'Mannetje',
         pt: 'Macho',
         ja: 'オス',
+        zh: '雄性',
       );
   String get sexUnknown => _t(
         ru: 'Пол неизвестно',
@@ -472,6 +509,7 @@ class AppStrings {
         nl: 'Geslacht onbekend',
         pt: 'Sexo desconhecido',
         ja: '不明',
+        zh: '性别未知',
       );
   String get dontKnow => _t(
         ru: 'Не знаю',
@@ -484,6 +522,7 @@ class AppStrings {
         nl: 'Weet ik niet',
         pt: 'Não sei',
         ja: '不明',
+        zh: '不知道',
       );
   String get currentStage => _t(
         ru: 'Текущий возраст',
@@ -496,6 +535,7 @@ class AppStrings {
         nl: 'Huidig stadium',
         pt: 'Estágio atual',
         ja: '現在のステージ',
+        zh: '当前阶段',
       );
   String get age => _t(
         ru: 'Возраст',
@@ -508,6 +548,7 @@ class AppStrings {
         nl: 'Stadium',
         pt: 'Estágio',
         ja: 'ステージ',
+        zh: '阶段',
       );
   String get choose => _t(
         ru: 'Выбрать',
@@ -520,6 +561,7 @@ class AppStrings {
         nl: 'Kies',
         pt: 'Escolher',
         ja: '選択',
+        zh: '选择',
       );
   String get humidity => _t(
         ru: 'Влажность',
@@ -532,6 +574,7 @@ class AppStrings {
         nl: 'Luchtvochtigheid',
         pt: 'Umidade',
         ja: '湿度',
+        zh: '湿度',
       );
   String get createMolt => _t(
         ru: 'Новая линька',
@@ -544,6 +587,7 @@ class AppStrings {
         nl: 'Nieuwe vervelling',
         pt: 'Nova muda',
         ja: '新しい脱皮',
+        zh: '新增蜕皮',
       );
   String get editMolt => _t(
         ru: 'Изменить линьку',
@@ -556,6 +600,7 @@ class AppStrings {
         nl: 'Vervelling bewerken',
         pt: 'Editar muda',
         ja: '脱皮を編集',
+        zh: '编辑蜕皮',
       );
   String get molts => _t(
         ru: 'Линьки',
@@ -568,6 +613,7 @@ class AppStrings {
         nl: 'Vervellingen',
         pt: 'Mudas',
         ja: '脱皮',
+        zh: '蜕皮',
       );
   String get feeding => _t(
         ru: 'Кормление',
@@ -580,6 +626,7 @@ class AppStrings {
         nl: 'Voeding',
         pt: 'Alimentação',
         ja: '給餌',
+        zh: '喂食',
       );
   String get speciesPlaceholder => _t(
         ru: 'Вид неизвестен',
@@ -592,6 +639,7 @@ class AppStrings {
         nl: 'Soort onbekend',
         pt: 'Espécie desconhecida',
         ja: '種不明',
+        zh: '品种未知',
       );
   String get missingValue => '—';
   String get archiveEmpty => _t(
@@ -605,6 +653,7 @@ class AppStrings {
         nl: 'Het archief is leeg',
         pt: 'O arquivo está vazio',
         ja: 'アーカイブは空です',
+        zh: '归档为空',
       );
   String get archivedSince => _t(
         ru: 'В архиве с',
@@ -617,6 +666,7 @@ class AppStrings {
         nl: 'Gearchiveerd sinds',
         pt: 'Arquivado desde',
         ja: 'アーカイブ日',
+        zh: '归档于',
       );
   String get noActiveCards => _t(
         ru: 'Нет активных карточек.',
@@ -629,6 +679,7 @@ class AppStrings {
         nl: 'Geen actieve kaarten.',
         pt: 'Não há cartões ativos.',
         ja: 'アクティブなカードはありません。',
+        zh: '没有活动卡片。',
       );
   String get analyticsChoose => _t(
         ru: 'Выбери, кто будет участвовать в аналитике.',
@@ -641,6 +692,7 @@ class AppStrings {
         nl: 'Kies wie aan de analyse meedoet.',
         pt: 'Escolha quem participa nas análises.',
         ja: '分析に参加する個体を選んでください。',
+        zh: '选择哪些卡片参与分析。',
       );
   String get noData => _t(
         ru: 'Нет данных',
@@ -653,6 +705,7 @@ class AppStrings {
         nl: 'Geen gegevens',
         pt: 'Sem dados',
         ja: 'データなし',
+        zh: '无数据',
       );
   String get littleData => _t(
         ru: 'Мало данных',
@@ -665,6 +718,7 @@ class AppStrings {
         nl: 'Onvoldoende gegevens',
         pt: 'Dados insuficientes',
         ja: 'データ不足',
+        zh: '数据不足',
       );
   String get noFeedings => _t(
         ru: 'Нет кормлений',
@@ -677,6 +731,7 @@ class AppStrings {
         nl: 'Geen voedingen',
         pt: 'Sem alimentações',
         ja: '給餌なし',
+        zh: '没有喂食',
       );
   String get noMolts => _t(
         ru: 'Нет линек',
@@ -689,6 +744,7 @@ class AppStrings {
         nl: 'Geen vervellingen',
         pt: 'Sem mudas',
         ja: '脱皮なし',
+        zh: '没有蜕皮',
       );
   String get noFeedingRecords => _t(
         ru: 'Пока нет записей о кормлении',
@@ -701,6 +757,7 @@ class AppStrings {
         nl: 'Nog geen voedingsregistraties',
         pt: 'Ainda não há registos de alimentação',
         ja: '給餌記録はまだありません',
+        zh: '还没有喂食记录',
       );
   String get noMoltsAdded => _t(
         ru: 'Пока нет записей о линьках',
@@ -713,6 +770,7 @@ class AppStrings {
         nl: 'Nog geen vervellingsregistraties',
         pt: 'Ainda não há registos de mudas',
         ja: '脱皮記録はまだありません',
+        zh: '还没有蜕皮记录',
       );
   String get avgEats => _t(
         ru: 'В среднем ест',
@@ -725,6 +783,7 @@ class AppStrings {
         nl: 'Gemiddelde voeding',
         pt: 'Média de alimentação',
         ja: '平均給餌',
+        zh: '平均喂食',
       );
   String get avgEatsPlural => _t(
         ru: 'В среднем едят',
@@ -737,6 +796,7 @@ class AppStrings {
         nl: 'Gemiddelde voeding',
         pt: 'Média de alimentação',
         ja: '平均給餌',
+        zh: '平均喂食',
       );
   String get avgMolts => _t(
         ru: 'В среднем линяет',
@@ -749,6 +809,7 @@ class AppStrings {
         nl: 'Gemiddelde vervelling',
         pt: 'Média de mudas',
         ja: '平均脱皮',
+        zh: '平均蜕皮',
       );
   String get avgMoltsPlural => _t(
         ru: 'В среднем линяют',
@@ -761,6 +822,7 @@ class AppStrings {
         nl: 'Gemiddelde vervelling',
         pt: 'Média de mudas',
         ja: '平均脱皮',
+        zh: '平均蜕皮',
       );
   String get totalShort => _t(
         ru: 'Всего',
@@ -773,6 +835,7 @@ class AppStrings {
         nl: 'Totaal',
         pt: 'Total',
         ja: '合計',
+        zh: '总计',
       );
   String get averageShort => _t(
         ru: 'В среднем',
@@ -785,6 +848,7 @@ class AppStrings {
         nl: 'Gemiddeld',
         pt: 'Média',
         ja: '平均',
+        zh: '平均',
       );
   String get averageEveryShort => _t(
         ru: 'В среднем каждые',
@@ -797,6 +861,7 @@ class AppStrings {
         nl: 'Gemiddeld elke',
         pt: 'Em média a cada',
         ja: '平均で',
+        zh: '平均每',
       );
   String get totalFeedings => _t(
         ru: 'Всего кормлений',
@@ -809,6 +874,7 @@ class AppStrings {
         nl: 'Totaal voedingen',
         pt: 'Total de alimentações',
         ja: '給餌合計',
+        zh: '总喂食次数',
       );
   String get totalMolts => _t(
         ru: 'Всего линек',
@@ -821,6 +887,7 @@ class AppStrings {
         nl: 'Totaal vervellingen',
         pt: 'Total de mudas',
         ja: '脱皮合計',
+        zh: '总蜕皮次数',
       );
   String get daysShort => _t(
         ru: 'дн.',
@@ -833,6 +900,7 @@ class AppStrings {
         nl: 'd',
         pt: 'd',
         ja: '日',
+        zh: '天',
       );
   String get averageIntervals => _t(
         ru: 'Средние интервалы',
@@ -845,6 +913,7 @@ class AppStrings {
         nl: 'Gemiddelde intervallen',
         pt: 'Intervalos médios',
         ja: '平均間隔',
+        zh: '平均间隔',
       );
   String get feedsSlowest => _t(
         ru: 'Кто ест реже всех',
@@ -857,6 +926,7 @@ class AppStrings {
         nl: 'Eet het minst vaak',
         pt: 'Quem come menos',
         ja: '最も少ない給餌',
+        zh: '喂食最少',
       );
   String get feedsFastest => _t(
         ru: 'Кто ест чаще всех',
@@ -869,6 +939,7 @@ class AppStrings {
         nl: 'Eet het vaakst',
         pt: 'Quem come mais',
         ja: '最も多い給餌',
+        zh: '喂食最多',
       );
   String get moltsFastest => _t(
         ru: 'Кто линяет чаще всех',
@@ -881,6 +952,7 @@ class AppStrings {
         nl: 'Vervelt het vaakst',
         pt: 'Quem muda mais',
         ja: '最も多い脱皮',
+        zh: '蜕皮最多',
       );
   String get sortByName => _t(
         ru: 'Имя',
@@ -893,6 +965,7 @@ class AppStrings {
         nl: 'Naam',
         pt: 'Nome',
         ja: '名前',
+        zh: '名称',
       );
   String get sortByFeedingDate => _t(
         ru: 'Дата кормления',
@@ -905,6 +978,7 @@ class AppStrings {
         nl: 'Voedingsdatum',
         pt: 'Data de alimentação',
         ja: '給餌日',
+        zh: '喂食日期',
       );
   String get sortByCreatedDate => _t(
         ru: 'Дата добавления',
@@ -917,6 +991,7 @@ class AppStrings {
         nl: 'Aanmaakdatum',
         pt: 'Data de criação',
         ja: '追加日',
+        zh: '添加日期',
       );
   String get sortNewestFirst => _t(
         ru: 'Недавно',
@@ -929,6 +1004,7 @@ class AppStrings {
         nl: 'Nieuw',
         pt: 'Recentes',
         ja: '新しい順',
+        zh: '最新',
       );
   String get sortOldestFirst => _t(
         ru: 'Давно',
@@ -941,6 +1017,7 @@ class AppStrings {
         nl: 'Oud',
         pt: 'Antigos',
         ja: '古い順',
+        zh: '最旧',
       );
   String get moltLabel => _t(
         ru: 'Линька',
@@ -953,6 +1030,7 @@ class AppStrings {
         nl: 'Vervelling',
         pt: 'Muda',
         ja: '脱皮',
+        zh: '蜕皮',
       );
   String get dateLabel => _t(
         ru: 'Дата',
@@ -965,6 +1043,7 @@ class AppStrings {
         nl: 'Datum',
         pt: 'Data',
         ja: '日付',
+        zh: '日期',
       );
   String get eatsShort => _t(
         ru: 'Едят',
@@ -977,6 +1056,7 @@ class AppStrings {
         nl: 'Eten',
         pt: 'Comem',
         ja: '給餌',
+        zh: '喂食',
       );
   String get moltsShort => _t(
         ru: 'Линяют',
@@ -989,6 +1069,7 @@ class AppStrings {
         nl: 'Vervellen',
         pt: 'Mudam',
         ja: '脱皮',
+        zh: '蜕皮',
       );
   String get backupDone => _t(
         ru: 'Бэкап сохранён',
@@ -1001,6 +1082,7 @@ class AppStrings {
         nl: 'Back-up opgeslagen',
         pt: 'Backup salvo',
         ja: 'バックアップを保存しました',
+        zh: '备份已保存',
       );
   String get restoreDone => _t(
         ru: 'Бэкап восстановлен',
@@ -1013,6 +1095,7 @@ class AppStrings {
         nl: 'Back-up hersteld',
         pt: 'Backup restaurado',
         ja: 'バックアップを復元しました',
+        zh: '备份已恢复',
       );
   String get exportData => _t(
         ru: 'Экспорт данных',
@@ -1025,6 +1108,7 @@ class AppStrings {
         nl: 'Gegevens exporteren',
         pt: 'Exportar dados',
         ja: 'データをエクスポート',
+        zh: '导出数据',
       );
   String get exportLocation => _t(
         ru: 'Данные сохраняются в Downloads/Keeper',
@@ -1037,6 +1121,7 @@ class AppStrings {
         nl: 'Gegevens worden opgeslagen in Downloads/Keeper',
         pt: 'Os dados são salvos em Downloads/Keeper',
         ja: 'データはDownloads/Keeperに保存されます',
+        zh: '数据保存在 Downloads/Keeper',
       );
   String get pickBackupFile => _t(
         ru: 'Восстановить данные из файла',
@@ -1049,6 +1134,7 @@ class AppStrings {
         nl: 'Herstellen uit bestand',
         pt: 'Restaurar a partir de arquivo',
         ja: 'ファイルから復元',
+        zh: '从文件恢复',
       );
   String get chooseFile => _t(
         ru: 'Выбрать файл',
@@ -1061,6 +1147,7 @@ class AppStrings {
         nl: 'Bestand kiezen',
         pt: 'Escolher arquivo',
         ja: 'ファイルを選択',
+        zh: '选择文件',
       );
   String get chooseFileFromComputer => _t(
         ru: 'Выбрать файл на компьютере',
@@ -1073,6 +1160,7 @@ class AppStrings {
         nl: 'Bestand vanaf computer kiezen',
         pt: 'Escolher arquivo do computador',
         ja: 'コンピューターからファイルを選択',
+        zh: '从电脑选择文件',
       );
   String get pickBackupFileDesktop => _t(
         ru: 'Восстановить данные из файла на компьютере',
@@ -1085,6 +1173,7 @@ class AppStrings {
         nl: 'Gegevens herstellen uit een bestand op de computer',
         pt: 'Restaurar dados de um arquivo no computador',
         ja: 'コンピューター上のファイルからデータを復元',
+        zh: '从电脑文件恢复数据',
       );
   String get restoreFailed => _t(
         ru: 'Не удалось восстановить бэкап',
@@ -1097,6 +1186,7 @@ class AppStrings {
         nl: 'Herstellen van back-up mislukt',
         pt: 'Falha ao restaurar o backup',
         ja: 'バックアップの復元に失敗しました',
+        zh: '恢复备份失败',
       );
   String get aboutStub => _t(
         ru: 'Keeper помогает владельцам экзотических животных вести учет кормлений и линек, а также показывает интересную аналитику.',
@@ -1109,6 +1199,7 @@ class AppStrings {
         nl: 'Keeper helpt eigenaren van exotische dieren om voedingen en vervellingen bij te houden en toont ook interessante analyses.',
         pt: 'Keeper ajuda donos de animais exóticos a registrar alimentações e mudas e também oferece análises úteis.',
         ja: 'Keeperは外来ペットの飼い主が給餌と脱皮を記録できるようにし、興味深い分析も提供します。',
+        zh: 'Keeper 帮助异宠主人记录喂食与蜕皮，并提供实用的分析。',
       );
   String get aboutSource => _t(
         ru: 'Keeper — исходный код',
@@ -1121,6 +1212,7 @@ class AppStrings {
         nl: 'Keeper — broncode',
         pt: 'Keeper — código‑fonte',
         ja: 'Keeper — ソースコード',
+        zh: 'Keeper — 源代码',
       );
   String aboutVersion(String version) => _t(
         ru: 'Версия $version',
@@ -1133,6 +1225,7 @@ class AppStrings {
         nl: 'Versie $version',
         pt: 'Versão $version',
         ja: 'バージョン $version',
+        zh: '版本 $version',
       );
   String get enterName => _t(
         ru: 'Введите имя',
@@ -1145,6 +1238,7 @@ class AppStrings {
         nl: 'Voer een naam in',
         pt: 'Digite um nome',
         ja: '名前を入力',
+        zh: '输入名称',
       );
   String get photoStyle => _t(
         ru: 'Выбрать фото-стиль',
@@ -1157,6 +1251,7 @@ class AppStrings {
         nl: 'Kies fotostijl',
         pt: 'Escolher estilo de foto',
         ja: '写真スタイルを選択',
+        zh: '选择照片样式',
       );
   String get changePhoto => _t(
         ru: 'Изменить фото',
@@ -1169,6 +1264,7 @@ class AppStrings {
         nl: 'Foto wijzigen',
         pt: 'Alterar foto',
         ja: '写真を変更',
+        zh: '更改照片',
       );
   String get choosePhotoFromComputer => _t(
         ru: 'Выбрать фото с компьютера',
@@ -1181,6 +1277,7 @@ class AppStrings {
         nl: 'Foto vanaf computer kiezen',
         pt: 'Escolher foto do computador',
         ja: 'コンピューターから写真を選択',
+        zh: '从电脑选择照片',
       );
   String get removePhoto => _t(
         ru: 'Удалить фото',
@@ -1193,6 +1290,7 @@ class AppStrings {
         nl: 'Foto verwijderen',
         pt: 'Remover foto',
         ja: '写真を削除',
+        zh: '删除照片',
       );
   String get editSpider => _t(
         ru: 'Редактировать паука',
@@ -1205,6 +1303,7 @@ class AppStrings {
         nl: 'Spin bewerken',
         pt: 'Editar aranha',
         ja: 'クモを編集',
+        zh: '编辑蜘蛛',
       );
   String get deleteSpiderTitle => _t(
         ru: 'Удалить карточку?',
@@ -1217,6 +1316,7 @@ class AppStrings {
         nl: 'Deze kaart verwijderen?',
         pt: 'Excluir este cartão?',
         ja: 'カードを削除しますか？',
+        zh: '删除这张卡片？',
       );
   String deleteSpiderMessage(String name) => _t(
         ru: 'Карточка $name будет удалена безвозвратно.',
@@ -1229,6 +1329,7 @@ class AppStrings {
         nl: 'De kaart $name wordt permanent verwijderd.',
         pt: 'O cartão $name será removido permanentemente.',
         ja: '$name のカードは完全に削除されます。',
+        zh: '$name 将被永久删除。',
       );
   String feedSpiderTitle(String name) => _t(
         ru: 'Кормить $name?',
@@ -1241,6 +1342,7 @@ class AppStrings {
         nl: '$name voeren?',
         pt: 'Alimentar $name?',
         ja: '$name に給餌しますか？',
+        zh: '给 $name 喂食？',
       );
   String feedMarkPrompt(String formattedDate) => _t(
         ru: 'Отметить кормление на $formattedDate?',
@@ -1253,6 +1355,7 @@ class AppStrings {
         nl: 'Voeding registreren op $formattedDate?',
         pt: 'Registrar alimentação em $formattedDate?',
         ja: '$formattedDate の給餌として記録しますか？',
+        zh: '将 $formattedDate 记为喂食日期？',
       );
   String feedingMarked(String name, String formattedDate) => _t(
         ru: 'Кормление для $name отмечено на $formattedDate',
@@ -1265,6 +1368,7 @@ class AppStrings {
         nl: 'Voeding voor $name geregistreerd op $formattedDate',
         pt: 'Alimentação de $name registrada em $formattedDate',
         ja: '$name の給餌が $formattedDate に記録されました',
+        zh: '$name 的喂食已记录到 $formattedDate',
       );
   String spiderAdded(String name) => _t(
         ru: '$name добавлен в Keeper',
@@ -1277,6 +1381,7 @@ class AppStrings {
         nl: '$name is toegevoegd aan Keeper',
         pt: '$name foi adicionado ao Keeper',
         ja: '$name をKeeperに追加しました',
+        zh: '$name 已添加到 Keeper',
       );
   String everyDays(int days) => _t(
         ru: 'Каждые $days дн.',
@@ -1289,6 +1394,7 @@ class AppStrings {
         nl: 'elke $days d',
         pt: 'a cada $days d',
         ja: '$days日ごと',
+        zh: '每 $days 天',
       );
   String daysAgo(int days) => _t(
         ru: '$days дн. назад',
@@ -1301,6 +1407,7 @@ class AppStrings {
         nl: '$days d geleden',
         pt: 'há $days d',
         ja: '$days日前',
+        zh: '$days 天前',
       );
   String get today => _t(
         ru: 'сегодня',
@@ -1313,6 +1420,7 @@ class AppStrings {
         nl: 'vandaag',
         pt: 'hoje',
         ja: '今日',
+        zh: '今天',
       );
   String get removeFromAnalyticsDone => _t(
         ru: 'Сохранить',
@@ -1325,5 +1433,6 @@ class AppStrings {
         nl: 'Opslaan',
         pt: 'Guardar',
         ja: '保存',
+        zh: '保存',
       );
 }

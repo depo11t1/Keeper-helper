@@ -11,6 +11,7 @@ enum AppLanguage {
   nl,
   pt,
   ja,
+  zh,
 }
 
 enum SortField {
