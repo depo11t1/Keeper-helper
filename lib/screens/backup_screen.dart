@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../l10n/app_strings.dart';
 import '../models/app_settings.dart';
 import '../theme/app_theme.dart';
+import '../widgets/keeper_layout.dart';
 
 class BackupScreen extends StatefulWidget {
   const BackupScreen({
@@ -58,89 +59,94 @@ class _BackupScreenState extends State<BackupScreen> {
       appBar: AppBar(
         title: Text(strings.backup),
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-        children: [
-          _SectionGroup(
-            position: _GroupPosition.top,
-            title: strings.exportData,
-            description: strings.exportLocation,
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: FilledButton(
-                onPressed: _handleExport,
-                style: FilledButton.styleFrom(
-                  backgroundColor: widget.accent,
-                  foregroundColor: scheme.onPrimary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18),
+      body: KeeperCenteredBody(
+        maxWidth: 760,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          children: [
+            _SectionGroup(
+              position: _GroupPosition.top,
+              title: strings.exportData,
+              description: strings.exportLocation,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: FilledButton(
+                  onPressed: _handleExport,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: widget.accent,
+                    foregroundColor: scheme.onPrimary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 12,
+                    ),
+                    textStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
                   ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 12,
-                  ),
-                  textStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w500,
-                      ),
-                ),
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 180),
-                  child: _showCheck
-                      ? Icon(
-                          Icons.check_rounded,
-                          size: 24,
-                          key: const ValueKey('check'),
-                        )
-                      : _exporting
-                          ? SizedBox(
-                              key: const ValueKey('progress'),
-                              width: 22,
-                              height: 22,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.4,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  scheme.onPrimary,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 180),
+                    child: _showCheck
+                        ? Icon(
+                            Icons.check_rounded,
+                            size: 24,
+                            key: const ValueKey('check'),
+                          )
+                        : _exporting
+                            ? SizedBox(
+                                key: const ValueKey('progress'),
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.4,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    scheme.onPrimary,
+                                  ),
+                                ),
+                              )
+                            : ClipRRect(
+                                key: const ValueKey('play'),
+                                borderRadius: BorderRadius.circular(6),
+                                child: Icon(
+                                  Icons.play_arrow_rounded,
+                                  size: 26,
                                 ),
                               ),
-                            )
-                      : ClipRRect(
-                          key: const ValueKey('play'),
-                          borderRadius: BorderRadius.circular(6),
-                          child: Icon(
-                            Icons.play_arrow_rounded,
-                            size: 26,
-                          ),
-                        ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          _SectionGroup(
-            position: _GroupPosition.bottom,
-            title: strings.restore,
-            description: strings.pickBackupFile,
-            child: SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: widget.onRestore,
-                style: FilledButton.styleFrom(
-                  backgroundColor: widget.accent,
-                  foregroundColor: scheme.onPrimary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18),
                   ),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  textStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w500,
-                      ),
                 ),
-                child: Text(strings.chooseFile),
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 8),
+            _SectionGroup(
+              position: _GroupPosition.bottom,
+              title: strings.restore,
+              description: strings.pickBackupFile,
+              child: SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: widget.onRestore,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: widget.accent,
+                    foregroundColor: scheme.onPrimary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    textStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                  ),
+                  child: Text(strings.chooseFile),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

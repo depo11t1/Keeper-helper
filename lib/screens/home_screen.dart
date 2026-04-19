@@ -4,6 +4,7 @@ import '../l10n/app_strings.dart';
 import '../models/app_settings.dart';
 import '../models/spider.dart';
 import '../theme/app_theme.dart';
+import '../widgets/keeper_layout.dart';
 import '../widgets/spider_card.dart';
 
 // Главная вкладка приложения.
@@ -67,42 +68,79 @@ class HomeScreen extends StatelessWidget {
               ],
             ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 110),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
+              padding: keeperPagePadding(
+                context,
+                top: 16,
+                bottom: 110,
+                maxWidth: 1420,
+              ),
+              sliver: SliverLayoutBuilder(
+                builder: (context, constraints) {
+                  const gap = 14.0;
+                  const minCardWidth = 330.0;
+                  final availableWidth = constraints.crossAxisExtent;
+                  final columns =
+                      ((availableWidth + gap) / (minCardWidth + gap)).floor()
+                          .clamp(1, 3);
+
+                  Widget buildCard(int index) {
                     final spider = sortedSpiders[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 14),
-                        child: SpiderCard(
-                          spider: spider,
-                          globalAccent: accent,
-                          speciesLabel: spider.latinName.trim().isEmpty
-                              ? strings.speciesPlaceholder
-                              : spider.latinName,
-                          feedingTitle: strings.feeding,
-                          moltTitle: strings.moltLabel,
-                          sex: spider.sex,
-                          onTap: () => onSpiderTap(spider),
-                        onLongPress: () => onSpiderLongPress(spider),
-                        onFeedTap: () => onFeedTap(spider),
-                        onFeedLongPress: () => onFeedLongPress(spider),
-                        relativeLastFeeding: _relativeLabel(
-                          spider.lastFeeding?.date,
-                          strings,
+                    return SpiderCard(
+                      spider: spider,
+                      globalAccent: accent,
+                      speciesLabel: spider.latinName.trim().isEmpty
+                          ? strings.speciesPlaceholder
+                          : spider.latinName,
+                      feedingTitle: strings.feeding,
+                      moltTitle: strings.moltLabel,
+                      sex: spider.sex,
+                      onTap: () => onSpiderTap(spider),
+                      onLongPress: () => onSpiderLongPress(spider),
+                      onFeedTap: () => onFeedTap(spider),
+                      onFeedLongPress: () => onFeedLongPress(spider),
+                      relativeLastFeeding: _relativeLabel(
+                        spider.lastFeeding?.date,
+                        strings,
+                      ),
+                      lastMoltLabel: _lastMoltLabel(spider, strings),
+                    );
+                  }
+
+                  if (columns <= 1) {
+                    return SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) => Padding(
+                          padding: const EdgeInsets.only(bottom: 14),
+                          child: buildCard(index),
                         ),
-                        lastMoltLabel: _lastMoltLabel(spider, strings),
+                        childCount: sortedSpiders.length,
                       ),
                     );
-                  },
-                  childCount: sortedSpiders.length,
-                ),
+                  }
+
+                  return SliverGrid(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) => buildCard(index),
+                      childCount: sortedSpiders.length,
+                    ),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: columns,
+                      mainAxisSpacing: gap,
+                      crossAxisSpacing: gap,
+                      mainAxisExtent: 176,
+                    ),
+                  );
+                },
               ),
             ),
           ],
         ),
         Positioned(
-          right: 20,
+          right: keeperPagePadding(
+            context,
+            horizontal: 20,
+            maxWidth: 1420,
+          ).right,
           bottom: 22,
           child: FloatingActionButton(
             onPressed: onCreateSpider,

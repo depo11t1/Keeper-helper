@@ -79,6 +79,42 @@ class AppStrings {
         pt: 'Analítica',
         ja: '分析',
       );
+  String get analyticsMonth => _t(
+        ru: 'Месяц',
+        en: 'Month',
+        hi: 'महीना',
+        fr: 'Mois',
+        de: 'Monat',
+        es: 'Mes',
+        sv: 'Månad',
+        nl: 'Maand',
+        pt: 'Mês',
+        ja: '月',
+      );
+  String get analyticsYear => _t(
+        ru: 'Год',
+        en: 'Year',
+        hi: 'वर्ष',
+        fr: 'Année',
+        de: 'Jahr',
+        es: 'Año',
+        sv: 'År',
+        nl: 'Jaar',
+        pt: 'Ano',
+        ja: '年',
+      );
+  String get analyticsAllTime => _t(
+        ru: 'Все время',
+        en: 'All time',
+        hi: 'पूरे समय',
+        fr: 'Tout le temps',
+        de: 'Gesamte Zeit',
+        es: 'Todo el tiempo',
+        sv: 'Hela tiden',
+        nl: 'Altijd',
+        pt: 'Todo o período',
+        ja: '全期間',
+      );
   String get settings => _t(
         ru: 'Настройки',
         en: 'Settings',
@@ -92,16 +128,16 @@ class AppStrings {
         ja: '設定',
       );
   String get experimentalColors => _t(
-        ru: 'Экспериментальные цвета',
-        en: 'Experimental colors',
-        hi: 'प्रयोगात्मक रंग',
-        fr: 'Couleurs expérimentales',
-        de: 'Experimentelle Farben',
-        es: 'Colores experimentales',
-        sv: 'Experimentella färger',
-        nl: 'Experimentele kleuren',
-        pt: 'Cores experimentais',
-        ja: '実験的な色',
+        ru: 'Кастомизация',
+        en: 'Customization',
+        hi: 'कस्टमाइज़ेशन',
+        fr: 'Personnalisation',
+        de: 'Anpassung',
+        es: 'Personalización',
+        sv: 'Anpassning',
+        nl: 'Aanpassing',
+        pt: 'Personalização',
+        ja: 'カスタマイズ',
       );
   String get tintedBackgroundMode => _t(
         ru: 'Черный цвет',
@@ -929,30 +965,6 @@ class AppStrings {
         nl: 'Vervellen',
         pt: 'Mudam',
         ja: '脱皮',
-      );
-  String get archiveStub => _t(
-        ru: 'Заглушка. Здесь будет экспорт данных приложения.',
-        en: 'Stub. App data export will appear here.',
-        hi: 'यहाँ ऐप डेटा निर्यात होगा।',
-        fr: 'Ici, l’export des données apparaîtra.',
-        de: 'Platzhalter. Hier erscheint der Datenexport der App.',
-        es: 'Marcador. Aquí aparecerá la exportación de datos de la app.',
-        sv: 'Platshållare. Här visas export av appdata.',
-        nl: 'Placeholder. Hier verschijnt de export van app-gegevens.',
-        pt: 'Placeholder. Aqui aparecerá a exportação dos dados do app.',
-        ja: 'プレースホルダー。ここにアプリデータのエクスポートが表示されます。',
-      );
-  String get restoreStub => _t(
-        ru: 'Заглушка. Здесь будет восстановление данных из бекапа.',
-        en: 'Stub. Backup restore will appear here.',
-        hi: 'यहाँ बैकअप से पुनर्स्थापना होगी।',
-        fr: 'Ici, la restauration des données apparaîtra.',
-        de: 'Platzhalter. Hier erscheint die Wiederherstellung aus dem Backup.',
-        es: 'Marcador. Aquí aparecerá la restauración del respaldo.',
-        sv: 'Platshållare. Här visas återställning från säkerhetskopia.',
-        nl: 'Placeholder. Hier verschijnt het herstellen van de back-up.',
-        pt: 'Placeholder. Aqui aparecerá a restauração do backup.',
-        ja: 'プレースホルダー。ここにバックアップからの復元が表示されます。',
       );
   String get backupDone => _t(
         ru: 'Бэкап сохранён',

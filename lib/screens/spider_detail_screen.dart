@@ -11,6 +11,7 @@ import '../models/app_settings.dart';
 import '../models/spider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/keeper_panel.dart';
+import '../widgets/keeper_layout.dart';
 import '../widgets/spider_avatar.dart';
 import 'package:image_picker/image_picker.dart';
 import '../widgets/timeline_chart.dart';
@@ -79,9 +80,11 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
       appBar: AppBar(
         title: Text(widget.spider.name),
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
-        children: [
+      body: KeeperCenteredBody(
+        maxWidth: 760,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+          children: [
           if (widget.spider.archived && widget.spider.archivedAt != null) ...[
             KeeperPanel(
               tone: KeeperPanelTone.base,
@@ -431,7 +434,8 @@ class _SpiderDetailScreenState extends State<SpiderDetailScreen> {
               ),
             ),
           ],
-        ],
+          ],
+        ),
       ),
     );
   }

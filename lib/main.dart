@@ -501,11 +501,14 @@ class _KeeperAppState extends State<KeeperApp> {
         experimentalTintedBackground:
             _settings.experimentalTintedBackground,
       ),
-      home: Scaffold(
-        body: IndexedStack(
-          index: _currentTab,
-          children: [
-            HomeScreen(
+      home: LayoutBuilder(
+        builder: (context, constraints) {
+          final media = MediaQuery.sizeOf(context);
+          final isTablet = media.shortestSide >= 600;
+          final body = IndexedStack(
+            index: _currentTab,
+            children: [
+              HomeScreen(
                 key: const ValueKey('home'),
                 spiders: sortedActiveSpiders,
                 accent: _settings.accentColor,
@@ -517,18 +520,20 @@ class _KeeperAppState extends State<KeeperApp> {
                 onCreateSpider: _createSpider,
                 onOpenSort: _openSortSheet,
               ),
-            AnalyticsPlaceholderScreen(
+              AnalyticsPlaceholderScreen(
                 key: const ValueKey('analytics'),
                 spiders: analyticsSpiders,
                 accent: _settings.accentColor,
                 language: _settings.language,
               ),
-            SettingsScreen(
+              SettingsScreen(
                 key: const ValueKey('settings'),
                 currentAccent: _settings.accentColor,
                 currentLanguage: _settings.language,
                 experimentalTintedBackground:
                     !_settings.experimentalTintedBackground,
+                analyticsSpiders: activeSpiders,
+                analyticsSelectedIds: _settings.analyticsIncludeIds,
                 onAccentChanged: (color) {
                   setState(() {
                     _settings.accentColor = color;
@@ -548,33 +553,103 @@ class _KeeperAppState extends State<KeeperApp> {
                   });
                   _saveState();
                 },
+                onAnalyticsSelectionChanged: (selected) {
+                  setState(() {
+                    if (selected.length == activeSpiders.length) {
+                      _settings.analyticsIncludeIds = <String>{};
+                    } else {
+                      _settings.analyticsIncludeIds = selected;
+                    }
+                  });
+                  _saveState();
+                },
                 onOpenArchive: _openArchiveSheet,
                 onOpenAnalytics: _openAnalyticsSheet,
                 onBackup: _openBackupScreen,
+                onRestoreBackup: _restoreFromFile,
               ),
-          ],
-        ),
-        bottomNavigationBar: NavigationBar(
-          height: 80,
-          selectedIndex: _currentTab,
-          onDestinationSelected: (index) {
-            setState(() => _currentTab = index);
-          },
-          destinations: [
-            NavigationDestination(
-              icon: const Icon(Icons.grid_view_rounded),
-              label: strings.menu,
-            ),
-            NavigationDestination(
-              icon: const Icon(Icons.analytics_rounded),
-              label: strings.analytics,
-            ),
-            NavigationDestination(
-              icon: const Icon(Icons.settings_rounded),
-              label: strings.settings,
-            ),
-          ],
-        ),
+            ],
+          );
+
+          return Scaffold(
+            body: isTablet
+                ? Stack(
+                    children: [
+                      body,
+                      Align(
+                        alignment: Alignment.bottomCenter,
+                        child: SafeArea(
+                          top: false,
+                          minimum: EdgeInsets.zero,
+                          child: Material(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerLow
+                                .withValues(alpha: 0.94),
+                            elevation: 8,
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(24),
+                              topRight: Radius.circular(24),
+                            ),
+                            clipBehavior: Clip.antiAlias,
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 276),
+                              child: NavigationBar(
+                                height: 72,
+                                backgroundColor: Colors.transparent,
+                                labelBehavior:
+                                    NavigationDestinationLabelBehavior.alwaysHide,
+                                selectedIndex: _currentTab,
+                                onDestinationSelected: (index) {
+                                  setState(() => _currentTab = index);
+                                },
+                                destinations: [
+                                  NavigationDestination(
+                                    icon: const Icon(Icons.grid_view_rounded),
+                                    label: strings.menu,
+                                  ),
+                                  NavigationDestination(
+                                    icon: const Icon(Icons.analytics_rounded),
+                                    label: strings.analytics,
+                                  ),
+                                  NavigationDestination(
+                                    icon: const Icon(Icons.settings_rounded),
+                                    label: strings.settings,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                : body,
+            bottomNavigationBar: isTablet
+                ? null
+                : NavigationBar(
+                    height: 80,
+                    selectedIndex: _currentTab,
+                    onDestinationSelected: (index) {
+                      setState(() => _currentTab = index);
+                    },
+                    destinations: [
+                      NavigationDestination(
+                        icon: const Icon(Icons.grid_view_rounded),
+                        label: strings.menu,
+                      ),
+                      NavigationDestination(
+                        icon: const Icon(Icons.analytics_rounded),
+                        label: strings.analytics,
+                      ),
+                      NavigationDestination(
+                        icon: const Icon(Icons.settings_rounded),
+                        label: strings.settings,
+                      ),
+                    ],
+                  ),
+          );
+        },
       ),
     );
   }
@@ -1083,6 +1158,12 @@ class _KeeperAppState extends State<KeeperApp> {
     if (created != null) {
       setState(() {
         _spiders.insert(0, created);
+        if (_settings.analyticsIncludeIds.isNotEmpty) {
+          _settings.analyticsIncludeIds = {
+            ..._settings.analyticsIncludeIds,
+            created.id,
+          };
+        }
       });
       _saveState();
       _showTopNotice(

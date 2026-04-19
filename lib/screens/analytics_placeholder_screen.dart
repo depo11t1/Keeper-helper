@@ -4,6 +4,7 @@ import '../l10n/app_strings.dart';
 import '../models/app_settings.dart';
 import '../models/spider.dart';
 import '../theme/app_theme.dart';
+import '../widgets/keeper_layout.dart';
 import '../widgets/timeline_chart.dart';
 
 int? _averageAcrossSpiders(
@@ -122,7 +123,12 @@ class _AnalyticsPlaceholderScreenState extends State<AnalyticsPlaceholderScreen>
           ),
         ),
         SliverPadding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+          padding: keeperPagePadding(
+            context,
+            top: 16,
+            bottom: 28,
+            maxWidth: 760,
+          ),
           sliver: SliverList(
             delegate: SliverChildListDelegate(
               [
@@ -142,6 +148,13 @@ class _AnalyticsPlaceholderScreenState extends State<AnalyticsPlaceholderScreen>
             });
           },
           onPickCustomRange: _pickCustomRange,
+          onClearCustomRange: () {
+            setState(() {
+              _customStart = null;
+              _customEnd = null;
+              _period = _AnalyticsPeriod.allTime;
+            });
+          },
         ),
         const SizedBox(height: 18),
         _AnalyticsListBlock(
@@ -570,6 +583,7 @@ class _AnalyticsHero extends StatefulWidget {
     required this.strings,
     required this.onPeriodSelected,
     required this.onPickCustomRange,
+    required this.onClearCustomRange,
   });
 
   final _AnalyticsPeriod period;
@@ -583,6 +597,7 @@ class _AnalyticsHero extends StatefulWidget {
   final AppStrings strings;
   final ValueChanged<_AnalyticsPeriod> onPeriodSelected;
   final VoidCallback onPickCustomRange;
+  final VoidCallback onClearCustomRange;
 
   @override
   State<_AnalyticsHero> createState() => _AnalyticsHeroState();
@@ -638,15 +653,19 @@ class _AnalyticsHeroState extends State<_AnalyticsHero> {
         ),
         if (showCustomRange) ...[
           const SizedBox(height: 6),
-          _MetricGroup(
-            decoration: BoxDecoration(
-              color: base,
-              borderRadius: BorderRadius.circular(22),
-            ),
-            child: _CustomRangeLabel(
-              start: widget.customStart!,
-              end: widget.customEnd!,
-              strings: widget.strings,
+          Align(
+            alignment: Alignment.centerLeft,
+            child: _MetricGroup(
+              decoration: BoxDecoration(
+                color: base,
+                borderRadius: BorderRadius.circular(22),
+              ),
+              child: _CustomRangeLabel(
+                start: widget.customStart!,
+                end: widget.customEnd!,
+                strings: widget.strings,
+                onClear: widget.onClearCustomRange,
+              ),
             ),
           ),
         ],
@@ -741,19 +760,12 @@ class _AnalyticsHeroState extends State<_AnalyticsHero> {
   }
 
   String _periodLabel(_AnalyticsPeriod period) {
-    final ru = switch (period) {
-      _AnalyticsPeriod.month => 'Месяц',
-      _AnalyticsPeriod.year => 'Год',
-      _AnalyticsPeriod.allTime => 'Все время',
+    return switch (period) {
+      _AnalyticsPeriod.month => widget.strings.analyticsMonth,
+      _AnalyticsPeriod.year => widget.strings.analyticsYear,
+      _AnalyticsPeriod.allTime => widget.strings.analyticsAllTime,
       _AnalyticsPeriod.custom => '+',
     };
-    final en = switch (period) {
-      _AnalyticsPeriod.month => 'Month',
-      _AnalyticsPeriod.year => 'Year',
-      _AnalyticsPeriod.allTime => 'All time',
-      _AnalyticsPeriod.custom => '+',
-    };
-    return widget.strings.isRu ? ru : en;
   }
 }
 
@@ -777,29 +789,28 @@ class _AnalyticsPeriodChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = keeperPalette(context);
+    final radius = BorderRadius.circular(selected ? 999 : 16);
 
-    return Material(
-      color: background,
-      borderRadius: BorderRadius.circular(selected ? 999 : 16),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(selected ? 999 : 16),
-        child: AnimatedContainer(
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeInOutCubic,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? accent.withValues(alpha: 0.16) : background,
+          borderRadius: radius,
+        ),
+        child: AnimatedDefaultTextStyle(
           duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: selected ? accent.withValues(alpha: 0.16) : background,
-            borderRadius: BorderRadius.circular(selected ? 999 : 16),
+          curve: Curves.easeInOutCubic,
+          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+            color: selected
+                ? accent
+                : palette.textPrimary.withValues(alpha: 0.84),
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
           ),
-          child: Text(
-            label,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: selected
-                  ? accent
-                  : palette.textPrimary.withValues(alpha: 0.84),
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-            ),
-          ),
+          child: Text(label),
         ),
       ),
     );
@@ -821,27 +832,27 @@ class _AnalyticsPlusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: background,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          width: 42,
-          height: 42,
-          decoration: BoxDecoration(
-            color: selected ? accent.withValues(alpha: 0.16) : background,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Icon(
-            Icons.add_rounded,
-            size: 22,
-            color: selected
-                ? accent
-                : keeperPalette(context).textPrimary.withValues(alpha: 0.84),
-          ),
+    final radius = BorderRadius.circular(16);
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeInOutCubic,
+        constraints: const BoxConstraints(
+          minWidth: 42,
+          minHeight: 40,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+        decoration: BoxDecoration(
+          color: selected ? accent.withValues(alpha: 0.16) : background,
+          borderRadius: radius,
+        ),
+        child: Icon(
+          Icons.add_rounded,
+          size: 22,
+          color: selected
+              ? accent
+              : keeperPalette(context).textPrimary.withValues(alpha: 0.84),
         ),
       ),
     );
@@ -1005,6 +1016,7 @@ class _HeroWideMetricRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final palette = keeperPalette(context);
+    final isDataValue = RegExp(r'^\d+').hasMatch(value);
 
     return Row(
       children: [
@@ -1026,10 +1038,16 @@ class _HeroWideMetricRow extends StatelessWidget {
         const SizedBox(width: 12),
         Text(
           value,
-          style: theme.textTheme.titleLarge?.copyWith(
-            color: accent,
-            fontWeight: FontWeight.w800,
-          ),
+          style: isDataValue
+              ? theme.textTheme.titleLarge?.copyWith(
+                  color: accent,
+                  fontWeight: FontWeight.w800,
+                )
+              : theme.textTheme.labelLarge?.copyWith(
+                  fontSize: 12,
+                  color: palette.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
         ),
       ],
     );
@@ -1041,11 +1059,13 @@ class _CustomRangeLabel extends StatelessWidget {
     required this.start,
     required this.end,
     required this.strings,
+    required this.onClear,
   });
 
   final DateTime start;
   final DateTime end;
   final AppStrings strings;
+  final VoidCallback onClear;
 
   @override
   Widget build(BuildContext context) {
@@ -1054,12 +1074,29 @@ class _CustomRangeLabel extends StatelessWidget {
         '${start.day.toString().padLeft(2, '0')}.${start.month.toString().padLeft(2, '0')}.${start.year}'
         ' - '
         '${end.day.toString().padLeft(2, '0')}.${end.month.toString().padLeft(2, '0')}.${end.year}';
-    return Text(
-      text,
-      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: palette.textPrimary.withValues(alpha: 0.96),
-            fontWeight: FontWeight.w600,
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          text,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: palette.textPrimary.withValues(alpha: 0.96),
+                fontWeight: FontWeight.w600,
+              ),
+        ),
+        const SizedBox(width: 8),
+        GestureDetector(
+          onTap: onClear,
+          child: Padding(
+            padding: const EdgeInsets.only(top: 1),
+            child: Icon(
+              Icons.close_rounded,
+              size: 16,
+              color: palette.textPrimary.withValues(alpha: 0.76),
+            ),
           ),
+        ),
+      ],
     );
   }
 }

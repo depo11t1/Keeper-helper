@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../l10n/app_strings.dart';
 import '../models/app_settings.dart';
 import '../theme/app_theme.dart';
+import '../widgets/keeper_layout.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({
@@ -24,86 +25,89 @@ class AboutScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(strings.aboutApp),
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-        children: [
-          Container(
-            height: 150,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(22),
-              gradient: const LinearGradient(
-                colors: [
-                  Color(0xFFA78BFA),
-                  Color(0xFF7DD3FC),
-                  Color(0xFF93C5FD),
-                  Color(0xFFF9A8D4),
-                  Color(0xFFFDBA74),
-                  Color(0xFF86EFAC),
-                ],
-                stops: [0.0, 0.2, 0.4, 0.6, 0.8, 1.0],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+      body: KeeperCenteredBody(
+        maxWidth: 760,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          children: [
+            Container(
+              height: 150,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(22),
+                gradient: const LinearGradient(
+                  colors: [
+                    Color(0xFFA78BFA),
+                    Color(0xFF7DD3FC),
+                    Color(0xFF93C5FD),
+                    Color(0xFFF9A8D4),
+                    Color(0xFFFDBA74),
+                    Color(0xFF86EFAC),
+                  ],
+                  stops: [0.0, 0.2, 0.4, 0.6, 0.8, 1.0],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: Center(
+                child: Text(
+                  'Keeper',
+                  style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                        fontSize: 62,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                ),
               ),
             ),
-            child: Center(
+            const SizedBox(height: 16),
+            _AboutGroupCard(
+              position: _AboutGroupPosition.top,
               child: Text(
-                'Keeper',
-                style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                      fontSize: 62,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
+                strings.aboutStub,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: palette.textPrimary,
                     ),
               ),
             ),
-          ),
-          const SizedBox(height: 16),
-          _AboutGroupCard(
-            position: _AboutGroupPosition.top,
-            child: Text(
-              strings.aboutStub,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: palette.textPrimary,
+            const SizedBox(height: 8),
+            _AboutGroupCard(
+              position: _AboutGroupPosition.middle,
+              onTap: () async {
+                await launchUrl(
+                  _sourceUrl,
+                  mode: LaunchMode.externalApplication,
+                );
+              },
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.open_in_new_rounded,
+                    color: palette.badgeForeground,
                   ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          _AboutGroupCard(
-            position: _AboutGroupPosition.middle,
-            onTap: () async {
-              await launchUrl(
-                _sourceUrl,
-                mode: LaunchMode.externalApplication,
-              );
-            },
-            child: Row(
-              children: [
-                Icon(
-                  Icons.language_rounded,
-                  color: palette.badgeForeground,
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  strings.aboutSource,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w400,
-                        color: palette.textPrimary,
-                      ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-          _AboutGroupCard(
-            position: _AboutGroupPosition.bottom,
-            child: Text(
-              strings.aboutVersion,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w400,
-                    color: palette.textPrimary,
+                  const SizedBox(width: 10),
+                  Text(
+                    strings.aboutSource,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w400,
+                          color: palette.textPrimary,
+                        ),
                   ),
+                ],
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 8),
+            _AboutGroupCard(
+              position: _AboutGroupPosition.bottom,
+              child: Text(
+                strings.aboutVersion,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w400,
+                      color: palette.textPrimary,
+                    ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
