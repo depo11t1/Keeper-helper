@@ -1122,17 +1122,17 @@ class AppStrings {
         pt: 'Keeper — código‑fonte',
         ja: 'Keeper — ソースコード',
       );
-  String get aboutVersion => _t(
-        ru: 'Версия 1.0.0',
-        en: 'Version 1.0.0',
-        hi: 'संस्करण 1.0.0',
-        fr: 'Version 1.0.0',
-        de: 'Version 1.0.0',
-        es: 'Versión 1.0.0',
-        sv: 'Version 1.0.0',
-        nl: 'Versie 1.0.0',
-        pt: 'Versão 1.0.0',
-        ja: 'バージョン 1.0.0',
+  String aboutVersion(String version) => _t(
+        ru: 'Версия $version',
+        en: 'Version $version',
+        hi: 'संस्करण $version',
+        fr: 'Version $version',
+        de: 'Version $version',
+        es: 'Versión $version',
+        sv: 'Version $version',
+        nl: 'Versie $version',
+        pt: 'Versão $version',
+        ja: 'バージョン $version',
       );
   String get enterName => _t(
         ru: 'Введите имя',

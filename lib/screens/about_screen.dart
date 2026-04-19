@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../l10n/app_strings.dart';
 import '../models/app_settings.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_version_text.dart';
 import '../widgets/keeper_layout.dart';
 
 class AboutScreen extends StatelessWidget {
@@ -98,8 +99,8 @@ class AboutScreen extends StatelessWidget {
             const SizedBox(height: 8),
             _AboutGroupCard(
               position: _AboutGroupPosition.bottom,
-              child: Text(
-                strings.aboutVersion,
+              child: AppVersionText(
+                language: language,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w400,
                       color: palette.textPrimary,

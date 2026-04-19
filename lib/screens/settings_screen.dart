@@ -6,6 +6,7 @@ import '../l10n/app_strings.dart';
 import '../models/app_settings.dart';
 import '../models/spider.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_version_text.dart';
 import '../widgets/keeper_layout.dart';
 import 'about_screen.dart';
 
@@ -822,8 +823,8 @@ class _SettingsTabletViewState extends State<_SettingsTabletView> {
             const SizedBox(height: 8),
             _SettingsBlockCard(
               position: _SettingsBlockPosition.bottom,
-              child: Text(
-                strings.aboutVersion,
+              child: AppVersionText(
+                language: widget.currentLanguage,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w400,
                       color: palette.textPrimary,
