@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'widgets/spider_avatar.dart';
@@ -35,6 +37,44 @@ class _BootstrapState {
 
   final AppSettings settings;
   final List<SpiderProfile> spiders;
+}
+
+List<int> _processBackupPhotoBytes(List<int> bytes) {
+  final decoded = img.decodeImage(Uint8List.fromList(bytes));
+  if (decoded == null) {
+    return bytes;
+  }
+  final baked = img.bakeOrientation(decoded);
+  final maxSide = math.max(baked.width, baked.height);
+  final resized = maxSide > 1024
+      ? img.copyResize(
+          baked,
+          width: baked.width >= baked.height ? 1024 : null,
+          height: baked.height > baked.width ? 1024 : null,
+        )
+      : baked;
+  return img.encodeJpg(resized, quality: 85);
+}
+
+List<int>? _encodeBackupArchive(
+  Map<String, Object?> input,
+) {
+  final archive = Archive();
+  final manifestRaw = input['manifest'] as String;
+  final manifestBytes = utf8.encode(manifestRaw);
+  archive.addFile(
+    ArchiveFile('backup.json', manifestBytes.length, manifestBytes),
+  );
+
+  final photos = (input['photos'] as List<dynamic>?) ?? const [];
+  for (final item in photos) {
+    final entry = item as Map<String, dynamic>;
+    final name = entry['name'] as String;
+    final bytes = (entry['bytes'] as List<dynamic>).cast<int>();
+    archive.addFile(ArchiveFile(name, bytes.length, bytes));
+  }
+
+  return ZipEncoder().encode(archive);
 }
 
 AppLanguage _resolveSystemLanguage() {
@@ -224,20 +264,7 @@ class _KeeperAppState extends State<KeeperApp> {
 
   Future<List<int>> _encodeBackupPhoto(String photoPath) async {
     final bytes = await File(photoPath).readAsBytes();
-    final decoded = img.decodeImage(bytes);
-    if (decoded == null) {
-      return bytes;
-    }
-    final baked = img.bakeOrientation(decoded);
-    final maxSide = math.max(baked.width, baked.height);
-    final resized = maxSide > 1024
-        ? img.copyResize(
-            baked,
-            width: baked.width >= baked.height ? 1024 : null,
-            height: baked.height > baked.width ? 1024 : null,
-          )
-        : baked;
-    return img.encodeJpg(resized, quality: 85);
+    return compute(_processBackupPhotoBytes, bytes);
   }
 
   Future<void> _exportBackupToDownloads() async {
@@ -255,11 +282,7 @@ class _KeeperAppState extends State<KeeperApp> {
     final backupPath =
         path.join(keeperDir.path, 'keeper_backup_$timestamp.kpr.zip');
     final manifest = _buildBackupManifest();
-    final manifestBytes = utf8.encode(jsonEncode(manifest));
-    final archive = Archive();
-    archive.addFile(
-      ArchiveFile('backup.json', manifestBytes.length, manifestBytes),
-    );
+    final photoEntries = <Map<String, Object>>[];
     for (final spider in _spiders) {
       final photoPath = spider.photoPath;
       if (photoPath == null) {
@@ -276,9 +299,18 @@ class _KeeperAppState extends State<KeeperApp> {
         continue;
       }
       final bytes = await _encodeBackupPhoto(photoPath);
-      archive.addFile(ArchiveFile(fileName, bytes.length, bytes));
+      photoEntries.add({
+        'name': fileName,
+        'bytes': bytes,
+      });
     }
-    final zipData = ZipEncoder().encode(archive);
+    final zipData = await compute(
+      _encodeBackupArchive,
+      <String, Object?>{
+        'manifest': jsonEncode(manifest),
+        'photos': photoEntries,
+      },
+    );
     if (zipData == null) {
       throw Exception('Backup archive failed');
     }

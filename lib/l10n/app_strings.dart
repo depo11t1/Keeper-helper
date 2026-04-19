@@ -714,6 +714,66 @@ class AppStrings {
         pt: 'Média de mudas',
         ja: '平均脱皮',
       );
+  String get totalShort => _t(
+        ru: 'Всего',
+        en: 'Total',
+        hi: 'कुल',
+        fr: 'Total',
+        de: 'Gesamt',
+        es: 'Total',
+        sv: 'Totalt',
+        nl: 'Totaal',
+        pt: 'Total',
+        ja: '合計',
+      );
+  String get averageShort => _t(
+        ru: 'В среднем',
+        en: 'Average',
+        hi: 'औसतन',
+        fr: 'Moyenne',
+        de: 'Im Schnitt',
+        es: 'Promedio',
+        sv: 'I snitt',
+        nl: 'Gemiddeld',
+        pt: 'Média',
+        ja: '平均',
+      );
+  String get totalFeedings => _t(
+        ru: 'Всего кормлений',
+        en: 'Total feedings',
+        hi: 'कुल भोजन',
+        fr: 'Total nourrissages',
+        de: 'Fütterungen gesamt',
+        es: 'Total de alimentaciones',
+        sv: 'Totalt antal matningar',
+        nl: 'Totaal voedingen',
+        pt: 'Total de alimentações',
+        ja: '給餌合計',
+      );
+  String get totalMolts => _t(
+        ru: 'Всего линек',
+        en: 'Total molts',
+        hi: 'कुल मोल्ट',
+        fr: 'Total mues',
+        de: 'Häutungen gesamt',
+        es: 'Total de mudas',
+        sv: 'Totalt antal ömsningar',
+        nl: 'Totaal vervellingen',
+        pt: 'Total de mudas',
+        ja: '脱皮合計',
+      );
+  String get daysShort => _t(
+        ru: 'дн.',
+        en: 'd',
+        hi: 'दिन',
+        fr: 'j',
+        de: 'T.',
+        es: 'd',
+        sv: 'd',
+        nl: 'd',
+        pt: 'd',
+        ja: '日',
+      );
   String get averageIntervals => _t(
         ru: 'Средние интервалы',
         en: 'Average intervals',

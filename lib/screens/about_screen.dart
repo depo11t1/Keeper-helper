@@ -78,7 +78,7 @@ class AboutScreen extends StatelessWidget {
             child: Row(
               children: [
                 Icon(
-                  Icons.link_rounded,
+                  Icons.language_rounded,
                   color: palette.badgeForeground,
                 ),
                 const SizedBox(width: 10),

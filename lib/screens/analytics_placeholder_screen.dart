@@ -411,13 +411,13 @@ class _AnalyticsGroupCard extends StatelessWidget {
         _AnalyticsGroupPosition.top => const BorderRadius.only(
             topLeft: Radius.circular(22),
             topRight: Radius.circular(22),
-            bottomLeft: Radius.circular(10),
-            bottomRight: Radius.circular(10),
+            bottomLeft: Radius.circular(12),
+            bottomRight: Radius.circular(12),
           ),
-        _AnalyticsGroupPosition.middle => BorderRadius.circular(10),
+        _AnalyticsGroupPosition.middle => BorderRadius.circular(12),
         _AnalyticsGroupPosition.bottom => const BorderRadius.only(
-            topLeft: Radius.circular(10),
-            topRight: Radius.circular(10),
+            topLeft: Radius.circular(12),
+            topRight: Radius.circular(12),
             bottomLeft: Radius.circular(22),
             bottomRight: Radius.circular(22),
           ),
@@ -591,113 +591,149 @@ class _AnalyticsHero extends StatefulWidget {
 class _AnalyticsHeroState extends State<_AnalyticsHero> {
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final base = Theme.of(context).colorScheme.surfaceContainerLow;
+    final showCustomRange = widget.period == _AnalyticsPeriod.custom &&
+        widget.customStart != null &&
+        widget.customEnd != null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              _AnalyticsPeriodChip(
+                label: _periodLabel(_AnalyticsPeriod.month),
+                selected: widget.period == _AnalyticsPeriod.month,
+                accent: widget.accent,
+                background: base,
+                onTap: () => widget.onPeriodSelected(_AnalyticsPeriod.month),
+              ),
+              const SizedBox(width: 8),
+              _AnalyticsPeriodChip(
+                label: _periodLabel(_AnalyticsPeriod.year),
+                selected: widget.period == _AnalyticsPeriod.year,
+                accent: widget.accent,
+                background: base,
+                onTap: () => widget.onPeriodSelected(_AnalyticsPeriod.year),
+              ),
+              const SizedBox(width: 8),
+              _AnalyticsPeriodChip(
+                label: _periodLabel(_AnalyticsPeriod.allTime),
+                selected: widget.period == _AnalyticsPeriod.allTime,
+                accent: widget.accent,
+                background: base,
+                onTap: () => widget.onPeriodSelected(_AnalyticsPeriod.allTime),
+              ),
+              const SizedBox(width: 8),
+              _AnalyticsPlusChip(
+                selected: widget.period == _AnalyticsPeriod.custom,
+                accent: widget.accent,
+                background: base,
+                onTap: widget.onPickCustomRange,
+              ),
+            ],
+          ),
+        ),
+        if (showCustomRange) ...[
+          const SizedBox(height: 6),
+          _MetricGroup(
+            decoration: BoxDecoration(
+              color: base,
+              borderRadius: BorderRadius.circular(22),
+            ),
+            child: _CustomRangeLabel(
+              start: widget.customStart!,
+              end: widget.customEnd!,
+              strings: widget.strings,
+            ),
+          ),
+        ],
+        const SizedBox(height: 14),
+        Row(
           children: [
-            _AnalyticsPeriodChip(
-              label: _periodLabel(_AnalyticsPeriod.month),
-              selected: widget.period == _AnalyticsPeriod.month,
-              accent: widget.accent,
-              onTap: () => widget.onPeriodSelected(_AnalyticsPeriod.month),
+            Expanded(
+              child: _MetricGroup(
+                decoration: BoxDecoration(
+                  color: base,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(22),
+                    topRight: Radius.circular(12),
+                    bottomLeft: Radius.circular(12),
+                    bottomRight: Radius.circular(12),
+                  ),
+                ),
+                child: _HeroMetricCard(
+                  icon: Icons.restaurant_rounded,
+                  title: widget.strings.feeding,
+                  label: widget.strings.totalShort,
+                  value: '${widget.totalFeedings}',
+                  accent: widget.accent,
+                ),
+              ),
             ),
-            _AnalyticsPeriodChip(
-              label: _periodLabel(_AnalyticsPeriod.year),
-              selected: widget.period == _AnalyticsPeriod.year,
-              accent: widget.accent,
-              onTap: () => widget.onPeriodSelected(_AnalyticsPeriod.year),
-            ),
-            _AnalyticsPeriodChip(
-              label: _periodLabel(_AnalyticsPeriod.allTime),
-              selected: widget.period == _AnalyticsPeriod.allTime,
-              accent: widget.accent,
-              onTap: () => widget.onPeriodSelected(_AnalyticsPeriod.allTime),
-            ),
-            _AnalyticsPlusChip(
-              selected: widget.period == _AnalyticsPeriod.custom,
-              accent: widget.accent,
-              onTap: widget.onPickCustomRange,
+            const SizedBox(width: 6),
+            Expanded(
+              child: _MetricGroup(
+                decoration: BoxDecoration(
+                  color: base,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(12),
+                    topRight: Radius.circular(22),
+                    bottomLeft: Radius.circular(12),
+                    bottomRight: Radius.circular(12),
+                  ),
+                ),
+                child: _HeroMetricCard(
+                  icon: Icons.autorenew_rounded,
+                  title: widget.strings.molts,
+                  label: widget.strings.totalShort,
+                  value: '${widget.totalMolts}',
+                  accent: widget.accent,
+                ),
+              ),
             ),
           ],
         ),
-        const SizedBox(height: 14),
-        Container(
+        const SizedBox(height: 6),
+        _MetricGroup(
           decoration: BoxDecoration(
             color: base,
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(12),
+              topRight: Radius.circular(12),
+              bottomLeft: Radius.circular(12),
+              bottomRight: Radius.circular(12),
+            ),
           ),
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: _HeroMetricRow(
-                      label: _totalFeedingsLabel(),
-                      value: '${widget.totalFeedings}',
-                      accent: widget.accent,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _HeroMetricRow(
-                      label: _totalMoltsLabel(),
-                      value: '${widget.totalMolts}',
-                      accent: widget.accent,
-                    ),
-                  ),
-                ],
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                child: Divider(
-                  height: 1,
-                  thickness: 1,
-                  color: scheme.outline.withValues(alpha: 0.16),
-                ),
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: _HeroMetricRow(
-                      label: widget.strings.avgEatsPlural,
-                      value: widget.feedAverage == null
-                          ? widget.strings.littleData
-                          : widget.strings.everyDays(widget.feedAverage!),
-                      accent: widget.accent,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _HeroMetricRow(
-                      label: widget.strings.avgMoltsPlural,
-                      value: widget.moltAverage == null
-                          ? widget.strings.littleData
-                          : widget.strings.everyDays(widget.moltAverage!),
-                      accent: widget.accent,
-                    ),
-                  ),
-                ],
-              ),
-              if (widget.period == _AnalyticsPeriod.custom &&
-                  widget.customStart != null &&
-                  widget.customEnd != null) ...[
-                Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: _CustomRangeLabel(
-                    start: widget.customStart!,
-                    end: widget.customEnd!,
-                    strings: widget.strings,
-                  ),
-                ),
-              ],
-            ],
+          child: _HeroWideMetricRow(
+            icon: Icons.restaurant_rounded,
+            label: widget.strings.averageShort,
+            value: widget.feedAverage == null
+                ? widget.strings.littleData
+                : '${widget.feedAverage} ${widget.strings.daysShort}',
+            accent: widget.accent,
+          ),
+        ),
+        const SizedBox(height: 6),
+        _MetricGroup(
+          decoration: BoxDecoration(
+            color: base,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(12),
+              topRight: Radius.circular(12),
+              bottomLeft: Radius.circular(22),
+              bottomRight: Radius.circular(22),
+            ),
+          ),
+          child: _HeroWideMetricRow(
+            icon: Icons.autorenew_rounded,
+            label: widget.strings.averageShort,
+            value: widget.moltAverage == null
+                ? widget.strings.littleData
+                : '${widget.moltAverage} ${widget.strings.daysShort}',
+            accent: widget.accent,
           ),
         ),
       ],
@@ -719,12 +755,6 @@ class _AnalyticsHeroState extends State<_AnalyticsHero> {
     };
     return widget.strings.isRu ? ru : en;
   }
-
-  String _totalFeedingsLabel() =>
-      widget.strings.isRu ? 'Всего кормлений' : 'Total feedings';
-
-  String _totalMoltsLabel() =>
-      widget.strings.isRu ? 'Всего линек' : 'Total molts';
 }
 
 enum _AnalyticsPeriod { month, year, allTime, custom }
@@ -734,33 +764,39 @@ class _AnalyticsPeriodChip extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.accent,
+    required this.background,
     required this.onTap,
   });
 
   final String label;
   final bool selected;
   final Color accent;
+  final Color background;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final palette = keeperPalette(context);
-    final scheme = Theme.of(context).colorScheme;
 
     return Material(
-      color: selected
-          ? Color.alphaBlend(accent.withValues(alpha: 0.18), Colors.transparent)
-          : Colors.transparent,
-      borderRadius: BorderRadius.circular(999),
+      color: background,
+      borderRadius: BorderRadius.circular(selected ? 999 : 16),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(999),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        borderRadius: BorderRadius.circular(selected ? 999 : 16),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: selected ? accent.withValues(alpha: 0.16) : background,
+            borderRadius: BorderRadius.circular(selected ? 999 : 16),
+          ),
           child: Text(
             label,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: selected ? palette.textPrimary : palette.textMuted,
+              color: selected
+                  ? accent
+                  : palette.textPrimary.withValues(alpha: 0.84),
               fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
             ),
           ),
@@ -774,33 +810,59 @@ class _AnalyticsPlusChip extends StatelessWidget {
   const _AnalyticsPlusChip({
     required this.selected,
     required this.accent,
+    required this.background,
     required this.onTap,
   });
 
   final bool selected;
   final Color accent;
+  final Color background;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return FilledButton.tonal(
-      onPressed: onTap,
-      style: FilledButton.styleFrom(
-        backgroundColor: selected
-            ? accent
-            : Color.alphaBlend(
-                accent.withValues(alpha: 0.14),
-                scheme.surfaceContainerLow,
-              ),
-        foregroundColor: selected ? scheme.onPrimary : accent,
-        minimumSize: const Size(40, 40),
-        padding: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
+    return Material(
+      color: background,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            color: selected ? accent.withValues(alpha: 0.16) : background,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Icon(
+            Icons.add_rounded,
+            size: 22,
+            color: selected
+                ? accent
+                : keeperPalette(context).textPrimary.withValues(alpha: 0.84),
+          ),
         ),
       ),
-      child: const Icon(Icons.add_rounded, size: 22),
+    );
+  }
+}
+
+class _MetricGroup extends StatelessWidget {
+  const _MetricGroup({
+    required this.decoration,
+    required this.child,
+  });
+
+  final BoxDecoration decoration;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: decoration,
+      padding: const EdgeInsets.all(14),
+      child: child,
     );
   }
 }
@@ -820,6 +882,7 @@ class _HeroMetricRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final palette = keeperPalette(context);
+    final compactValue = value.length > 8;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -827,17 +890,145 @@ class _HeroMetricRow extends StatelessWidget {
         Text(
           label,
           style: theme.textTheme.bodySmall?.copyWith(
-            fontSize: 11,
+            fontSize: 10,
             color: accent,
             fontWeight: FontWeight.w700,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
+        SizedBox(
+          width: double.infinity,
+          height: 24,
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                value,
+                maxLines: 1,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontSize: compactValue ? 15 : 18,
+                  color: palette.textPrimary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _HeroMetricCard extends StatelessWidget {
+  const _HeroMetricCard({
+    required this.icon,
+    required this.title,
+    required this.label,
+    required this.value,
+    required this.accent,
+  });
+
+  final IconData icon;
+  final String title;
+  final String label;
+  final String value;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final palette = keeperPalette(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              icon,
+              size: 18,
+              color: accent,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                title,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: palette.textPrimary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        Row(
+          children: [
+            Text(
+              label,
+              style: theme.textTheme.titleLarge?.copyWith(
+                color: palette.textPrimary,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              value,
+              style: theme.textTheme.headlineSmall?.copyWith(
+                color: accent,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _HeroWideMetricRow extends StatelessWidget {
+  const _HeroWideMetricRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.accent,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final palette = keeperPalette(context);
+
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: 18,
+          color: accent,
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            label,
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: palette.textPrimary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
         Text(
           value,
-          style: theme.textTheme.titleMedium?.copyWith(
-            color: palette.textPrimary,
-            fontWeight: FontWeight.w700,
+          style: theme.textTheme.titleLarge?.copyWith(
+            color: accent,
+            fontWeight: FontWeight.w800,
           ),
         ),
       ],
@@ -866,7 +1057,7 @@ class _CustomRangeLabel extends StatelessWidget {
     return Text(
       text,
       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: palette.textMuted,
+            color: palette.textPrimary.withValues(alpha: 0.96),
             fontWeight: FontWeight.w600,
           ),
     );

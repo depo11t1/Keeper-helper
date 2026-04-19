@@ -33,6 +33,7 @@ class _BackupScreenState extends State<BackupScreen> {
     setState(() {
       _exporting = true;
     });
+    await Future<void>.delayed(const Duration(milliseconds: 32));
     await widget.onExport();
     setState(() {
       _showCheck = true;
