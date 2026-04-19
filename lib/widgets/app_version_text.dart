@@ -17,11 +17,21 @@ class AppVersionText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = AppStrings.of(language);
+    const buildName = String.fromEnvironment('FLUTTER_BUILD_NAME');
+    final compiledVersion = buildName.isEmpty ? null : buildName;
+
+    if (compiledVersion != null) {
+      return Text(
+        strings.aboutVersion(compiledVersion),
+        style: style,
+      );
+    }
 
     return FutureBuilder<PackageInfo>(
       future: PackageInfo.fromPlatform(),
       builder: (context, snapshot) {
-        final version = snapshot.data?.version ?? '...';
+        final info = snapshot.data;
+        final version = info?.version ?? '...';
         return Text(
           strings.aboutVersion(version),
           style: style,
